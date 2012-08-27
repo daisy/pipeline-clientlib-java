@@ -23,8 +23,6 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import play.Logger;
-
 public class Pipeline2WSResponse {
 	
 	public int status;
@@ -45,8 +43,9 @@ public class Pipeline2WSResponse {
 	/**
 	 * Returns the response body as a InputStream.
 	 * @return
+	 * @throws Pipeline2WSException 
 	 */
-	public InputStream asStream() {
+	public InputStream asStream() throws Pipeline2WSException {
 		if (bodyStream != null)
 			return bodyStream;
 		
@@ -54,8 +53,7 @@ public class Pipeline2WSResponse {
 			try {
 				return new ByteArrayInputStream(bodyText.getBytes("utf-8"));
 	        } catch(UnsupportedEncodingException e) {
-	            Logger.error("Unable to open body string as stream", new RuntimeException(e));
-	            return null;
+	            throw new Pipeline2WSException("Unable to open body string as stream", e);
 	        }
 		}
 		
@@ -65,8 +63,9 @@ public class Pipeline2WSResponse {
 	/**
 	 * Returns the response body as a String.
 	 * @return
+	 * @throws Pipeline2WSException 
 	 */
-	public String asText() {
+	public String asText() throws Pipeline2WSException {
 		if (bodyText != null)
 			return bodyText;
 		
@@ -91,7 +90,7 @@ public class Pipeline2WSResponse {
 					bodyStream.close();
 					bodyStream = null;
 				} catch (IOException e) {
-					Logger.error("Unable to close stream while reading response body", e);
+					throw new Pipeline2WSException("Unable to close stream while reading response body", e);
 				}
             }
             bodyText = writer.toString();
@@ -107,7 +106,7 @@ public class Pipeline2WSResponse {
 				bodyText = result.getWriter().toString();
 				
 			} catch (TransformerException e) {
-				Logger.error("Unable to serialize body XML Document as string", e);
+				throw new Pipeline2WSException("Unable to serialize body XML Document as string", e);
 			}
 		}
 		
@@ -117,8 +116,9 @@ public class Pipeline2WSResponse {
 	/**
 	 * Returns the response body as an XML Document.
 	 * @return
+	 * @throws Pipeline2WSException 
 	 */
-	public Document asXml() {
+	public Document asXml() throws Pipeline2WSException {
 		if (bodyXml != null)
 			return bodyXml;
 		
@@ -135,7 +135,7 @@ public class Pipeline2WSResponse {
 			factory.setNamespaceAware(true);
 			builder = factory.newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
-			throw new RuntimeException(e);
+			throw new Pipeline2WSException(e);
 		}
 		
 		try {
@@ -150,7 +150,7 @@ public class Pipeline2WSResponse {
 				errorMessage = ": "+errorMessage;
 			}
 			errorMessage = "Unable to parse body as XML"+errorMessage;
-			Logger.error(errorMessage, e);
+			throw new Pipeline2WSException(errorMessage, e);
 		}
 		
 		return bodyXml;

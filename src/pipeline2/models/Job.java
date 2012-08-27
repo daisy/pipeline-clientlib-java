@@ -8,9 +8,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import pipeline2.Pipeline2WS;
+import pipeline2.Pipeline2WSException;
 import pipeline2.Pipeline2WSResponse;
 import pipeline2.models.job.Message;
-import play.libs.XPath;
+
+import pipeline2.utils.XPath;
 
 public class Job {
 	
@@ -30,11 +32,11 @@ public class Job {
 		messages = new ArrayList<Message>();
 	}
 	
-	public Job(Document jobXml) {
+	public Job(Document jobXml) throws Pipeline2WSException {
 		this(XPath.selectNode("/d:job", jobXml, Pipeline2WS.ns));
 	}
 	
-	public Job(Node jobXml) {
+	public Job(Node jobXml) throws Pipeline2WSException {
 		this();
 		
 		id = XPath.selectText("@id", jobXml, Pipeline2WS.ns);
@@ -63,7 +65,7 @@ public class Job {
 		Collections.sort(this.messages);
 	}
 	
-	public static List<Job> getJobs(Pipeline2WSResponse response) {
+	public static List<Job> getJobs(Pipeline2WSResponse response) throws Pipeline2WSException {
 		List<Job> jobs = new ArrayList<Job>();
 		
 		List<Node> jobNodes = XPath.selectNodes("/d:jobs/d:job", response.asXml(), Pipeline2WS.ns);

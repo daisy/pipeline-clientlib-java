@@ -5,17 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import pipeline2.Pipeline2WS;
+import pipeline2.Pipeline2WSException;
 import pipeline2.Pipeline2WSResponse;
 import pipeline2.models.script.Argument;
 import pipeline2.models.script.Author;
 import pipeline2.models.script.Homepage;
-import play.Logger;
-import play.libs.XPath;
-import utils.XML;
+import pipeline2.utils.XPath;
 
 /** Information about the current script. */
 public class Script {
@@ -40,12 +38,13 @@ public class Script {
 		this.mediaTypeBlacklist = new ArrayList<String>();
 	}
 	
-	public Script(Pipeline2WSResponse response) {
+	public Script(Pipeline2WSResponse response) throws Pipeline2WSException {
 		this(XPath.selectNode("/d:script", response.asXml(), Pipeline2WS.ns));
 	}
 	
-	/** Parse a Script XML document retrieved from the Pipeline 2 Web Service and create Helper function for the Script(Document) constructor */
-	public Script(Node scriptXml) {
+	/** Parse a Script XML document retrieved from the Pipeline 2 Web Service and create Helper function for the Script(Document) constructor 
+	 * @throws Pipeline2WSException */
+	public Script(Node scriptXml) throws Pipeline2WSException {
 		this();
 		
 		this.id = XPath.selectText("@id", scriptXml, Pipeline2WS.ns);
@@ -135,7 +134,7 @@ public class Script {
 		}
 	}
 	
-	public static List<Script> getScripts(Pipeline2WSResponse response) {
+	public static List<Script> getScripts(Pipeline2WSResponse response) throws Pipeline2WSException {
 		List<Script> scripts = new ArrayList<Script>();
 		
 		List<Node> scriptNodes = XPath.selectNodes("/d:scripts/d:script", response.asXml(), Pipeline2WS.ns);

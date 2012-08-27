@@ -33,9 +33,11 @@ import org.restlet.resource.ClientResource;
 import org.restlet.resource.ResourceException;
 import org.w3c.dom.Document;
 
-import play.Logger;
+import pipeline2.utils.XML;
 
 public class Pipeline2WS {
+	
+	public static boolean debug = false;
 	
 	public static final Map<String, String> ns; 
 	static {
@@ -61,8 +63,9 @@ public class Pipeline2WS {
 	 * @param secret Robot secret.
 	 * @param parameters URL query string parameters
 	 * @return The return body.
+	 * @throws Pipeline2WSException 
 	 */
-	public static Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) {
+	public static Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
 		String url = url(endpoint, path, username, secret, parameters);
 		if (endpoint == null) {
 			return new Pipeline2WSResponse(503, "Pipeline 2 Web Service endpoint is not configured.", "Please configure Pipeline 2 in the administrator settings.", null);
@@ -81,7 +84,7 @@ public class Pipeline2WS {
 			try {
 				in = new ByteArrayInputStream("An unknown problem occured while communicating with the Pipeline 2 framework.".getBytes("utf-8"));
 	        } catch(UnsupportedEncodingException unsupportedEncodingException) {
-	            Logger.error("Unable to create body string as stream", new RuntimeException(e));
+	            throw new Pipeline2WSException("Unable to create body string as stream", e);
 	        }
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -100,19 +103,22 @@ public class Pipeline2WS {
 	 * @param secret Robot secret.
 	 * @param xml The XML document to post.
 	 * @return The return body.
+	 * @throws Pipeline2WSException 
 	 */
-	public static Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) {
+	public static Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {
 		String url = url(endpoint, path, username, secret, null);
 		
-		Logger.debug("URL: ["+url+"]");
-		Logger.debug(utils.XML.toString(xml));
+		if (Pipeline2WS.debug) {
+			System.out.println("URL: ["+url+"]");
+			System.out.println(XML.toString(xml));
+		}
 		
 		ClientResource resource = new ClientResource(url);
 		Representation representation = null;
 		try {
-			representation = resource.post(utils.XML.toString(xml));
+			representation = resource.post(XML.toString(xml));
 		} catch (org.restlet.resource.ResourceException e) {
-			Logger.error(e.getMessage(), e);
+			throw new Pipeline2WSException(e.getMessage(), e);
 		}
 		
 		InputStream in = null;
@@ -137,8 +143,9 @@ public class Pipeline2WS {
 	 * @param secret Robot secret.
 	 * @param parts A map of all the parts.
 	 * @return The return body.
+	 * @throws Pipeline2WSException 
 	 */
-	public static Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) {
+	public static Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) throws Pipeline2WSException {
 		String url = url(endpoint, path, username, secret, null);
 		
 		HttpClient httpclient = new DefaultHttpClient();
@@ -154,11 +161,9 @@ public class Pipeline2WS {
 		try {
 			response = httpclient.execute(httppost);
 		} catch (ClientProtocolException e) {
-			Logger.error("Error while POSTing: "+e.getMessage());
-			throw new RuntimeErrorException(new Error(e), "Error while POSTing.");
+			throw new Pipeline2WSException("Error while POSTing.", e);
 		} catch (IOException e) {
-			Logger.error("Error while POSTing: "+e.getMessage());
-			throw new RuntimeErrorException(new Error(e), "Error while POSTing.");
+			throw new Pipeline2WSException("Error while POSTing.", e);
 		}
 		HttpEntity resEntity = response.getEntity();
 		
@@ -166,8 +171,7 @@ public class Pipeline2WS {
 		try {
 			bodyStream = resEntity.getContent();
 		} catch (IOException e) {
-			Logger.error("Error while reading response body");
-			throw new RuntimeErrorException(new Error(e), "Error while reading response body"); 
+			throw new Pipeline2WSException("Error while reading response body", e); 
 		}
 		
 		Status status = Status.valueOf(response.getStatusLine().getStatusCode());
@@ -175,7 +179,10 @@ public class Pipeline2WS {
 		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), bodyStream);
 	}
 	
-	public static String url(String endpoint, String path, String username, String secret, Map<String,String> parameters) {
+	public static String url(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
+		if (username == null)
+			return endpoint+path;
+		
 		String time = iso8601.format(new Date());
 		
 		String nonce = "";
@@ -187,7 +194,7 @@ public class Pipeline2WS {
 		if (parameters != null) {
 			for (String name : parameters.keySet()) {
 				try { url += URLEncoder.encode(name, "UTF-8") + "=" + URLEncoder.encode(parameters.get(name), "UTF-8") + "&"; }
-				catch (UnsupportedEncodingException e) { Logger.error("Unsupported encoding: UTF-8", e); }
+				catch (UnsupportedEncodingException e) { throw new Pipeline2WSException("Unsupported encoding: UTF-8", e); }
 			}
 		}
 		url += "authid="+username + "&time="+time + "&nonce="+nonce;
@@ -207,8 +214,7 @@ public class Pipeline2WS {
 			url += "&sign="+hashEscaped;
 			
 		} catch (SignatureException e) {
-			Logger.error("Could not sign request.");
-			e.printStackTrace();
+			throw new Pipeline2WSException("Could not sign request.");
 		}
 		
 		return url;
