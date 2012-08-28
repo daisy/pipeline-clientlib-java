@@ -27,7 +27,7 @@ public class Message implements Comparable<Message> {
 		this.text = text;
 	}
 
-	@Override
+//	@Override
 	public int compareTo(Message other) {
 		if (!(other instanceof Message))
 			return 0;

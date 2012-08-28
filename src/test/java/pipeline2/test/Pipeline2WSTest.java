@@ -1,4 +1,4 @@
-package pipeline2.tests;
+package pipeline2.test;
 
 import static org.junit.Assert.*;
 

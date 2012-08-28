@@ -46,7 +46,7 @@ public class Jobs {
 	 * @throws Pipeline2WSException 
 	 */
 	private static Document createJobRequestDocument(String href, List<Argument> arguments, Map<String,String> callbacks) throws Pipeline2WSException {
-		Document jobRequestDocument = pipeline2.utils.XML.getXml("<jobRequest xmlns='http://www.daisy.org/ns/pipeline/data'/>");
+		Document jobRequestDocument = XML.getXml("<jobRequest xmlns='http://www.daisy.org/ns/pipeline/data'/>");
 		Element jobRequest = jobRequestDocument.getDocumentElement();
 
 		Element element = jobRequestDocument.createElement("script");

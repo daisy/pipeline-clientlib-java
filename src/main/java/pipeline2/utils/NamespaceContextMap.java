@@ -86,21 +86,21 @@ public final class NamespaceContextMap implements NamespaceContext {
 		return nsMap;
 	}
 
-	@Override
+//	@Override
 	public String getNamespaceURI(String prefix) {
 		checkNotNull(prefix);
 		String nsURI = prefixMap.get(prefix);
 		return nsURI == null ? XMLConstants.NULL_NS_URI : nsURI;
 	}
 
-	@Override
+//	@Override
 	public String getPrefix(String namespaceURI) {
 		checkNotNull(namespaceURI);
 		Set<String> set = nsMap.get(namespaceURI);
 		return set == null ? null : set.iterator().next();
 	}
 
-	@Override
+//	@Override
 	public Iterator<String> getPrefixes(String namespaceURI) {
 		checkNotNull(namespaceURI);
 		Set<String> set = nsMap.get(namespaceURI);
