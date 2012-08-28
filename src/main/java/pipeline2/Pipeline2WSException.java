@@ -1,9 +1,8 @@
 package pipeline2;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 public class Pipeline2WSException extends Exception {
-	
+	private static final long serialVersionUID = 1L;
+
 	public Pipeline2WSException(String message, Throwable cause) {
 		super(message, cause);
 	}
