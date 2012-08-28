@@ -7,6 +7,7 @@ import org.daisy.pipeline.client.models.script.Argument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/** An argument of type "anyFileURI" and sequence="true" */
 public class ArgFiles extends Argument {
 	
 	public List<String> hrefs = new ArrayList<String>();

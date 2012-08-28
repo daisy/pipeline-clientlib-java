@@ -29,6 +29,32 @@ import org.w3c.dom.NodeList;
 public class Pipeline2WSTest {
 
 	@Test
+	public void getScripts() {
+		try {
+			//			Pipeline2WSResponse response = Scripts.get("http://localhost:8181/ws", null, null);
+			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret");
+			if (response.status != 200)
+				fail(response.status+": "+response.statusName+" ("+response.statusDescription+")");
+			
+			List<Script> scripts = Script.getScripts(response);
+			if (scripts.size() == 0)
+				fail("no scripts in response");
+			if (scripts.get(0).id == null || scripts.get(0).id.length() == 0)
+				fail("empty script id");
+			if (scripts.get(0).nicename == null || scripts.get(0).nicename.length() == 0)
+				fail("empty nicename id");
+			if (scripts.get(0).desc == null || scripts.get(0).desc.length() == 0)
+				fail("empty script description");
+			
+
+			assertNotNull(scripts.get(0).id);
+
+		} catch (Pipeline2WSException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test
 	public void testXPath() {
 		XPathFactory factory = XPathFactory.newInstance();
 		javax.xml.xpath.XPath xpath = factory.newXPath();
@@ -114,24 +140,5 @@ public class Pipeline2WSTest {
 		Assert.assertEquals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, context.getNamespaceURI(XMLConstants.XMLNS_ATTRIBUTE));
 		Assert.assertEquals(XMLConstants.XML_NS_PREFIX, context.getPrefix(XMLConstants.XML_NS_URI));
 		Assert.assertEquals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, context.getNamespaceURI(XMLConstants.XMLNS_ATTRIBUTE));
-	}
-
-	@Test
-	public void getScripts() {
-		try {
-			//			Pipeline2WSResponse response = Scripts.get("http://localhost:8181/ws", null, null);
-			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret");
-			if (response.status != 200)
-				fail(response.status+": "+response.statusName+" ("+response.statusDescription+")");
-
-			List<Script> scripts = Script.getScripts(response);
-			if (scripts.size() == 0)
-				fail("no scripts in response");
-
-			assertNotNull(scripts.get(0).id);
-
-		} catch (Pipeline2WSException e) {
-			fail(e.getMessage());
-		}
 	}
 }

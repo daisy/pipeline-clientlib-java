@@ -16,8 +16,14 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
+/**
+ * Utility class for parsing and serializing XML.
+ * 
+ * @author jostein
+ */
 public class XML {
 	
 	/**
@@ -75,7 +81,12 @@ public class XML {
        return ret;
     }
     
-    public static String toString(Document xml) {
+    /**
+     * Serialize an XML node as a string.
+     * @param xml
+     * @return
+     */
+    public static String toString(Node xml) {
     	try {
 			Transformer transformer = TransformerFactory.newInstance().newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");

@@ -21,8 +21,13 @@ import org.daisy.pipeline.utils.XML;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-
-
+/**
+ * Methods for communicating with the "/jobs" resource in a Pipeline 2 Web Service.
+ * 
+ * @see http://code.google.com/p/daisy-pipeline/wiki/WebServiceAPI#Jobs
+ * 
+ * @author jostein
+ */
 public class Jobs {
 	
 	/**

@@ -4,6 +4,7 @@ import org.daisy.pipeline.client.models.script.Argument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/** An argument of type "string" */
 public class ArgString extends Argument {
 	
 	public String value = "";

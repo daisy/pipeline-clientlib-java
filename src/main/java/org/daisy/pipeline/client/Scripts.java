@@ -1,5 +1,12 @@
 package org.daisy.pipeline.client;
 
+/**
+ * Methods for communicating with the "/scripts" resource in a Pipeline 2 Web Service.
+ * 
+ * @see http://code.google.com/p/daisy-pipeline/wiki/WebServiceAPI#Scripts
+ * 
+ * @author jostein
+ */
 public class Scripts {
 
 	/**

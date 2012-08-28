@@ -33,14 +33,18 @@ import org.restlet.resource.ClientResource;
 import org.restlet.resource.ResourceException;
 import org.w3c.dom.Document;
 
-
+/**
+ * Methods for communicating directly with the Pipeline 2 Web Service.
+ * 
+ * @author jostein
+ */
 public class Pipeline2WS {
 	
 	public static boolean debug = false;
 	
+	/** Used to provide a the namespace when querying a document using XPath. */
 	public static final Map<String, String> ns; 
 	static {
-		// Useful as the last parameter with the Play 2.0 XPath library
     	Map<String, String> nsMap = new HashMap<String, String>();
     	nsMap.put("d", "http://www.daisy.org/ns/pipeline/data");
     	ns = Collections.unmodifiableMap(nsMap);
@@ -58,8 +62,8 @@ public class Pipeline2WS {
 	 * Send a GET request.
 	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
 	 * @param path Path to resource, for instance "/scripts".
-	 * @param username Robot username.
-	 * @param secret Robot secret.
+	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
+	 * @param secret Robot secret. Can be null.
 	 * @param parameters URL query string parameters
 	 * @return The return body.
 	 * @throws Pipeline2WSException 
@@ -98,8 +102,8 @@ public class Pipeline2WS {
 	 * POST an XML document.
 	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
 	 * @param path Path to resource, for instance "/scripts".
-	 * @param username Robot username.
-	 * @param secret Robot secret.
+	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
+	 * @param secret Robot secret. Can be null.
 	 * @param xml The XML document to post.
 	 * @return The return body.
 	 * @throws Pipeline2WSException 
@@ -138,8 +142,8 @@ public class Pipeline2WS {
 	 * POST a multipart request.
 	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
 	 * @param path Path to resource, for instance "/scripts".
-	 * @param username Robot username.
-	 * @param secret Robot secret.
+	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
+	 * @param secret Robot secret. Can be null.
 	 * @param parts A map of all the parts.
 	 * @return The return body.
 	 * @throws Pipeline2WSException 
@@ -178,6 +182,17 @@ public class Pipeline2WS {
 		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), bodyStream);
 	}
 	
+	/**
+	 * Sign a URL for communication with a Pipeline 2 Web Service running in authenticated mode.
+	 * 
+	 * @param endpoint
+	 * @param path
+	 * @param username
+	 * @param secret
+	 * @param parameters
+	 * @return
+	 * @throws Pipeline2WSException
+	 */
 	public static String url(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
 		if (username == null)
 			return endpoint+path;

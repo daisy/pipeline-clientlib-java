@@ -7,6 +7,7 @@ import org.daisy.pipeline.client.models.script.Argument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/** An argument of type "string" and sequence="true" */
 public class ArgStrings extends Argument {
 	
 	public List<String> values = new ArrayList<String>();

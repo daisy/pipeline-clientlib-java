@@ -4,6 +4,7 @@ import org.daisy.pipeline.client.models.script.Argument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/** An argument of type "anyFileURI" */
 public class ArgFile extends Argument {
 	
 	public String href = "";

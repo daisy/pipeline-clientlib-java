@@ -12,8 +12,11 @@ import org.daisy.pipeline.utils.XPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-
-
+/**
+ * A representation of a Pipeline 2 job.
+ * 
+ * @author jostein
+ */
 public class Job {
 	
 	public enum Status { IDLE, RUNNING, DONE, ERROR };
@@ -27,17 +30,37 @@ public class Job {
 	public String logHref;
 	public String resultHref;
 	
+	/**
+	 * Create an empty representation of a job.
+	 */
 	public Job() {
 		script = new Script();
 		messages = new ArrayList<Message>();
 	}
 	
-	public Job(Document jobXml) throws Pipeline2WSException {
-		this(XPath.selectNode("/d:job", jobXml, Pipeline2WS.ns));
+	/**
+	 * Parse the job described by the provided Pipeline2WSResponse.
+	 * 
+	 * @param response
+	 * @throws Pipeline2WSException
+	 */
+	public Job(Pipeline2WSResponse response) throws Pipeline2WSException {
+		this(response.asXml());
 	}
 	
+	/**
+	 * Parse the job described by the provided XML document/node.
+	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/job.xml
+	 * 
+	 * @param jobXml
+	 * @throws Pipeline2WSException
+	 */
 	public Job(Node jobXml) throws Pipeline2WSException {
 		this();
+		
+		// select root element if the node is a document node
+		if (jobXml instanceof Document)
+			jobXml = XPath.selectNode("/d:job", jobXml, Pipeline2WS.ns);
 		
 		id = XPath.selectText("@id", jobXml, Pipeline2WS.ns);
 		href = XPath.selectText("@href", jobXml, Pipeline2WS.ns);
@@ -65,10 +88,33 @@ public class Job {
 		Collections.sort(this.messages);
 	}
 	
+	/**
+	 * Parse the list of jobs described by the provided Pipeline2WSResponse.
+	 * 
+	 * @param response
+	 * @return
+	 * @throws Pipeline2WSException
+	 */
 	public static List<Job> getJobs(Pipeline2WSResponse response) throws Pipeline2WSException {
+		return getJobs(response.asXml());
+	}
+	
+	/**
+	 * Parse the list of jobs described by the provided XML document/node.
+	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/jobs.xml
+	 * 
+	 * @param response
+	 * @return
+	 * @throws Pipeline2WSException
+	 */
+	public static List<Job> getJobs(Node jobsXml) throws Pipeline2WSException {
 		List<Job> jobs = new ArrayList<Job>();
 		
-		List<Node> jobNodes = XPath.selectNodes("/d:jobs/d:job", response.asXml(), Pipeline2WS.ns);
+		// select root element if the node is a document node
+		if (jobsXml instanceof Document)
+			jobsXml = XPath.selectNode("/d:jobs", jobsXml, Pipeline2WS.ns);
+		
+		List<Node> jobNodes = XPath.selectNodes("d:job", jobsXml, Pipeline2WS.ns);
 		for (Node jobNode : jobNodes) {
 			jobs.add(new Job(jobNode));
 		}

@@ -14,7 +14,11 @@ import org.daisy.pipeline.client.Pipeline2WSException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-
+/**
+ * Utility class for querying XML documents using XPath.
+ * 
+ * @author jostein
+ */
 public class XPath {
 	
 	private static Map<String,XPathExpression> expressions = new HashMap<String,XPathExpression>();
@@ -52,7 +56,19 @@ public class XPath {
 		}
 	}
 	
+	/**
+	 * Select all nodes matching `expr` and return them as a List.
+	 * 
+	 * @param expr XPath expression
+	 * @param doc XML node
+	 * @param ns Namespace map (Map<String prefix, String namespace>)
+	 * @return
+	 * @throws Pipeline2WSException
+	 */
 	public static List<Node> selectNodes(String expr, Node doc, Map<String, String> ns) throws Pipeline2WSException {
+		if (doc == null || expr == null)
+			return new ArrayList<Node>();
+		
 		try {
 			NodeList nodeList = (NodeList) xpath(expr,ns).evaluate(doc, XPathConstants.NODESET);
 			List<Node> result = new ArrayList<Node>();
@@ -65,14 +81,38 @@ public class XPath {
 			throw new Pipeline2WSException(e);
 		}
 	}
-
+	
+	/**
+	 * Select the node matching `expr` and return its text content.
+	 * 
+	 * @param expr XPath expression
+	 * @param doc XML node
+	 * @param ns Namespace map (Map<String prefix, String namespace>)
+	 * @return
+	 * @throws Pipeline2WSException
+	 */
 	public static String selectText(String expr, Node doc, Map<String, String> ns) throws Pipeline2WSException {
+		if (doc == null || expr == null)
+			return null;
+		
 		Node node = selectNode(expr, doc, ns);
 		if (node == null) return null;
-		return node.getNodeValue();
+		return node.getTextContent();
 	}
-
+	
+	/**
+	 * Select the nodes matching `expr` and return it.
+	 * 
+	 * @param expr XPath expression
+	 * @param doc XML node
+	 * @param ns Namespace map (Map<String prefix, String namespace>)
+	 * @return
+	 * @throws Pipeline2WSException
+	 */
 	public static Node selectNode(String expr, Node doc, Map<String, String> ns) throws Pipeline2WSException {
+		if (doc == null || expr == null)
+			return null;
+		
 		try {
 			NodeList nodeList = (NodeList) xpath(expr,ns).evaluate(doc, XPathConstants.NODESET);
 			if (nodeList.getLength() == 0) return null;

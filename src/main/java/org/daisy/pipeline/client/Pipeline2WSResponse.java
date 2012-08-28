@@ -32,6 +32,14 @@ public class Pipeline2WSResponse {
 	private String bodyText;
 	private Document bodyXml;
 	
+	/**
+	 * Creates a new Pipeline2WSResponse with the given HTTP status code, status name, status description and content body.
+	 * 
+	 * @param status
+	 * @param statusName
+	 * @param statusDescription
+	 * @param bodyStream
+	 */
 	public Pipeline2WSResponse(int status, String statusName, String statusDescription, InputStream bodyStream) {
 		this.status = status;
 		this.statusName = statusName;

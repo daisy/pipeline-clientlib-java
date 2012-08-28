@@ -1,0 +1,7 @@
+org.daisy.pipeline.client
+org.daisy.pipeline.client.models
+org.daisy.pipeline.client.models.job
+org.daisy.pipeline.client.models.script
+org.daisy.pipeline.client.models.script.arguments
+org.daisy.pipeline.client.test
+org.daisy.pipeline.utils

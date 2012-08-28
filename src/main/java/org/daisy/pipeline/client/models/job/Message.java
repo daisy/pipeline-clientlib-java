@@ -1,5 +1,10 @@
 package org.daisy.pipeline.client.models.job;
 
+/**
+ * A job message.
+ * 
+ * @author jostein
+ */
 public class Message implements Comparable<Message> {
 	
 	public enum Level { ERROR, WARNING, INFO, DEBUG, TRACE };

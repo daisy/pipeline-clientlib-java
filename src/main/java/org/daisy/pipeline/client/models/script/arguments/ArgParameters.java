@@ -6,7 +6,7 @@ import java.util.Map;
 import org.daisy.pipeline.client.models.script.Argument;
 import org.w3c.dom.Node;
 
-
+/** An argument of type "parameters" */
 public class ArgParameters extends Argument {
 	
 	public Map<String,String> parameters = new HashMap<String,String>();
