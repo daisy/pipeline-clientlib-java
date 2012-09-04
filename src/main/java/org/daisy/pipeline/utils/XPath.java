@@ -95,9 +95,20 @@ public class XPath {
 		if (doc == null || expr == null)
 			return null;
 		
-		Node node = selectNode(expr, doc, ns);
-		if (node == null) return null;
-		return node.getTextContent();
+		try {
+			String nodeText = (String) xpath(expr,ns).evaluate(doc, XPathConstants.STRING);
+			return nodeText;
+//			if (nodeList.getLength() == 0) return null;
+//			else return nodeList.item(0);
+			
+		} catch (XPathExpressionException e) {
+			e.printStackTrace();
+			throw new Pipeline2WSException(e);
+		}
+		
+//		Node node = selectNode(expr, doc, ns);
+//		if (node == null) return null;
+//		return node.getTextContent();
 	}
 	
 	/**
@@ -119,6 +130,7 @@ public class XPath {
 			else return nodeList.item(0);
 			
 		} catch (XPathExpressionException e) {
+			e.printStackTrace();
 			throw new Pipeline2WSException(e);
 		}
 	}

@@ -8,4 +8,7 @@ public class Homepage {
 		this.href = href;
 		this.desc = desc;
 	}
+	public String toString() {
+		return "<a href=\""+href+"\">"+desc+"</a>";
+	}
 }

@@ -20,6 +20,7 @@ import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Scripts;
 import org.daisy.pipeline.client.models.Script;
+import org.daisy.pipeline.client.models.script.Argument;
 import org.daisy.pipeline.utils.NamespaceContextMap;
 import org.daisy.pipeline.utils.XML;
 import org.junit.Test;
@@ -45,13 +46,78 @@ public class Pipeline2WSTest {
 				fail("empty nicename id");
 			if (scripts.get(0).desc == null || scripts.get(0).desc.length() == 0)
 				fail("empty script description");
-			
-
 			assertNotNull(scripts.get(0).id);
+			
+			response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
+			Script script = new Script(response);
+			if ("dtbook-to-zedai".equals(script.id)) {
+				if (!"DTBook to ZedAI".equals(script.nicename)) fail("dtbook-to-zedai: Wrong nicename");
+				if (!"Transforms DTBook XML into ZedAI XML.".equals(script.desc)) fail("dtbook-to-zedai: Wrong description");
+				if (script.homepage == null || !"http://code.google.com/p/daisy-pipeline/wiki/DTBookToZedAI".equals(script.homepage.href)) fail("dtbook-to-zedai: Wrong homepage ("+script.homepage+")");
+				if (!containsArgument(script.arguments, "source")) fail("dtbook-to-zedai: Missing input: source");
+				if (!containsArgument(script.arguments, "zedai-filename")) fail("dtbook-to-zedai: Missing option: zedai-filename");
+//				if (!containsArgument(script.arguments, "output-dir")) fail("dtbook-to-zedai: Missing option: output-dir");
+				if (!containsArgument(script.arguments, "mods-filename")) fail("dtbook-to-zedai: Missing option: mods-filename");
+				if (!containsArgument(script.arguments, "lang")) fail("dtbook-to-zedai: Missing option: lang");
+				if (!containsArgument(script.arguments, "css-filename")) fail("dtbook-to-zedai: Missing option: css-filename");
+				for (Argument arg : script.arguments) {
+					if ("source".equals(arg.name)) {
+						if (!"One or more DTBook files to be transformed. In the case of multiple files, a merge will be performed.".equals(arg.desc)) fail("dtbook-to-zedai: Argument source: Wrong description");
+						if (!"application/x-dtbook+xml".equals(arg.mediaTypes.get(0))) fail("dtbook-to-zedai: Argument source: Wrong mediaType");
+						if (!"true".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument source: Wrong sequence");							
+						
+					} else if ("zedai-filename".equals(arg.name)) {
+						if (!"Filename for the generated ZedAI file".equals(arg.desc)) fail("dtbook-to-zedai: Argument zedai-filename: Wrong description");
+						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument zedai-filename: Wrong ordered");
+						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument zedai-filename: Wrong required");
+						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument zedai-filename: Wrong sequence");
+						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument zedai-filename: Wrong type");
+						
+					} else if ("output-dir".equals(arg.name)) {
+						if (!"The directory to store the generated files in.".equals(arg.desc)) fail("dtbook-to-zedai: Argument output-dir: Wrong description");
+						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument output-dir: Wrong ordered");
+						if (!"true".equals(arg.required+"")) fail("dtbook-to-zedai: Argument output-dir: Wrong required");
+						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument output-dir: Wrong sequence");
+						if (!"anyDirURI".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument output-dir: Wrong type");
+						
+					} else if ("mods-filename".equals(arg.name)) {
+						if (!"Filename for the generated MODS file".equals(arg.desc)) fail("dtbook-to-zedai: Argument mods-filename: Wrong description");
+						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument mods-filename: Wrong ordered");
+						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument mods-filename: Wrong required");
+						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument mods-filename: Wrong sequence");
+						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument mods-filename: Wrong type");
+						
+					} else if ("lang".equals(arg.name)) {
+						if (!"Language code of the input document.".equals(arg.desc)) fail("dtbook-to-zedai: Argument lang: Wrong description");
+						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument lang: Wrong ordered");
+						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument lang: Wrong required");
+						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument lang: Wrong sequence");
+						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument lang: Wrong type");
+						
+					} else if ("css-filename".equals(arg.name)) {
+						if (!"Filename for the generated CSS file".equals(arg.desc)) fail("dtbook-to-zedai: Argument css-filename: Wrong description");
+						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong ordered");
+						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong required");
+						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong sequence");
+						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument css-filename: Wrong type");
+						
+					} else {
+						fail("dtbook-to-zedai: Unknown argument: "+arg.name);
+					}
+				}
+			}
 
 		} catch (Pipeline2WSException e) {
 			fail(e.getMessage());
 		}
+	}
+	
+	private boolean containsArgument(List<Argument> arguments, String argName) {
+		for (Argument arg : arguments) {
+			if (argName.equals(arg.name))
+				return true;
+		}
+		return false;
 	}
 	
 	@Test

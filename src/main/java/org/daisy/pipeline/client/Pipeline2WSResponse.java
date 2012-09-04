@@ -157,7 +157,7 @@ public class Pipeline2WSResponse {
 					errorMessage = errorMessage.substring(0, 1000);
 				errorMessage = ": "+errorMessage;
 			}
-			errorMessage = "Unable to parse body as XML"+errorMessage;
+			errorMessage = "Unable to parse body as XML: "+errorMessage;
 			throw new Pipeline2WSException(errorMessage, e);
 		}
 		

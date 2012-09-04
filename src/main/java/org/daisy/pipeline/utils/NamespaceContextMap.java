@@ -119,5 +119,13 @@ public final class NamespaceContextMap implements NamespaceContext {
 	public Map<String, String> getMap() {
 		return prefixMap;
 	}
+	
+	public String toString() {
+		String result = "";
+		for (String prefix : prefixMap.keySet()) {
+			result += prefix+":"+prefixMap.get(prefix)+" , ";
+		}
+		return "{ "+result+" } ";
+	}
 
 }

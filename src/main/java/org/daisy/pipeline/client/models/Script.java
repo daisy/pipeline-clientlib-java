@@ -66,13 +66,15 @@ public class Script {
 		
 		// select root element if the node is a document node
 		if (scriptXml instanceof Document)
-			scriptXml = XPath.selectNode("/d:job", scriptXml, Pipeline2WS.ns);
+			scriptXml = XPath.selectNode("/d:script", scriptXml, Pipeline2WS.ns);
 		
 		this.id = XPath.selectText("@id", scriptXml, Pipeline2WS.ns);
 		this.href = XPath.selectText("@href", scriptXml, Pipeline2WS.ns);
 		this.nicename = XPath.selectText("d:nicename", scriptXml, Pipeline2WS.ns);
 		this.desc = XPath.selectText("d:description", scriptXml, Pipeline2WS.ns);
-		this.homepage = new Homepage(XPath.selectText("d:homepage", scriptXml, Pipeline2WS.ns), "");
+		String homepageHref = XPath.selectText("d:homepage", scriptXml, Pipeline2WS.ns);
+		if (homepageHref != null)
+			this.homepage = new Homepage(homepageHref, homepageHref);
 		
 		List<Node> inputNodes = XPath.selectNodes("d:input", scriptXml, Pipeline2WS.ns);
 		List<Node> optionNodes = XPath.selectNodes("d:option", scriptXml, Pipeline2WS.ns);
@@ -175,6 +177,7 @@ public class Script {
 	 * @throws Pipeline2WSException
 	 */
 	public static List<Script> getScripts(Node scriptsXml) throws Pipeline2WSException {
+		
 		List<Script> scripts = new ArrayList<Script>();
 		
 		// select root element if the node is a document node
@@ -182,6 +185,7 @@ public class Script {
 			scriptsXml = XPath.selectNode("/d:scripts", scriptsXml, Pipeline2WS.ns);
 		
 		List<Node> scriptNodes = XPath.selectNodes("d:script", scriptsXml, Pipeline2WS.ns);
+		System.err.println("script nodes: "+scriptNodes.size());
 		for (Node scriptNode : scriptNodes) {
 			scripts.add(new Script(scriptNode));
 		}
