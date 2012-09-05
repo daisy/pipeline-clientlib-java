@@ -48,6 +48,23 @@ public class Pipeline2WSTest {
 				fail("empty script description");
 			assertNotNull(scripts.get(0).id);
 			
+			/*
+			<script xmlns="http://www.daisy.org/ns/pipeline/data" href="http://localhost:8181/ws/scripts/dtbook-to-zedai" id="dtbook-to-zedai">
+			<nicename>DTBook to ZedAI</nicename>
+			<description>Transforms DTBook XML into ZedAI XML.</description>
+			<homepage>
+			http://code.google.com/p/daisy-pipeline/wiki/DTBookToZedAI
+			</homepage>
+			<input desc="One or more DTBook files to be transformed. In the case of multiple files, a merge will be performed." mediaType="application/x-dtbook+xml" name="source" sequence="true"/>
+			<option desc="Filename for the generated ZedAI file" name="zedai-filename" ordered="true" required="false" sequence="false" type="string"/>
+			<option desc="Whether to stop processing and raise an error on validation issues." name="assert-valid" ordered="true" required="false" sequence="false" type="boolean"/>
+			<option desc="The directory to store the generated files in." name="output-dir" ordered="true" outputType="result" required="true" sequence="false" type="anyDirURI"/>
+			<option desc="Filename for the generated MODS file" name="mods-filename" ordered="true" required="false" sequence="false" type="string"/>
+			<option desc="Language code of the input document." name="lang" ordered="true" required="false" sequence="false" type="string"/>
+			<option desc="Filename for the generated CSS file" name="css-filename" ordered="true" required="false" sequence="false" type="string"/>
+			</script>
+			*/
+			
 			response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
 			Script script = new Script(response);
 			if ("dtbook-to-zedai".equals(script.id)) {
@@ -100,6 +117,13 @@ public class Pipeline2WSTest {
 						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong required");
 						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong sequence");
 						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument css-filename: Wrong type");
+					
+					} else if ("assert-valid".equals(arg.name)) {
+						if (!"Whether to stop processing and raise an error on validation issues.".equals(arg.desc)) fail("dtbook-to-zedai: Argument assert-valid: Wrong description");
+						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong ordered");
+						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong required");
+						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong sequence");
+						if (!"boolean".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument css-filename: Wrong type");
 						
 					} else {
 						fail("dtbook-to-zedai: Unknown argument: "+arg.name);
