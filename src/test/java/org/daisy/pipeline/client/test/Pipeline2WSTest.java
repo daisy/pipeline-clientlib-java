@@ -16,11 +16,17 @@ import javax.xml.xpath.XPathFactory;
 
 import junit.framework.Assert;
 
+import org.daisy.pipeline.client.Jobs;
+import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Scripts;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
+import org.daisy.pipeline.client.models.script.arguments.ArgBoolean;
+import org.daisy.pipeline.client.models.script.arguments.ArgFile;
+import org.daisy.pipeline.client.models.script.arguments.ArgFiles;
+import org.daisy.pipeline.client.models.script.arguments.ArgString;
 import org.daisy.pipeline.utils.NamespaceContextMap;
 import org.daisy.pipeline.utils.XML;
 import org.junit.Test;
@@ -32,7 +38,7 @@ public class Pipeline2WSTest {
 	@Test
 	public void getScripts() {
 		try {
-			//			Pipeline2WSResponse response = Scripts.get("http://localhost:8181/ws", null, null);
+			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
 			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret");
 			if (response.status != 200)
 				fail(response.status+": "+response.statusName+" ("+response.statusDescription+")");
@@ -47,23 +53,6 @@ public class Pipeline2WSTest {
 			if (scripts.get(0).desc == null || scripts.get(0).desc.length() == 0)
 				fail("empty script description");
 			assertNotNull(scripts.get(0).id);
-			
-			/*
-			<script xmlns="http://www.daisy.org/ns/pipeline/data" href="http://localhost:8181/ws/scripts/dtbook-to-zedai" id="dtbook-to-zedai">
-			<nicename>DTBook to ZedAI</nicename>
-			<description>Transforms DTBook XML into ZedAI XML.</description>
-			<homepage>
-			http://code.google.com/p/daisy-pipeline/wiki/DTBookToZedAI
-			</homepage>
-			<input desc="One or more DTBook files to be transformed. In the case of multiple files, a merge will be performed." mediaType="application/x-dtbook+xml" name="source" sequence="true"/>
-			<option desc="Filename for the generated ZedAI file" name="zedai-filename" ordered="true" required="false" sequence="false" type="string"/>
-			<option desc="Whether to stop processing and raise an error on validation issues." name="assert-valid" ordered="true" required="false" sequence="false" type="boolean"/>
-			<option desc="The directory to store the generated files in." name="output-dir" ordered="true" outputType="result" required="true" sequence="false" type="anyDirURI"/>
-			<option desc="Filename for the generated MODS file" name="mods-filename" ordered="true" required="false" sequence="false" type="string"/>
-			<option desc="Language code of the input document." name="lang" ordered="true" required="false" sequence="false" type="string"/>
-			<option desc="Filename for the generated CSS file" name="css-filename" ordered="true" required="false" sequence="false" type="string"/>
-			</script>
-			*/
 			
 			response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
 			Script script = new Script(response);
@@ -142,6 +131,43 @@ public class Pipeline2WSTest {
 				return true;
 		}
 		return false;
+	}
+	
+	@Test
+	public void testParseJobRequest() {
+		try {
+			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
+			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
+			Script script = new Script(response);
+			for (Argument arg : script.arguments) {
+				if ("source".equals(arg.name)) {arg.add("file1.xml"); arg.add("file2.xml");}
+				else if ("zedai-filename".equals(arg.name)) arg.set("zedai.xml");
+				else if ("assert-valid".equals(arg.name)) arg.set(true);
+				else if ("output-dir".equals(arg.name)) arg.set("file:/tmp/text/");
+				else if ("mods-filename".equals(arg.name)) arg.set("mods.xml");
+				else if ("lang".equals(arg.name)) arg.set("en");
+				else if ("css-filename".equals(arg.name)) arg.set("main.css");
+			}
+			Document jobRequest = Jobs.createJobRequestDocument(script.href, script.arguments, null);
+			
+			script = new Script(response);
+			script.parseFromJobRequest(jobRequest);
+			for (Argument arg : script.arguments) {
+				if ("source".equals(arg.name)) {
+					assert("file1.xml".equals(((ArgFiles)arg).hrefs.get(0)));
+					assert("file2.xml".equals(((ArgFiles)arg).hrefs.get(1)));
+				}
+				else if ("zedai-filename".equals(arg.name)) assertEquals("zedai.xml", ((ArgString)arg).value);
+				else if ("assert-valid".equals(arg.name)) assertEquals(true, ((ArgBoolean)arg).value);
+				else if ("output-dir".equals(arg.name)) assertEquals("file:/tmp/text/", ((ArgFile)arg).href);
+				else if ("mods-filename".equals(arg.name)) assertEquals("mods.xml", ((ArgString)arg).value);
+				else if ("lang".equals(arg.name)) assertEquals("en", ((ArgString)arg).value);
+				else if ("css-filename".equals(arg.name)) assertEquals("main.css", ((ArgString)arg).value);
+			}
+
+		} catch (Pipeline2WSException e) {
+			fail(e.getMessage());
+		}
 	}
 	
 	@Test

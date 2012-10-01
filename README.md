@@ -35,3 +35,4 @@ Example; getting a list of all scripts:
 See also:
 
  - the [JavaDoc](https://raw.github.com/daisy-consortium/pipeline-clientlib-java/master/doc/index.html)
+ - Benetech has also implemented and released their client library here: [github.com/benetech/daisy-pipeline2-client](https://github.com/benetech/daisy-pipeline2-client)

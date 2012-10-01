@@ -11,6 +11,11 @@ import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.models.script.Argument;
 import org.daisy.pipeline.client.models.script.Author;
 import org.daisy.pipeline.client.models.script.Homepage;
+import org.daisy.pipeline.client.models.script.arguments.ArgBoolean;
+import org.daisy.pipeline.client.models.script.arguments.ArgFile;
+import org.daisy.pipeline.client.models.script.arguments.ArgFiles;
+import org.daisy.pipeline.client.models.script.arguments.ArgString;
+import org.daisy.pipeline.client.models.script.arguments.ArgStrings;
 import org.daisy.pipeline.utils.XPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -81,64 +86,37 @@ public class Script {
 		List<Node> outputNodes = XPath.selectNodes("d:output", scriptXml, Pipeline2WS.ns);
 		
 		for (Node inputNode : inputNodes) {
-			Argument arg = new Argument();
-			
-			arg.name = parseTypeString(XPath.selectText("@name", inputNode, Pipeline2WS.ns));
-			arg.nicename = parseTypeString(XPath.selectText("@nicename", inputNode, Pipeline2WS.ns));
-			if (arg.nicename == null || "".equals(arg.nicename))
-				arg.nicename = arg.name;
-			arg.desc = parseTypeString(XPath.selectText("@desc", inputNode, Pipeline2WS.ns));
-			arg.required = parseTypeBoolean(XPath.selectText("@required", inputNode, Pipeline2WS.ns), true);
-			arg.sequence = parseTypeBoolean(XPath.selectText("@sequence", inputNode, Pipeline2WS.ns), false);
-			arg.ordered = parseTypeBoolean(XPath.selectText("@ordered", inputNode, Pipeline2WS.ns), true);
-			arg.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", inputNode, Pipeline2WS.ns));
-			if (arg.mediaTypes.size() == 0)
-				arg.mediaTypes.add("application/xml");
-			arg.xsdType = "anyFileURI";
-			arg.output = null; // irrelevant, but let's give it a value
-			arg.kind = "input"; // TODO "parameters": is there a @kind attribute in the Web API?
-			
-			this.arguments.add(arg);
+			if ("true".equals(XPath.selectText("@sequence", inputNode, Pipeline2WS.ns)))
+				this.arguments.add(new ArgFiles(inputNode));
+			else
+				this.arguments.add(new ArgFile(inputNode));
 		}
 
 		for (Node optionNode : optionNodes) {
-			Argument arg = new Argument();
+			boolean sequence = "true".equals(XPath.selectText("@sequence", optionNode, Pipeline2WS.ns));
+			String xsdType = XPath.selectText("@type", optionNode, Pipeline2WS.ns);
 			
-			arg.name = parseTypeString(XPath.selectText("@name", optionNode, Pipeline2WS.ns));
-			arg.nicename = parseTypeString(XPath.selectText("@nicename", optionNode, Pipeline2WS.ns));
-			if (arg.nicename == null || "".equals(arg.nicename))
-				arg.nicename = arg.name;
-			arg.desc = parseTypeString(XPath.selectText("@desc", optionNode, Pipeline2WS.ns));
-			arg.required = parseTypeBoolean(XPath.selectText("@required", optionNode, Pipeline2WS.ns), true);
-			arg.sequence = parseTypeBoolean(XPath.selectText("@sequence", optionNode, Pipeline2WS.ns), false);
-			arg.ordered = parseTypeBoolean(XPath.selectText("@ordered", optionNode, Pipeline2WS.ns), true);
-			arg.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", optionNode, Pipeline2WS.ns));
-			arg.xsdType = parseTypeString(XPath.selectText("@type", optionNode, Pipeline2WS.ns));
-			arg.output = parseTypeString(XPath.selectText("@outputType", optionNode, Pipeline2WS.ns));
-			arg.kind = "option";
+			if ("boolean".equals(xsdType))
+				this.arguments.add(new ArgBoolean(optionNode));
 			
-			this.arguments.add(arg);
+			else if ("anyFileURI".equals(xsdType) && sequence)
+				this.arguments.add(new ArgFiles(optionNode));
+			
+			else if ("anyFileURI".equals(xsdType) || "anyDirURI".equals(xsdType))
+				this.arguments.add(new ArgFile(optionNode));
+			
+			else if ("string".equals(xsdType) && sequence)
+				this.arguments.add(new ArgStrings(optionNode));
+			
+			else
+				this.arguments.add(new ArgString(optionNode));
 		}
 
 		for (Node outputNode : outputNodes) {
-			Argument arg = new Argument();
-			
-			arg.name = parseTypeString(XPath.selectText("@name", outputNode, Pipeline2WS.ns));
-			arg.nicename = parseTypeString(XPath.selectText("@nicename", outputNode, Pipeline2WS.ns));
-			if (arg.nicename == null || "".equals(arg.nicename))
-				arg.nicename = arg.name;
-			arg.desc = parseTypeString(XPath.selectText("@desc", outputNode, Pipeline2WS.ns));
-			arg.required = parseTypeBoolean(XPath.selectText("@required", outputNode, Pipeline2WS.ns), true);
-			arg.sequence = parseTypeBoolean(XPath.selectText("@sequence", outputNode, Pipeline2WS.ns), false);
-			arg.ordered = parseTypeBoolean(XPath.selectText("@ordered", outputNode, Pipeline2WS.ns), true);
-			arg.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", outputNode, Pipeline2WS.ns));
-			if (arg.mediaTypes.size() == 0)
-				arg.mediaTypes.add("application/xml");
-			arg.xsdType = "anyFileURI";
-			arg.output = parseTypeString(XPath.selectText("@outputType", outputNode, Pipeline2WS.ns));
-			arg.kind = "output";
-			
-			this.arguments.add(arg);
+			if ("true".equals(XPath.selectText("@sequence", outputNode, Pipeline2WS.ns)))
+				this.arguments.add(new ArgFiles(outputNode));
+			else
+				this.arguments.add(new ArgFile(outputNode));
 		}
 		
 		Map<String,Integer> mediaTypeOccurences = new HashMap<String,Integer>();
@@ -155,6 +133,36 @@ public class Script {
 			if (mediaTypeOccurences.get(mediaType) > 1)
 				this.mediaTypeBlacklist.add(mediaType);
 		}
+	}
+	
+	/**
+	 * Populate the script arguments with the values contained in the given jobRequest document.
+	 * 
+	 * @param jobRequest
+	 * @throws Pipeline2WSException 
+	 */
+	public void parseFromJobRequest(Node jobRequest) throws Pipeline2WSException {
+		if (jobRequest instanceof Document)
+			jobRequest = ((Document)jobRequest).getDocumentElement();
+		
+		for (Argument arg : arguments) {
+			arg.parseFromJobRequest(jobRequest);
+		}
+	}
+	
+	/**
+	 * Get an argument by its name and kind.
+	 * 
+	 * @param name
+	 * @param kind
+	 * @return
+	 */
+	public Argument getArgument(String name, String kind) {
+		for (Argument arg : arguments) {
+			if (kind.equals(arg.kind) && name.equals(arg.name))
+				return arg;
+		}
+		return null;
 	}
 	
 	/**
@@ -185,49 +193,11 @@ public class Script {
 			scriptsXml = XPath.selectNode("/d:scripts", scriptsXml, Pipeline2WS.ns);
 		
 		List<Node> scriptNodes = XPath.selectNodes("d:script", scriptsXml, Pipeline2WS.ns);
-		System.err.println("script nodes: "+scriptNodes.size());
 		for (Node scriptNode : scriptNodes) {
 			scripts.add(new Script(scriptNode));
 		}
 		
 		return scripts;
-	}
-	
-	/** Helper function for the Script(Document) constructor */
-	private static String parseTypeString(String string) {
-		if (!(string instanceof String))
-			return null;
-		return string.replaceAll("\"", "'").replaceAll("\\n", " ");
-	}
-	
-	/** Helper function for the Script(Document) constructor */
-	private static boolean parseTypeBoolean(String bool, boolean def) {
-		if (!(bool instanceof String))
-			return def;
-		if ("false".equals(bool))
-			return false;
-		if ("true".equals(bool))
-			return true;
-		return def;
-	}
-	
-	/** Helper function for the Script(Document) constructor */
-	private static List<String> parseTypeMediaTypes(String mediaTypesString) {
-		if (!(mediaTypesString instanceof String))
-			return new ArrayList<String>();
-		mediaTypesString = parseTypeString(mediaTypesString);
-		String[] mediaTypes = (mediaTypesString==null?"":mediaTypesString).split(" ");
-		List<String> mediaTypesList = new ArrayList<String>();
-		for (String mediaType : mediaTypes) {
-			if ("".equals(mediaType))
-				continue;
-			
-			if ("text/xml".equals(mediaType))
-				mediaTypesList.add("application/xml");
-			else
-				mediaTypesList.add(mediaType);
-		}
-		return mediaTypesList;
 	}
 	
 }

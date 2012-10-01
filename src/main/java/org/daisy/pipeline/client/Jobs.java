@@ -42,7 +42,7 @@ public class Jobs {
 	}
 	
 	/**
-	 * Helper method for the two post(...) methods that creates the job request document
+	 * Creates a job request document.
 	 * 
 	 * @param href
 	 * @param options
@@ -50,7 +50,7 @@ public class Jobs {
 	 * @return
 	 * @throws Pipeline2WSException 
 	 */
-	private static Document createJobRequestDocument(String href, List<Argument> arguments, Map<String,String> callbacks) throws Pipeline2WSException {
+	public static Document createJobRequestDocument(String href, List<Argument> arguments, Map<String,String> callbacks) throws Pipeline2WSException {
 		Document jobRequestDocument = XML.getXml("<jobRequest xmlns='http://www.daisy.org/ns/pipeline/data'/>");
 		Element jobRequest = jobRequestDocument.getDocumentElement();
 
@@ -76,8 +76,59 @@ public class Jobs {
 			}
 		}
 		
+		jobRequestDocument = XML.getXml(XML.toString(jobRequestDocument)); // fixes namespaces somehow
 		return jobRequestDocument;
 	}
+	
+//	/**
+//	 * Returns a list of all the arguments and their values in the given jobRequest document.
+//	 * 
+//	 * @param jobRequest
+//	 * @return
+//	 */
+//	public static List<Argument> parseJobRequestDocumentArguments(Document jobRequest) throws Pipeline2WSException {
+//		
+//		List<Node> inputs = XPath.selectNodes("/*/d:input", jobRequest, Pipeline2WS.ns);
+//		List<Node> outputs = XPath.selectNodes("/*/d:output", jobRequest, Pipeline2WS.ns);
+//		List<Node> options = XPath.selectNodes("/*/d:option", jobRequest, Pipeline2WS.ns);
+//		
+//		for (Node input : inputs) {
+//			
+//		}
+//		
+		/*
+		public Job(Node jobRequest) throws Pipeline2WSException {
+			this();
+			
+			
+			
+			id = XPath.selectText("@id", jobRequest, Pipeline2WS.ns);
+			href = XPath.selectText("@href", jobRequest, Pipeline2WS.ns);
+			String status = XPath.selectText("@status", jobRequest, Pipeline2WS.ns);
+			for (Status s : Status.values()) {
+				if (s.toString().equals(status)) {
+					this.status = s;
+					break;
+				}
+			}
+			script.id = XPath.selectText("d:script/@id", jobRequest, Pipeline2WS.ns);
+			script.href = XPath.selectText("d:script/@href", jobRequest, Pipeline2WS.ns);
+			script.desc = XPath.selectText("d:script/d:description", jobRequest, Pipeline2WS.ns);
+			logHref = XPath.selectText("d:log/@href", jobRequest, Pipeline2WS.ns);
+			resultHref = XPath.selectText("d:result/@href", jobRequest, Pipeline2WS.ns);
+			
+			List<Node> messageNodes = XPath.selectNodes("d:messages/d:message", jobRequest, Pipeline2WS.ns);
+			for (Node messageNode : messageNodes) {
+				this.messages.add(new Message(
+					XPath.selectText("@level", messageNode, Pipeline2WS.ns),
+					XPath.selectText("@sequence", messageNode, Pipeline2WS.ns),
+					XPath.selectText(".", messageNode, Pipeline2WS.ns)
+				));
+			}
+			Collections.sort(this.messages);
+		}
+		*/
+//	}
 	
 	/**
 	 * Create a job with files

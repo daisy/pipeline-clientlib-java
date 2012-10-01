@@ -59,130 +59,6 @@ public class Pipeline2WS {
 	}
 	
 	/**
-	 * Send a GET request.
-	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
-	 * @param path Path to resource, for instance "/scripts".
-	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
-	 * @param secret Robot secret. Can be null.
-	 * @param parameters URL query string parameters
-	 * @return The return body.
-	 * @throws Pipeline2WSException 
-	 */
-	public static Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
-		String url = url(endpoint, path, username, secret, parameters);
-		if (endpoint == null) {
-			return new Pipeline2WSResponse(503, "Pipeline 2 Web Service endpoint is not configured.", "Please configure Pipeline 2 in the administrator settings.", null);
-		}
-		
-		ClientResource resource = new ClientResource(url);
-		Representation representation;
-		InputStream in = null;
-		try {
-			representation = resource.get();
-			if (representation != null)
-				in = representation.getStream();
-			
-		} catch (ResourceException e) {
-			// Unauthorized etc.
-			try {
-				in = new ByteArrayInputStream("An unknown problem occured while communicating with the Pipeline 2 framework.".getBytes("utf-8"));
-	        } catch(UnsupportedEncodingException unsupportedEncodingException) {
-	            throw new Pipeline2WSException("Unable to create body string as stream", e);
-	        }
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		Status status = resource.getStatus();
-		
-		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), in);
-	}
-	
-	/**
-	 * POST an XML document.
-	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
-	 * @param path Path to resource, for instance "/scripts".
-	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
-	 * @param secret Robot secret. Can be null.
-	 * @param xml The XML document to post.
-	 * @return The return body.
-	 * @throws Pipeline2WSException 
-	 */
-	public static Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {
-		String url = url(endpoint, path, username, secret, null);
-		
-		if (Pipeline2WS.debug) {
-			System.out.println("URL: ["+url+"]");
-			System.out.println(XML.toString(xml));
-		}
-		
-		ClientResource resource = new ClientResource(url);
-		Representation representation = null;
-		try {
-			representation = resource.post(XML.toString(xml));
-		} catch (org.restlet.resource.ResourceException e) {
-			throw new Pipeline2WSException(e.getMessage(), e);
-		}
-		
-		InputStream in = null;
-		if (representation != null) {
-			try {
-				in = representation.getStream();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		Status status = resource.getStatus();
-		
-		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), in);
-	}
-	
-	/**
-	 * POST a multipart request.
-	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
-	 * @param path Path to resource, for instance "/scripts".
-	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
-	 * @param secret Robot secret. Can be null.
-	 * @param parts A map of all the parts.
-	 * @return The return body.
-	 * @throws Pipeline2WSException 
-	 */
-	public static Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) throws Pipeline2WSException {
-		String url = url(endpoint, path, username, secret, null);
-		
-		HttpClient httpclient = new DefaultHttpClient();
-		HttpPost httppost = new HttpPost(url);
-		
-		MultipartEntity reqEntity = new MultipartEntity();
-		for (String partName : parts.keySet()) { 
-			reqEntity.addPart(partName, new FileBody(parts.get(partName)));
-		}
-		httppost.setEntity(reqEntity);
-		
-		HttpResponse response = null;
-		try {
-			response = httpclient.execute(httppost);
-		} catch (ClientProtocolException e) {
-			throw new Pipeline2WSException("Error while POSTing.", e);
-		} catch (IOException e) {
-			throw new Pipeline2WSException("Error while POSTing.", e);
-		}
-		HttpEntity resEntity = response.getEntity();
-		
-		InputStream bodyStream = null;
-		try {
-			bodyStream = resEntity.getContent();
-		} catch (IOException e) {
-			throw new Pipeline2WSException("Error while reading response body", e); 
-		}
-		
-		Status status = Status.valueOf(response.getStatusLine().getStatusCode());
-		
-		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), bodyStream);
-	}
-	
-	/**
 	 * Sign a URL for communication with a Pipeline 2 Web Service running in authenticated mode.
 	 * 
 	 * @param endpoint
@@ -194,7 +70,7 @@ public class Pipeline2WS {
 	 * @throws Pipeline2WSException
 	 */
 	public static String url(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
-		if (username == null)
+		if (username == null || "".equals(username) || secret == null || "".equals(secret))
 			return endpoint+path;
 		
 		String time = iso8601.format(new Date());
@@ -269,6 +145,161 @@ public class Pipeline2WS {
         }
         return new String(result);
     }
-
+    
+    public static interface DP2HttpClient {
+		public Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException;
+		public Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException;
+		public Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) throws Pipeline2WSException;
+	}
+	private static DP2HttpClient httpClient = new RestletHttpClient();
+	public static void setHttpClientImplementation(DP2HttpClient httpClientImpl) {
+		Pipeline2WS.httpClient = httpClientImpl;
+	}
 	
+	public static Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
+		return httpClient.get(endpoint, path, username, secret, parameters);
+	}
+	public static Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {
+		return httpClient.postXml(endpoint, path, username, secret, xml);
+	}
+	public static Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) throws Pipeline2WSException {
+		return httpClient.postMultipart(endpoint, path, username, secret, parts);
+	}
+	
+    /**
+     * Implementation of DP2HttpClient that uses Restlet as the underlying HTTP client.
+     * 
+     * @author jostein
+     */
+    public static class RestletHttpClient implements DP2HttpClient {
+
+    	/**
+    	 * Send a GET request.
+    	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
+    	 * @param path Path to resource, for instance "/scripts".
+    	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
+    	 * @param secret Robot secret. Can be null.
+    	 * @param parameters URL query string parameters
+    	 * @return The return body.
+    	 * @throws Pipeline2WSException 
+    	 */
+    	public Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
+    		String url = url(endpoint, path, username, secret, parameters);
+    		if (endpoint == null) {
+    			return new Pipeline2WSResponse(503, "Endpoint is not set", "Please provide a Pipeline 2 endpoint.", null);
+    		}
+    		
+    		ClientResource resource = new ClientResource(url);
+    		Representation representation;
+    		InputStream in = null;
+    		try {
+    			representation = resource.get();
+    			if (representation != null)
+    				in = representation.getStream();
+    			
+    		} catch (ResourceException e) {
+    			// Unauthorized etc.
+    			try {
+    				in = new ByteArrayInputStream("An unknown problem occured while communicating with the Pipeline 2 framework.".getBytes("utf-8"));
+    	        } catch(UnsupportedEncodingException unsupportedEncodingException) {
+    	            throw new Pipeline2WSException("Unable to create body string as stream", e);
+    	        }
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+    		
+    		Status status = resource.getStatus();
+    		
+    		Pipeline2WSResponse response =  new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), in);
+    		if (Pipeline2WS.debug)
+    			System.err.println("---- Received: ----\n"+response.asText());
+    		return response;
+    	}
+    	
+    	/**
+    	 * POST an XML document.
+    	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
+    	 * @param path Path to resource, for instance "/scripts".
+    	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
+    	 * @param secret Robot secret. Can be null.
+    	 * @param xml The XML document to post.
+    	 * @return The return body.
+    	 * @throws Pipeline2WSException 
+    	 */
+    	public Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {
+    		String url = url(endpoint, path, username, secret, null);
+    		
+    		if (Pipeline2WS.debug) {
+    			System.err.println("URL: ["+url+"]");
+    			System.err.println(XML.toString(xml));
+    		}
+    		
+    		ClientResource resource = new ClientResource(url);
+    		Representation representation = null;
+    		try {
+    			representation = resource.post(XML.toString(xml));
+    		} catch (org.restlet.resource.ResourceException e) {
+    			throw new Pipeline2WSException(e.getMessage(), e);
+    		}
+    		
+    		InputStream in = null;
+    		if (representation != null) {
+    			try {
+    				in = representation.getStream();
+    			} catch (IOException e) {
+    				e.printStackTrace();
+    			}
+    		}
+    		
+    		Status status = resource.getStatus();
+    		
+    		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), in);
+    	}
+    	
+    	/**
+    	 * POST a multipart request.
+    	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
+    	 * @param path Path to resource, for instance "/scripts".
+    	 * @param username Robot username. Can be null. If null, then the URL will not be signed.
+    	 * @param secret Robot secret. Can be null.
+    	 * @param parts A map of all the parts.
+    	 * @return The return body.
+    	 * @throws Pipeline2WSException 
+    	 */
+    	public Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) throws Pipeline2WSException {
+    		String url = url(endpoint, path, username, secret, null);
+    		
+    		HttpClient httpclient = new DefaultHttpClient();
+    		HttpPost httppost = new HttpPost(url);
+    		
+    		MultipartEntity reqEntity = new MultipartEntity();
+    		for (String partName : parts.keySet()) { 
+    			reqEntity.addPart(partName, new FileBody(parts.get(partName)));
+    		}
+    		httppost.setEntity(reqEntity);
+    		
+    		HttpResponse response = null;
+    		try {
+    			response = httpclient.execute(httppost);
+    		} catch (ClientProtocolException e) {
+    			throw new Pipeline2WSException("Error while POSTing.", e);
+    		} catch (IOException e) {
+    			throw new Pipeline2WSException("Error while POSTing.", e);
+    		}
+    		HttpEntity resEntity = response.getEntity();
+    		
+    		InputStream bodyStream = null;
+    		try {
+    			bodyStream = resEntity.getContent();
+    		} catch (IOException e) {
+    			throw new Pipeline2WSException("Error while reading response body", e); 
+    		}
+    		
+    		Status status = Status.valueOf(response.getStatusLine().getStatusCode());
+    		
+    		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), bodyStream);
+    	}
+    	
+    }
+    
 }
