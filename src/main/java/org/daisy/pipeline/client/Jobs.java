@@ -20,6 +20,7 @@ import org.daisy.pipeline.client.models.script.Argument;
 import org.daisy.pipeline.utils.XML;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Methods for communicating with the "/jobs" resource in a Pipeline 2 Web Service.
@@ -60,7 +61,9 @@ public class Jobs {
 		
 		for (Argument arg : arguments) {
 			try {
-				jobRequest.appendChild(arg.asDocumentElement(jobRequestDocument));
+				Node node = arg.asDocumentElement(jobRequestDocument);
+				if (node != null)
+					jobRequest.appendChild(node);
 			} catch (NullPointerException e) {
 				throw new Pipeline2WSException("Tried to serialize generic argument", e);
 			}

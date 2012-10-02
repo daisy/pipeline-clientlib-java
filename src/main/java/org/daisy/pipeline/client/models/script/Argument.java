@@ -174,13 +174,13 @@ public abstract class Argument {
 	
 	public abstract String get();
 	
-	public void get(byte value) { get(value+""); }
-	public void get(short value) { get(value+""); }
-	public void get(int value) { get(value+""); }
-	public void get(long value) { get(value+""); }
-	public void get(float value) { get(value+""); }
-	public void get(double value) { get(value+""); }
-	public void get(boolean value) { get(value+""); }
+	public String get(byte value) { return get(value+""); }
+	public String get(short value) { return get(value+""); }
+	public String get(int value) { return get(value+""); }
+	public String get(long value) { return get(value+""); }
+	public String get(float value) { return get(value+""); }
+	public String get(double value) { return get(value+""); }
+	public String get(boolean value) { return get(value+""); }
 	public abstract String get(Object key);
 	
 	public abstract int size();
