@@ -27,6 +27,8 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.daisy.pipeline.utils.XML;
+import org.restlet.Client;
+import org.restlet.data.Protocol;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ClientResource;
@@ -172,7 +174,9 @@ public class Pipeline2WS {
      * @author jostein
      */
     public static class RestletHttpClient implements DP2HttpClient {
-
+    	
+    	private static Client client = new Client(Protocol.HTTP); // TODO: add support for HTTPS WS
+    	
     	/**
     	 * Send a GET request.
     	 * @param endpoint WS endpoint, for instance "http://localhost:8182/ws".
@@ -190,6 +194,7 @@ public class Pipeline2WS {
     		}
     		
     		ClientResource resource = new ClientResource(url);
+			resource.setNext(client);
     		Representation representation;
     		InputStream in = null;
     		try {
