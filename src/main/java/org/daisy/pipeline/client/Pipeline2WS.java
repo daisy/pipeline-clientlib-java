@@ -28,6 +28,7 @@ import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.daisy.pipeline.utils.XML;
 import org.restlet.Client;
+import org.restlet.data.MediaType;
 import org.restlet.data.Protocol;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
@@ -195,7 +196,7 @@ public class Pipeline2WS {
     		
     		ClientResource resource = new ClientResource(url);
 			resource.setNext(client);
-    		Representation representation;
+    		Representation representation = null;
     		InputStream in = null;
     		try {
     			representation = resource.get();
@@ -216,8 +217,13 @@ public class Pipeline2WS {
     		Status status = resource.getStatus();
     		
     		Pipeline2WSResponse response =  new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), in);
-    		if (Pipeline2WS.debug)
-    			System.err.println("---- Received: ----\n"+response.asText());
+    		if (Pipeline2WS.debug) {
+    			if (representation != null && representation.getMediaType() == MediaType.APPLICATION_ALL_XML) {
+    				System.err.println("---- Received: ----\n"+response.asText());
+    			} else {
+    				System.err.println("---- Received: "+representation.getMediaType()+" ("+representation.getSize()+" bytes) ----");
+    			}
+    		}
     		return response;
     	}
     	
