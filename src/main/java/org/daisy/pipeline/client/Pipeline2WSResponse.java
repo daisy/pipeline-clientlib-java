@@ -28,6 +28,7 @@ public class Pipeline2WSResponse {
 	public int status;
 	public String statusName;
 	public String statusDescription;
+	public String contentType;
 	private InputStream bodyStream;
 	private String bodyText;
 	private Document bodyXml;
@@ -40,10 +41,11 @@ public class Pipeline2WSResponse {
 	 * @param statusDescription
 	 * @param bodyStream
 	 */
-	public Pipeline2WSResponse(int status, String statusName, String statusDescription, InputStream bodyStream) {
+	public Pipeline2WSResponse(int status, String statusName, String statusDescription, String contentType, InputStream bodyStream) {
 		this.status = status;
 		this.statusName = statusName;
 		this.statusDescription = statusDescription;
+		this.contentType = contentType;
 		this.bodyStream = bodyStream;
 		this.bodyXml = null;
 	}

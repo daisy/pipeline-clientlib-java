@@ -191,7 +191,7 @@ public class Pipeline2WS {
     	public Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
     		String url = url(endpoint, path, username, secret, parameters);
     		if (endpoint == null) {
-    			return new Pipeline2WSResponse(503, "Endpoint is not set", "Please provide a Pipeline 2 endpoint.", null);
+    			return new Pipeline2WSResponse(503, "Endpoint is not set", "Please provide a Pipeline 2 endpoint.", null, null);
     		}
     		
     		ClientResource resource = new ClientResource(url);
@@ -216,7 +216,7 @@ public class Pipeline2WS {
     		
     		Status status = resource.getStatus();
     		
-    		Pipeline2WSResponse response =  new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), in);
+    		Pipeline2WSResponse response = new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), representation==null?null:representation.getMediaType().toString(), in);
     		if (Pipeline2WS.debug) {
     			if (representation != null && representation.getMediaType() == MediaType.APPLICATION_ALL_XML) {
     				System.err.println("---- Received: ----\n"+response.asText());
@@ -264,7 +264,7 @@ public class Pipeline2WS {
     		
     		Status status = resource.getStatus();
     		
-    		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), in);
+    		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), representation==null?null:representation.getMediaType().toString(), in);
     	}
     	
     	/**
@@ -308,7 +308,7 @@ public class Pipeline2WS {
     		
     		Status status = Status.valueOf(response.getStatusLine().getStatusCode());
     		
-    		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), bodyStream);
+    		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), response.getFirstHeader("Content-Type").getValue(), bodyStream);
     	}
     	
     }

@@ -14,7 +14,7 @@ import org.w3c.dom.Document;
 public class MockHttpClient implements DP2HttpClient {
 
 	public Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
-		return new Pipeline2WSResponse(200, "OK", "Mock object retrieved successfully", get(path));
+		return new Pipeline2WSResponse(200, "OK", "Mock object retrieved successfully", "application/xml", get(path));
 	}
 	
 	public Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {
