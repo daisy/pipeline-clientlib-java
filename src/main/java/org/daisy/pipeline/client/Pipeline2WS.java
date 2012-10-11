@@ -218,10 +218,14 @@ public class Pipeline2WS {
     		
     		Pipeline2WSResponse response = new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), representation==null?null:representation.getMediaType().toString(), in);
     		if (Pipeline2WS.debug) {
-    			if (representation != null && representation.getMediaType() == MediaType.APPLICATION_ALL_XML) {
-    				System.err.println("---- Received: ----\n"+response.asText());
-    			} else {
-    				System.err.println("---- Received: "+representation.getMediaType()+" ("+representation.getSize()+" bytes) ----");
+    			try {
+	    			if (representation != null && representation.getMediaType() == MediaType.APPLICATION_ALL_XML) {
+	    				System.err.println("---- Received: ----\n"+response.asText());
+	    			} else {
+	    				System.err.println("---- Received: "+representation.getMediaType()+" ("+representation.getSize()+" bytes) ----");
+	    			}
+    			} catch (Exception e) {
+    				System.err.print("---- Received: ["+e.getClass()+": "+e.getMessage()+"] ----");
     			}
     		}
     		return response;
