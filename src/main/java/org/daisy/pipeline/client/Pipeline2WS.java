@@ -198,6 +198,7 @@ public class Pipeline2WS {
 			resource.setNext(client);
     		Representation representation = null;
     		InputStream in = null;
+    		boolean error = false;
     		try {
     			representation = resource.get();
     			if (representation != null)
@@ -205,16 +206,25 @@ public class Pipeline2WS {
     			
     		} catch (ResourceException e) {
     			// Unauthorized etc.
-    			try {
-    				in = new ByteArrayInputStream("An unknown problem occured while communicating with the Pipeline 2 framework.".getBytes("utf-8"));
-    	        } catch(UnsupportedEncodingException unsupportedEncodingException) {
-    	            throw new Pipeline2WSException("Unable to create body string as stream", e);
-    	        }
+    			error = true;
     		} catch (IOException e) {
-    			e.printStackTrace();
+   				e.printStackTrace();
+    			error = true;
     		}
     		
     		Status status = resource.getStatus();
+    		
+    		if (error) {
+    			try {
+    				if (status != null && status.getCode() >= 1000) {
+    					in = new ByteArrayInputStream("Could not communicate with the Pipeline 2 framework.".getBytes("utf-8"));
+    				} else {
+    					in = new ByteArrayInputStream("An unknown problem occured while communicating with the Pipeline 2 framework.".getBytes("utf-8"));
+    				}
+    	        } catch(UnsupportedEncodingException e) {
+    	            throw new Pipeline2WSException("Unable to create error body string as stream", e);
+    	        }
+    		}
     		
     		Pipeline2WSResponse response = new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), representation==null?null:representation.getMediaType().toString(), in);
     		if (Pipeline2WS.debug) {
