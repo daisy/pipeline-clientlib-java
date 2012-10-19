@@ -11,7 +11,7 @@
     </parent>
     
     <groupId>org.daisy.pipeline</groupId>
-    <artifactId>pipeline2-clientlib</artifactId>
+    <artifactId>clientlib-java</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     
@@ -45,7 +45,11 @@
     	<system>Google Code Issue Tracker</system>
 	    <url>http://code.google.com/p/daisy-pipeline/issues/list</url>
   	</issueManagement>
-    
+
+    <properties>
+        <!--<restlet.version>2.1-RC6</restlet.version>-->
+    </properties>
+
     <build>
     	<plugins>
     		<plugin>
@@ -101,6 +105,33 @@
             <artifactId>httpmime</artifactId>
             <version>4.1.3</version>
         </dependency>
+        
+        <!--<dependency>
+          <groupId>org.restlet.osgi</groupId>
+          <artifactId>org.restlet</artifactId>
+          <version>${restlet.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.restlet.osgi</groupId>
+          <artifactId>org.restlet.ext.fileupload</artifactId>
+          <version>${restlet.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.restlet.osgi</groupId>
+          <artifactId>org.restlet.ext.xml</artifactId>
+          <version>${restlet.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.restlet.osgi</groupId>
+          <artifactId>org.restlet.ext.jetty</artifactId>
+          <version>${restlet.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.restlet.osgi</groupId>
+          <artifactId>org.restlet.ext.ssl</artifactId>
+          <version>${restlet.version}</version>
+        </dependency>-->
+        
         <dependency>
             <groupId>org.restlet.jse</groupId>
             <artifactId>org.restlet</artifactId>
