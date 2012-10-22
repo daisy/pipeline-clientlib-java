@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
-import org.daisy.pipeline.client.Pipeline2WS.DP2HttpClient;
+import org.daisy.pipeline.client.http.DP2HttpClient;
 import org.w3c.dom.Document;
 
 public class MockHttpClient implements DP2HttpClient {

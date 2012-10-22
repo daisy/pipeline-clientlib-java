@@ -40,7 +40,7 @@
     </dependency>
     <dependency>
       <groupId>org.daisy.pipeline</groupId>
-      <artifactId>pipeline2-clientlib</artifactId>
+      <artifactId>clientlib-java</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
