@@ -1,5 +1,7 @@
 package org.daisy.pipeline.client.models.script.arguments;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +55,7 @@ public class ArgFiles extends Argument {
 		
 		for (String href : hrefs) {
 			Element item = document.createElement("item");
-			item.setAttribute("value", href);
+			item.setAttribute("value", href+"");
 			element.appendChild(item);
 		}
 		

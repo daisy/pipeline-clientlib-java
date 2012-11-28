@@ -230,6 +230,7 @@ public class Jobs {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse getLog(String endpoint, String username, String secret, String id) throws Pipeline2WSException {
+		if (Pipeline2WS.debug) System.err.println("getting log...");
 		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/log", username, secret, null);
 	}
 	

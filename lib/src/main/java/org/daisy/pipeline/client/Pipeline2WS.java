@@ -150,6 +150,7 @@ public class Pipeline2WS {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
+		if (Pipeline2WS.debug) System.err.println("getting: "+endpoint+path);
 		return httpClient.get(endpoint, path, username, secret, parameters);
 	}
 	
@@ -184,6 +185,9 @@ public class Pipeline2WS {
 	/** The Pipeline2WSCallbackHandler that handles the callbacks. Set it with handleCallbacks(...) */
 	public static Pipeline2WSCallbackHandler callbackHandler;
 	
+	/** The callback server */
+	private static DP2HttpCallbackServerImpl callbackServer;
+	
 	/**
 	 * To handle callbacks, pass an instance of your Pipeline2WSCallbackHandler to this method.
 	 * A web service will be started on the given port to handle the callbacks.
@@ -198,9 +202,9 @@ public class Pipeline2WS {
 		Pipeline2WS.callbackHandler = callbackHandler;
 		
 		// Start the callback webservice
-		DP2HttpCallbackServerImpl callbackWS = new DP2HttpCallbackServerImpl();
+		Pipeline2WS.callbackServer = new DP2HttpCallbackServerImpl();
         try {
-			callbackWS.init(port);
+        	Pipeline2WS.callbackServer.init(port);
 			
 		} catch (Exception e) {
 			if (Pipeline2WS.debug) {
@@ -208,5 +212,13 @@ public class Pipeline2WS {
 				e.printStackTrace(System.err);
 			}
 		}
+	}
+	
+	/**
+	 * Stop handling callbacks. Shuts down the web service that handles callbacks.
+	 * @throws Exception 
+	 */
+	public static void stopCallbacks() throws Exception {
+		Pipeline2WS.callbackServer.close();
 	}
 }

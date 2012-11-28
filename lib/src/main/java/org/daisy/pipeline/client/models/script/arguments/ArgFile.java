@@ -1,5 +1,9 @@
 package org.daisy.pipeline.client.models.script.arguments;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.models.script.Argument;

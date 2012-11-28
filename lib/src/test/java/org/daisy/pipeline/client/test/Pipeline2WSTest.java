@@ -154,15 +154,15 @@ public class Pipeline2WSTest {
 			script.parseFromJobRequest(jobRequest);
 			for (Argument arg : script.arguments) {
 				if ("source".equals(arg.name)) {
-					assert("file1.xml".equals(((ArgFiles)arg).hrefs.get(0)));
-					assert("file2.xml".equals(((ArgFiles)arg).hrefs.get(1)));
+					assert("file1.xml".equals(arg.get(0)));
+					assert("file2.xml".equals(arg.get(1)));
 				}
-				else if ("zedai-filename".equals(arg.name)) assertEquals("zedai.xml", ((ArgString)arg).value);
-				else if ("assert-valid".equals(arg.name)) assertEquals(true, ((ArgBoolean)arg).value);
-				else if ("output-dir".equals(arg.name)) assertEquals("file:/tmp/text/", ((ArgFile)arg).href);
-				else if ("mods-filename".equals(arg.name)) assertEquals("mods.xml", ((ArgString)arg).value);
-				else if ("lang".equals(arg.name)) assertEquals("en", ((ArgString)arg).value);
-				else if ("css-filename".equals(arg.name)) assertEquals("main.css", ((ArgString)arg).value);
+				else if ("zedai-filename".equals(arg.name)) assertEquals("zedai.xml", arg.get());
+				else if ("assert-valid".equals(arg.name)) assertEquals("true", arg.get());
+				else if ("output-dir".equals(arg.name)) assertEquals("file:/tmp/text/", arg.get());
+				else if ("mods-filename".equals(arg.name)) assertEquals("mods.xml", arg.get());
+				else if ("lang".equals(arg.name)) assertEquals("en", arg.get());
+				else if ("css-filename".equals(arg.name)) assertEquals("main.css", arg.get());
 			}
 
 		} catch (Pipeline2WSException e) {
@@ -257,4 +257,5 @@ public class Pipeline2WSTest {
 		Assert.assertEquals(XMLConstants.XML_NS_PREFIX, context.getPrefix(XMLConstants.XML_NS_URI));
 		Assert.assertEquals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, context.getNamespaceURI(XMLConstants.XMLNS_ATTRIBUTE));
 	}
+	
 }
