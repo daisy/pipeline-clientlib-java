@@ -42,9 +42,6 @@ public class ArgFiles extends Argument {
 	 */
 	@Override
 	public Element asDocumentElement(Document document) {
-		if (hrefs.size() == 0)
-			return null;
-		
 		Element element;
 		if ("option".equals(kind))
 			element = document.createElement("option");

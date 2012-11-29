@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
@@ -53,72 +54,6 @@ public class Pipeline2WSTest {
 			if (scripts.get(0).desc == null || scripts.get(0).desc.length() == 0)
 				fail("empty script description");
 			assertNotNull(scripts.get(0).id);
-			
-			response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
-			Script script = new Script(response);
-			if ("dtbook-to-zedai".equals(script.id)) {
-				if (!"DTBook to ZedAI".equals(script.nicename)) fail("dtbook-to-zedai: Wrong nicename");
-				if (!"Transforms DTBook XML into ZedAI XML.".equals(script.desc)) fail("dtbook-to-zedai: Wrong description");
-				if (script.homepage == null || !"http://code.google.com/p/daisy-pipeline/wiki/DTBookToZedAI".equals(script.homepage.href)) fail("dtbook-to-zedai: Wrong homepage ("+script.homepage+")");
-				if (!containsArgument(script.arguments, "source")) fail("dtbook-to-zedai: Missing input: source");
-				if (!containsArgument(script.arguments, "zedai-filename")) fail("dtbook-to-zedai: Missing option: zedai-filename");
-//				if (!containsArgument(script.arguments, "output-dir")) fail("dtbook-to-zedai: Missing option: output-dir");
-				if (!containsArgument(script.arguments, "mods-filename")) fail("dtbook-to-zedai: Missing option: mods-filename");
-				if (!containsArgument(script.arguments, "lang")) fail("dtbook-to-zedai: Missing option: lang");
-				if (!containsArgument(script.arguments, "css-filename")) fail("dtbook-to-zedai: Missing option: css-filename");
-				for (Argument arg : script.arguments) {
-					if ("source".equals(arg.name)) {
-						if (!"One or more DTBook files to be transformed. In the case of multiple files, a merge will be performed.".equals(arg.desc)) fail("dtbook-to-zedai: Argument source: Wrong description");
-						if (!"application/x-dtbook+xml".equals(arg.mediaTypes.get(0))) fail("dtbook-to-zedai: Argument source: Wrong mediaType");
-						if (!"true".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument source: Wrong sequence");							
-						
-					} else if ("zedai-filename".equals(arg.name)) {
-						if (!"Filename for the generated ZedAI file".equals(arg.desc)) fail("dtbook-to-zedai: Argument zedai-filename: Wrong description");
-						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument zedai-filename: Wrong ordered");
-						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument zedai-filename: Wrong required");
-						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument zedai-filename: Wrong sequence");
-						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument zedai-filename: Wrong type");
-						
-					} else if ("output-dir".equals(arg.name)) {
-						if (!"The directory to store the generated files in.".equals(arg.desc)) fail("dtbook-to-zedai: Argument output-dir: Wrong description");
-						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument output-dir: Wrong ordered");
-						if (!"true".equals(arg.required+"")) fail("dtbook-to-zedai: Argument output-dir: Wrong required");
-						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument output-dir: Wrong sequence");
-						if (!"anyDirURI".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument output-dir: Wrong type");
-						
-					} else if ("mods-filename".equals(arg.name)) {
-						if (!"Filename for the generated MODS file".equals(arg.desc)) fail("dtbook-to-zedai: Argument mods-filename: Wrong description");
-						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument mods-filename: Wrong ordered");
-						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument mods-filename: Wrong required");
-						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument mods-filename: Wrong sequence");
-						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument mods-filename: Wrong type");
-						
-					} else if ("lang".equals(arg.name)) {
-						if (!"Language code of the input document.".equals(arg.desc)) fail("dtbook-to-zedai: Argument lang: Wrong description");
-						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument lang: Wrong ordered");
-						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument lang: Wrong required");
-						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument lang: Wrong sequence");
-						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument lang: Wrong type");
-						
-					} else if ("css-filename".equals(arg.name)) {
-						if (!"Filename for the generated CSS file".equals(arg.desc)) fail("dtbook-to-zedai: Argument css-filename: Wrong description");
-						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong ordered");
-						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong required");
-						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong sequence");
-						if (!"string".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument css-filename: Wrong type");
-					
-					} else if ("assert-valid".equals(arg.name)) {
-						if (!"Whether to stop processing and raise an error on validation issues.".equals(arg.desc)) fail("dtbook-to-zedai: Argument assert-valid: Wrong description");
-						if (!"true".equals(arg.ordered+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong ordered");
-						if (!"false".equals(arg.required+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong required");
-						if (!"false".equals(arg.sequence+"")) fail("dtbook-to-zedai: Argument css-filename: Wrong sequence");
-						if (!"boolean".equals(arg.xsdType)) fail("dtbook-to-zedai: Argument css-filename: Wrong type");
-						
-					} else {
-						fail("dtbook-to-zedai: Unknown argument: "+arg.name);
-					}
-				}
-			}
 
 		} catch (Pipeline2WSException e) {
 			fail(e.getMessage());
@@ -133,20 +68,97 @@ public class Pipeline2WSTest {
 		return false;
 	}
 	
+//	Pattern xmlDeclaration = Pattern.compile(".*<\\?xml.*");
+	
 	@Test
 	public void testParseJobRequest() {
 		try {
+			Pipeline2WS.debug = true;
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
 			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
 			Script script = new Script(response);
+			
 			for (Argument arg : script.arguments) {
-				if ("source".equals(arg.name)) {arg.add("file1.xml"); arg.add("file2.xml");}
-				else if ("zedai-filename".equals(arg.name)) arg.set("zedai.xml");
-				else if ("assert-valid".equals(arg.name)) arg.set(true);
-				else if ("output-dir".equals(arg.name)) arg.set("file:/tmp/text/");
-				else if ("mods-filename".equals(arg.name)) arg.set("mods.xml");
-				else if ("lang".equals(arg.name)) arg.set("en");
-				else if ("css-filename".equals(arg.name)) arg.set("main.css");
+				assertNotNull(arg.name);
+				assertNotNull(arg.name, arg.nicename);
+				assertNotNull(arg.name, arg.desc);
+				assertNotNull(arg.name, arg.required);
+				assertNotNull(arg.name, arg.sequence);
+				assertNotNull(arg.name, arg.ordered);
+				assertNotNull(arg.name, arg.mediaTypes);
+				assertNotNull(arg.name, arg.xsdType);
+				assertNotNull(arg.name, arg.kind);
+				
+				assertEquals(arg.name+" has a decription", true, arg.desc.length() > 0);
+				assertEquals(arg.name+" has xml declaration", false, arg.toString().replaceAll("\\n", " ").matches(".*<\\?xml.*"));
+				assertEquals(arg.name+" serializes as xml", true, arg.toString().length() > 0);
+				
+				if ("source".equals(arg.name)) {
+					assertEquals("input", arg.kind);
+					assertEquals("application/x-dtbook+xml", arg.mediaTypes.get(0));
+					assertEquals(true, arg.ordered);
+					assertEquals(true, arg.required);
+					assertEquals(true, arg.sequence);
+					
+					arg.add("file1.xml");
+					arg.add("file2.xml");
+				}
+				else if ("zedai-filename".equals(arg.name)) {
+					assertEquals("option", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(false, arg.sequence);
+					assertEquals("string", arg.xsdType);
+					
+					arg.set("zedai.xml");
+				}
+				else if ("assert-valid".equals(arg.name)) {
+					assertEquals("option", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(false, arg.sequence);
+					assertEquals("boolean", arg.xsdType);
+					
+					arg.set(true);
+				}
+				else if ("output-dir".equals(arg.name)) {
+					assertEquals("option", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(true, arg.required);
+					assertEquals(false, arg.sequence);
+					assertEquals("anyDirURI", arg.xsdType);
+					assertEquals("result", arg.output);
+					
+					arg.set("file:/tmp/text/");
+				}
+				else if ("mods-filename".equals(arg.name)) {
+					assertEquals("option", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(false, arg.sequence);
+					assertEquals("string", arg.xsdType);
+					
+					arg.set("mods.xml");
+				}
+				else if ("lang".equals(arg.name)) {
+					assertEquals("option", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(false, arg.sequence);
+					assertEquals("string", arg.xsdType);
+					
+					arg.set("en");
+				}
+				else if ("css-filename".equals(arg.name)) {
+					assertEquals("option", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(false, arg.sequence);
+					assertEquals("string", arg.xsdType);
+					
+					arg.set("main.css");
+				}
+				else fail("Unknown argument: "+arg.name);
 			}
 			Document jobRequest = Jobs.createJobRequestDocument(script.href, script.arguments, null);
 			
@@ -154,8 +166,8 @@ public class Pipeline2WSTest {
 			script.parseFromJobRequest(jobRequest);
 			for (Argument arg : script.arguments) {
 				if ("source".equals(arg.name)) {
-					assert("file1.xml".equals(arg.get(0)));
-					assert("file2.xml".equals(arg.get(1)));
+					assertEquals(true, "file1.xml".equals(arg.get(0)));
+					assertEquals(true, "file2.xml".equals(arg.get(1)));
 				}
 				else if ("zedai-filename".equals(arg.name)) assertEquals("zedai.xml", arg.get());
 				else if ("assert-valid".equals(arg.name)) assertEquals("true", arg.get());

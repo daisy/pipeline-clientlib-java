@@ -2,6 +2,7 @@ package org.daisy.pipeline.client.models.script;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
@@ -53,16 +54,35 @@ public abstract class Argument {
 	
 	public Argument(Node arg) throws Pipeline2WSException {
 		this.name = parseTypeString(XPath.selectText("@name", arg, Pipeline2WS.ns));
+		
 		this.nicename = parseTypeString(XPath.selectText("@nicename", arg, Pipeline2WS.ns));
 		if (this.nicename == null || "".equals(this.nicename))
 			this.nicename = this.name;
+		
 		this.desc = parseTypeString(XPath.selectText("@desc", arg, Pipeline2WS.ns));
+		if (this.desc == null)
+			this.desc = "";
+		
 		this.required = parseTypeBoolean(XPath.selectText("@required", arg, Pipeline2WS.ns));
+		if (this.required == null)
+			this.required = true;
+		
 		this.sequence = parseTypeBoolean(XPath.selectText("@sequence", arg, Pipeline2WS.ns));
+		if (this.sequence == null)
+			this.sequence = false;
+		
 		this.ordered = parseTypeBoolean(XPath.selectText("@ordered", arg, Pipeline2WS.ns));
+		if (this.ordered == null)
+			this.ordered = true;
+		
 		this.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", arg, Pipeline2WS.ns));
+		
 		this.xsdType = parseTypeString(XPath.selectText("@type", arg, Pipeline2WS.ns));
+		if (this.xsdType == null)
+			this.xsdType = "string";
+		
 		this.output = parseTypeString(XPath.selectText("@outputType", arg, Pipeline2WS.ns));
+		
 		this.kind = arg.getLocalName(); // TODO "parameters": how to determine that a port is a parameter port?
 		
 		if ("input".equals(this.kind) || "output".equals(this.kind)) {
@@ -116,10 +136,11 @@ public abstract class Argument {
 	
 	public abstract void parseFromJobRequest(Node jobRequest) throws Pipeline2WSException;
 	
+	Pattern xmlDeclaration = Pattern.compile("^\\s*<\\?xml[^>]*>[^<]*");
 	public String toString() {
 		String xml = XML.toString(asDocumentElement(XML.getXml("<doc/>")));
-		if (xml.startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
-			xml = xml.substring(38);
+		xml = xml.replaceAll("\\n", " ");
+		xml = xmlDeclaration.matcher(xml).replaceFirst("");
 		return xml;
 	}
 	
