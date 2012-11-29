@@ -35,23 +35,23 @@ public class ArgFile extends Argument {
 	 */
 	@Override
 	public Element asDocumentElement(Document document) {
+		if (href == null)
+			return null;
+		
 		Element element;
 		if ("option".equals(kind)) {
 			element = document.createElement("option");
 			element.setAttribute("name", name);
 			
-			if (href != null)
-				element.setTextContent(href+"");
+			element.setTextContent(href+"");
 			
 		} else {
 			element = document.createElement("input");
 			element.setAttribute("name", name);
 			
-			if (href != null) {
-				Element item = document.createElement("item");
-				item.setAttribute("value", href+"");
-				element.appendChild(item);
-			}
+			Element item = document.createElement("item");
+			item.setAttribute("value", href+"");
+			element.appendChild(item);
 		}
 		return element;
 	}

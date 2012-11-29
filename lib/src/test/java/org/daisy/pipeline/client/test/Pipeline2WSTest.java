@@ -91,7 +91,6 @@ public class Pipeline2WSTest {
 				
 				assertEquals(arg.name+" has a decription", true, arg.desc.length() > 0);
 				assertEquals(arg.name+" has xml declaration", false, arg.toString().replaceAll("\\n", " ").matches(".*<\\?xml.*"));
-				assertEquals(arg.name+" serializes as xml", true, arg.toString().length() > 0);
 				
 				if ("source".equals(arg.name)) {
 					assertEquals("input", arg.kind);

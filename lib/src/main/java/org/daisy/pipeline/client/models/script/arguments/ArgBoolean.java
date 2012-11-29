@@ -28,10 +28,13 @@ public class ArgBoolean extends Argument {
 	 */
 	@Override
 	public Element asDocumentElement(Document document) {
+		if (value == null)
+			return null;
+		
 		Element element = document.createElement("option");
 		element.setAttribute("name", name);
-		if (value != null)
-			element.setTextContent(value ? "true" : "false");
+		element.setTextContent(value ? "true" : "false");
+		
 		return element;
 	}
 	

@@ -35,6 +35,9 @@ public class ArgStrings extends Argument {
 	 */
 	@Override
 	public Element asDocumentElement(Document document) {
+		if (values.size() == 0)
+			return null;
+		
 		Element element = document.createElement("option");
 		element.setAttribute("name", name);
 		
