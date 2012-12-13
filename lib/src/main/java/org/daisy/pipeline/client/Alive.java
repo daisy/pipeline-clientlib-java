@@ -1,5 +1,7 @@
 package org.daisy.pipeline.client;
 
+import org.daisy.pipeline.client.models.Alive.Mode;
+
 /**
  * Methods for communicating with the "/alive" resource in a Pipeline 2 Web Service.
  * 
@@ -56,7 +58,7 @@ public class Alive {
 	public static Boolean isLocal(String endpoint) {
 		try {
 			org.daisy.pipeline.client.models.Alive alive = new org.daisy.pipeline.client.models.Alive(get(endpoint));
-			return alive.local;
+			return alive.mode == Mode.LOCAL;
 			
 		} catch (Pipeline2WSException e) {
 			return null;

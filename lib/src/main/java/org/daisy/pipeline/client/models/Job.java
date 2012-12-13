@@ -45,7 +45,10 @@ public class Job {
 	 * @throws Pipeline2WSException
 	 */
 	public Job(Pipeline2WSResponse response) throws Pipeline2WSException {
-		this(response.asXml());
+		this();
+		if (response.status != 200)
+			throw new Pipeline2WSException(response.status+" "+response.statusName+": "+response.statusDescription);
+		parseJobXml(response.asXml());
 	}
 	
 	/**
@@ -57,7 +60,10 @@ public class Job {
 	 */
 	public Job(Node jobXml) throws Pipeline2WSException {
 		this();
-		
+		parseJobXml(jobXml);
+	}
+	
+	private void parseJobXml(Node jobXml) throws Pipeline2WSException {
 		// select root element if the node is a document node
 		if (jobXml instanceof Document)
 			jobXml = XPath.selectNode("/d:job", jobXml, Pipeline2WS.ns);
@@ -96,7 +102,9 @@ public class Job {
 	 * @throws Pipeline2WSException
 	 */
 	public static List<Job> getJobs(Pipeline2WSResponse response) throws Pipeline2WSException {
-		return getJobs(response.asXml());
+		if (response.status != 200)
+			throw new Pipeline2WSException(response.status+" "+response.statusName+": "+response.statusDescription);
+		return parseJobsXml(response.asXml());
 	}
 	
 	/**
@@ -107,7 +115,7 @@ public class Job {
 	 * @return
 	 * @throws Pipeline2WSException
 	 */
-	public static List<Job> getJobs(Node jobsXml) throws Pipeline2WSException {
+	public static List<Job> parseJobsXml(Node jobsXml) throws Pipeline2WSException {
 		List<Job> jobs = new ArrayList<Job>();
 		
 		// select root element if the node is a document node

@@ -36,16 +36,8 @@ public class Script {
 	public Author author;
 	public List<Argument> arguments;
 	
-	/** List of mime types that are supported by more than one file argument.
-	 * This is not really a part of the Web API, but are more of a convenience.
-	 * A user interface cannot automatically assign files of these media types to a file argument. */
-	public List<String> mediaTypeBlacklist;
-	
-	// ---------- Constructors ----------
-	
 	public Script() {
 		this.arguments = new ArrayList<Argument>();
-		this.mediaTypeBlacklist = new ArrayList<String>();
 	}
 	
 	/**
@@ -56,7 +48,10 @@ public class Script {
 	 * @throws Pipeline2WSException
 	 */
 	public Script(Pipeline2WSResponse response) throws Pipeline2WSException {
-		this(response.asXml());
+		this();
+		if (response.status != 200)
+			throw new Pipeline2WSException(response.status+" "+response.statusName+": "+response.statusDescription);
+		parseScriptXml(response.asXml());
 	}
 	
 	/**
@@ -68,7 +63,10 @@ public class Script {
 	 */
 	public Script(Node scriptXml) throws Pipeline2WSException {
 		this();
-		
+		parseScriptXml(scriptXml);
+	}
+	
+	private void parseScriptXml(Node scriptXml) throws Pipeline2WSException {
 		// select root element if the node is a document node
 		if (scriptXml instanceof Document)
 			scriptXml = XPath.selectNode("/d:script", scriptXml, Pipeline2WS.ns);
@@ -86,10 +84,11 @@ public class Script {
 		List<Node> outputNodes = XPath.selectNodes("d:output", scriptXml, Pipeline2WS.ns);
 		
 		for (Node inputNode : inputNodes) {
-			if ("true".equals(XPath.selectText("@sequence", inputNode, Pipeline2WS.ns)))
+			if ("true".equals(XPath.selectText("@sequence", inputNode, Pipeline2WS.ns))) {
 				this.arguments.add(new ArgFiles(inputNode));
-			else
+			} else {
 				this.arguments.add(new ArgFile(inputNode));
+			}
 		}
 
 		for (Node optionNode : optionNodes) {
@@ -117,21 +116,6 @@ public class Script {
 				this.arguments.add(new ArgFiles(outputNode));
 			else
 				this.arguments.add(new ArgFile(outputNode));
-		}
-		
-		Map<String,Integer> mediaTypeOccurences = new HashMap<String,Integer>();
-		for (Argument arg : this.arguments) {
-			for (String mediaType : arg.mediaTypes) {
-				if (mediaTypeOccurences.containsKey(mediaType)) {
-					mediaTypeOccurences.put(mediaType, mediaTypeOccurences.get(mediaType)+1);
-				} else {
-					mediaTypeOccurences.put(mediaType, 1);
-				}
-			}
-		}
-		for (String mediaType : mediaTypeOccurences.keySet()) {
-			if (mediaTypeOccurences.get(mediaType) > 1)
-				this.mediaTypeBlacklist.add(mediaType);
 		}
 	}
 	
@@ -173,7 +157,9 @@ public class Script {
 	 * @throws Pipeline2WSException
 	 */
 	public static List<Script> getScripts(Pipeline2WSResponse response) throws Pipeline2WSException {
-		return getScripts(response.asXml());
+		if (response.status != 200)
+			throw new Pipeline2WSException(response.status+" "+response.statusName+": "+response.statusDescription);
+		return parseScriptsXml(response.asXml());
 	}
 	
 	/**
@@ -184,7 +170,7 @@ public class Script {
 	 * @return
 	 * @throws Pipeline2WSException
 	 */
-	public static List<Script> getScripts(Node scriptsXml) throws Pipeline2WSException {
+	public static List<Script> parseScriptsXml(Node scriptsXml) throws Pipeline2WSException {
 		
 		List<Script> scripts = new ArrayList<Script>();
 		

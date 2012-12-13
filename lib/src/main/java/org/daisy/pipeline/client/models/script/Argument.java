@@ -43,15 +43,6 @@ public abstract class Argument {
 	/** Type of underlying argument. Either "input", "parameters", "option" or "output". */
 	public String kind;
 	
-	// ---------- not part of the script metadata itself ----------
-	
-	/** Only relevant for file arguments. If mediaTypeBlacklist is defined, then all XML files are supported for this argument, except those listed in this list. */
-	public List<String> mediaTypeBlacklist;
-	
-	/** For use when rendering the job creation form */
-	public boolean hide;
-	
-	
 	public Argument(Node arg) throws Pipeline2WSException {
 		this.name = parseTypeString(XPath.selectText("@name", arg, Pipeline2WS.ns));
 		

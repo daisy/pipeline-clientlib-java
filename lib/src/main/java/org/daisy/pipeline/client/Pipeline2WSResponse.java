@@ -20,6 +20,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.daisy.pipeline.utils.XML;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -48,26 +49,6 @@ public class Pipeline2WSResponse {
 		this.contentType = contentType;
 		this.bodyStream = bodyStream;
 		this.bodyXml = null;
-	}
-	
-	/**
-	 * Returns the response body as a InputStream.
-	 * @return
-	 * @throws Pipeline2WSException 
-	 */
-	public InputStream asStream() throws Pipeline2WSException {
-		if (bodyStream != null)
-			return bodyStream;
-		
-		if (bodyText != null) {
-			try {
-				return new ByteArrayInputStream(bodyText.getBytes("utf-8"));
-	        } catch(UnsupportedEncodingException e) {
-	            throw new Pipeline2WSException("Unable to open body string as stream", e);
-	        }
-		}
-		
-		return null;
 	}
 	
 	/**
@@ -124,6 +105,29 @@ public class Pipeline2WSResponse {
 	}
 	
 	/**
+	 * Returns the response body as a InputStream.
+	 * @return
+	 * @throws Pipeline2WSException 
+	 */
+	public InputStream asStream() throws Pipeline2WSException {
+		if (bodyStream != null)
+			return bodyStream;
+		
+		if (bodyText == null)
+			asText();
+		
+		if (bodyText != null) {
+			try {
+				return new ByteArrayInputStream(bodyText.getBytes("utf-8"));
+	        } catch(UnsupportedEncodingException e) {
+	            throw new Pipeline2WSException("Unable to open body string as stream", e);
+	        }
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * Returns the response body as an XML Document.
 	 * @return
 	 * @throws Pipeline2WSException 
@@ -132,36 +136,10 @@ public class Pipeline2WSResponse {
 		if (bodyXml != null)
 			return bodyXml;
 		
-		InputStream xmlStream = asStream();
+		if (bodyText == null)
+			asText();
 		
-		if (xmlStream == null)
-			return null;
-		
-		DocumentBuilderFactory factory = null;
-		DocumentBuilder builder = null;
-		
-		try {
-			factory = DocumentBuilderFactory.newInstance();
-			factory.setNamespaceAware(true);
-			builder = factory.newDocumentBuilder();
-		} catch (ParserConfigurationException e) {
-			throw new Pipeline2WSException(e);
-		}
-		
-		try {
-			InputSource is = new InputSource(xmlStream);
-			is.setEncoding("utf-8");
-			bodyXml = builder.parse(is);
-		} catch (Exception e) {
-			String errorMessage = asText();
-			if (errorMessage != null) {
-				if (errorMessage.length() > 1000)
-					errorMessage = errorMessage.substring(0, 1000);
-				errorMessage = ": "+errorMessage;
-			}
-			errorMessage = "Unable to parse body as XML: "+errorMessage;
-			throw new Pipeline2WSException(errorMessage, e);
-		}
+		bodyXml = XML.getXml(bodyText);
 		
 		return bodyXml;
 	}

@@ -14,10 +14,14 @@ import org.w3c.dom.Node;
  */
 public class Alive {
 	
+	public enum Mode {
+		LOCAL, REMOTE
+	};
+	
 	public Boolean error = null;
 	
 	public Boolean authentication = null;
-	public Boolean local = null;
+	public Mode mode = null;
 	public String version = null;
 	
 	// ---------- Constructors ----------
@@ -30,7 +34,9 @@ public class Alive {
 	 * @throws Pipeline2WSException
 	 */
 	public Alive(Pipeline2WSResponse response) throws Pipeline2WSException {
-		this(response.asXml());
+		if (response.status != 200)
+			throw new Pipeline2WSException(response.status+" "+response.statusName+": "+response.statusDescription);
+		parseAliveXml(response.asXml());
 	}
 	
 	/**
@@ -41,6 +47,10 @@ public class Alive {
 	 * @throws Pipeline2WSException
 	 */
 	public Alive(Node aliveXml) throws Pipeline2WSException {
+		parseAliveXml(aliveXml);
+	}
+	
+	private void parseAliveXml(Node aliveXml) throws Pipeline2WSException {
 		if (XPath.selectNode("/d:error", aliveXml, Pipeline2WS.ns) != null) {
 			error = true;
 			return;
@@ -52,7 +62,10 @@ public class Alive {
 			aliveXml = XPath.selectNode("/d:alive", aliveXml, Pipeline2WS.ns);
 		
 		this.authentication = "true".equals(XPath.selectText("@authentication", aliveXml, Pipeline2WS.ns));
-		this.local = "true".equals(XPath.selectText("@local", aliveXml, Pipeline2WS.ns));
+		String mode = XPath.selectText("@mode", aliveXml, Pipeline2WS.ns);
+		if (mode == null || "".equals(mode))
+			mode = XPath.selectText("@local", aliveXml, Pipeline2WS.ns);
+		this.mode = ("local".equals(mode) || "true".equals(mode)) ? Mode.LOCAL : Mode.REMOTE;
 		this.version = XPath.selectText("@version", aliveXml, Pipeline2WS.ns);
 	}
 	

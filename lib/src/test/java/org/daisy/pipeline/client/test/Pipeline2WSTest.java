@@ -76,6 +76,7 @@ public class Pipeline2WSTest {
 			Pipeline2WS.debug = true;
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
 			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
+			System.out.println("response: "+response.asText());
 			Script script = new Script(response);
 			
 			for (Argument arg : script.arguments) {
