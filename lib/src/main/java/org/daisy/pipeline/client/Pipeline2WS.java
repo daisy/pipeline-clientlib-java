@@ -57,41 +57,46 @@ public class Pipeline2WS {
 	 * @throws Pipeline2WSException
 	 */
 	public static String url(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
-		if (username == null || "".equals(username) || secret == null || "".equals(secret))
-			return endpoint+path;
+		boolean hasAuth = !(username == null || "".equals(username) || secret == null || "".equals(secret));
 		
-		String time = iso8601.format(new Date());
+		String url = endpoint + path;
+		if (parameters != null && parameters.size() > 0 || hasAuth)
+			url += "?";
 		
-		String nonce = "";
-		while (nonce.length() < 30)
-			nonce += (Math.random()+"").substring(2);
-		nonce = nonce.substring(0, 30);
-		
-		String url = endpoint + path + "?";
 		if (parameters != null) {
 			for (String name : parameters.keySet()) {
 				try { url += URLEncoder.encode(name, "UTF-8") + "=" + URLEncoder.encode(parameters.get(name), "UTF-8") + "&"; }
 				catch (UnsupportedEncodingException e) { throw new Pipeline2WSException("Unsupported encoding: UTF-8", e); }
 			}
 		}
-		url += "authid="+username + "&time="+time + "&nonce="+nonce;
 		
-		String hash = "";
-		try {
-			hash = calculateRFC2104HMAC(url, secret);
-			String hashEscaped = "";
-			char c;
-			for (int i = 0; i < hash.length(); i++) {
-				// Base64 encoding uses + which we have to encode in URL parameters.
-				// Hoping this for loop is more efficient than the equivalent replace("\\+","%2B") regex.
-				c = hash.charAt(i);
-				if (c == '+') hashEscaped += "%2B";
-				else hashEscaped += c;
-			} 
-			url += "&sign="+hashEscaped;
-			
-		} catch (SignatureException e) {
-			throw new Pipeline2WSException("Could not sign request.");
+		if (hasAuth) {
+			String time = iso8601.format(new Date());
+
+			String nonce = "";
+			while (nonce.length() < 30)
+				nonce += (Math.random()+"").substring(2);
+			nonce = nonce.substring(0, 30);
+
+			url += "authid="+username + "&time="+time + "&nonce="+nonce;
+
+			String hash = "";
+			try {
+				hash = calculateRFC2104HMAC(url, secret);
+				String hashEscaped = "";
+				char c;
+				for (int i = 0; i < hash.length(); i++) {
+					// Base64 encoding uses + which we have to encode in URL parameters.
+					// Hoping this for loop is more efficient than the equivalent replace("\\+","%2B") regex.
+					c = hash.charAt(i);
+					if (c == '+') hashEscaped += "%2B";
+					else hashEscaped += c;
+				} 
+				url += "&sign="+hashEscaped;
+
+			} catch (SignatureException e) {
+				throw new Pipeline2WSException("Could not sign request.");
+			}
 		}
 		
 		return url;
