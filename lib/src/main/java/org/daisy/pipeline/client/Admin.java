@@ -21,9 +21,7 @@ public class Admin {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse halt(String endpoint, String username, String secret, String key) throws Pipeline2WSException {
-		Map<String,String> parameters = new HashMap<String,String>();
-		parameters.put("haltkey", key);
-		return Pipeline2WS.get(endpoint, "/admin/halt", null, null, parameters);
+		return Pipeline2WS.get(endpoint, "/admin/halt/"+key, username, secret, null);
 	}
 
 }
