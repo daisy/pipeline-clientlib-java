@@ -112,10 +112,11 @@ public class Script {
 		}
 
 		for (Node outputNode : outputNodes) {
-			if ("true".equals(XPath.selectText("@sequence", outputNode, Pipeline2WS.ns)))
+			if ("true".equals(XPath.selectText("@sequence", outputNode, Pipeline2WS.ns))) {
 				this.arguments.add(new ArgFiles(outputNode));
-			else
+			} else {
 				this.arguments.add(new ArgFile(outputNode));
+			}
 		}
 	}
 	

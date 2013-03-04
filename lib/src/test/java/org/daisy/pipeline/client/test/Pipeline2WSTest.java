@@ -183,6 +183,60 @@ public class Pipeline2WSTest {
 	}
 	
 	@Test
+	public void testOutputPorts() {
+		try {
+			Pipeline2WS.debug = true;
+			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
+			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-validator");
+			System.out.println("response: "+response.asText());
+			Script script = new Script(response);
+			
+			for (Argument arg : script.arguments) {
+				assertNotNull(arg.name);
+				assertNotNull(arg.name, arg.nicename);
+				assertNotNull(arg.name, arg.desc);
+				assertNotNull(arg.name, arg.required);
+				assertNotNull(arg.name, arg.sequence);
+				assertNotNull(arg.name, arg.ordered);
+				assertNotNull(arg.name, arg.mediaTypes);
+				assertNotNull(arg.name, arg.xsdType);
+				assertNotNull(arg.name, arg.kind);
+				
+				assertEquals(arg.name+" has a decription", true, arg.desc.length() > 0);
+				assertEquals(arg.name+" has xml declaration", false, arg.toString().replaceAll("\\n", " ").matches(".*<\\?xml.*"));
+				
+				if ("result".equals(arg.name)) {
+					assertEquals("output", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(false, arg.sequence);
+				}
+				else if ("schematron-report".equals(arg.name)) {
+					assertEquals("output", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(false, arg.sequence);
+				}
+				else if ("relaxng-report".equals(arg.name)) {
+					assertEquals("output", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(true, arg.sequence);
+				}
+				else if ("html-report".equals(arg.name)) {
+					assertEquals("output", arg.kind);
+					assertEquals(true, arg.ordered);
+					assertEquals(false, arg.required);
+					assertEquals(false, arg.sequence);
+				}
+			}
+
+		} catch (Pipeline2WSException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test
 	public void testXPath() {
 		XPathFactory factory = XPathFactory.newInstance();
 		javax.xml.xpath.XPath xpath = factory.newXPath();

@@ -82,6 +82,12 @@ public abstract class Argument {
 			if (this.mediaTypes.size() == 0)
 				this.mediaTypes.add("application/xml");
 		}
+		
+		if ("output".equals(this.kind)) {
+			this.required = false;
+			if (this.output == null)
+				this.output = "result";
+		}
 	}
 	
 	/** Helper function for the Script(Document) constructor */
