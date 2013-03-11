@@ -52,7 +52,7 @@
     
     <modules>
         <module>lib</module>
-        <module>cli</module>
+        <!--<module>cli</module>-->
     </modules>
     
 </project>
