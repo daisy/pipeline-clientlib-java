@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
-
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPathConstants;
@@ -25,10 +23,6 @@ import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Scripts;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
-import org.daisy.pipeline.client.models.script.arguments.ArgBoolean;
-import org.daisy.pipeline.client.models.script.arguments.ArgFile;
-import org.daisy.pipeline.client.models.script.arguments.ArgFiles;
-import org.daisy.pipeline.client.models.script.arguments.ArgString;
 import org.daisy.pipeline.utils.NamespaceContextMap;
 import org.daisy.pipeline.utils.XML;
 import org.junit.Test;
@@ -61,6 +55,7 @@ public class Pipeline2WSTest {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private boolean containsArgument(List<Argument> arguments, String argName) {
 		for (Argument arg : arguments) {
 			if (argName.equals(arg.name))
