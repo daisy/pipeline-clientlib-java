@@ -71,7 +71,9 @@ public class ArgStrings extends Argument {
 	public void set(Object key, Object value) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		if (value != null)
 			values.set(i, value.toString());
@@ -109,7 +111,9 @@ public class ArgStrings extends Argument {
 	public String get(Object key) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		return values.get(i);
 	}

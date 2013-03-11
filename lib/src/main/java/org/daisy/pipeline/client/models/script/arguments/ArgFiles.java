@@ -1,7 +1,5 @@
 package org.daisy.pipeline.client.models.script.arguments;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,7 +81,9 @@ public class ArgFiles extends Argument {
 	public void set(Object key, Object value) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		if (value != null)
 			hrefs.set(i, value.toString());
@@ -121,7 +121,9 @@ public class ArgFiles extends Argument {
 	public String get(Object key) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		return hrefs.get(i);
 	}

@@ -1,8 +1,5 @@
 package org.daisy.pipeline.client;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Methods for communicating with the "/scripts" resource in a Pipeline 2 Web Service.
  * 

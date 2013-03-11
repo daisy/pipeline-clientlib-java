@@ -1,6 +1,9 @@
 package org.daisy.pipeline.client.http;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.restlet.data.Status;
@@ -20,10 +23,11 @@ public class DP2HttpJobStatusCallbackResource extends ServerResource {
 				Pipeline2WS.callbackHandler.jobStatus(response);
 			
 		} catch (IOException e) {
-			if (Pipeline2WS.debug) {
-				System.err.println("Could not parse request");
-				e.printStackTrace(System.err);
-			}
+			Pipeline2WS.logger().warn("Job status callback: Could not parse request");
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			Pipeline2WS.logger().debug(sw.toString());
 		}
 	}
 }

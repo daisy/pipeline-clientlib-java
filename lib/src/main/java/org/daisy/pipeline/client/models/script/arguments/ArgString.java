@@ -54,7 +54,9 @@ public class ArgString extends Argument {
 	public void set(Object key, Object value) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		if (i == 0)
 			set(value);
@@ -90,7 +92,9 @@ public class ArgString extends Argument {
 	public String get(Object key) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		if (i == 0)
 			return value;

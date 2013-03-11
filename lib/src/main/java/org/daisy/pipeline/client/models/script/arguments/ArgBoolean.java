@@ -56,7 +56,9 @@ public class ArgBoolean extends Argument {
 	public void set(Object key, Object value) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		if (i == 0)
 			set(value);
@@ -70,8 +72,7 @@ public class ArgBoolean extends Argument {
 		else if ("false".equals(value))
 			this.value = false;
 			
-		else if (Pipeline2WS.debug)
-				System.err.println("Unable to parse boolean value of option '"+name+"': "+value);
+		else Pipeline2WS.logger().warn("Unable to parse boolean value of option '"+name+"': "+value);
 	}
 
 	@Override
@@ -98,7 +99,9 @@ public class ArgBoolean extends Argument {
 	public String get(Object key) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		if (i == 0)
 			return get();

@@ -1,9 +1,5 @@
 package org.daisy.pipeline.client.models.script.arguments;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.models.script.Argument;
@@ -66,7 +62,7 @@ public class ArgFile extends Argument {
 	 */
 	@Override
 	public void parseFromJobRequest(Node jobRequest) throws Pipeline2WSException {
-		System.err.println("parsing jobRequest...");
+		Pipeline2WS.logger().debug("parsing jobRequest...");
 		if ("option".equals(kind)) {
 			String href = XPath.selectText("/*/d:option[@name='"+name+"']", jobRequest, Pipeline2WS.ns);
 			set(href);
@@ -82,7 +78,9 @@ public class ArgFile extends Argument {
 	public void set(Object key, Object value) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		if (i == 0)
 			set(value);
@@ -118,7 +116,9 @@ public class ArgFile extends Argument {
 	public String get(Object key) {
 		Integer i = null;
 		try { i = Integer.parseInt(key+""); }
-		catch (NumberFormatException e) { if (Pipeline2WS.debug) System.err.println("Unable to parse integer: "+key); }
+		catch (NumberFormatException e) {
+			Pipeline2WS.logger().warn("Unable to parse integer: "+key);
+		}
 		
 		if (i == 0)
 			return get();

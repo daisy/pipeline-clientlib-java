@@ -145,7 +145,8 @@ public class Jobs {
 	public static Pipeline2WSResponse post(String endpoint, String username, String secret, String href, List<Argument> arguments, File contextZipFile, Map<String,String> callbacks) throws Pipeline2WSException {
 		
 		Document jobRequestDocument = createJobRequestDocument(href, arguments, callbacks);
-		if (Pipeline2WS.debug) System.out.println(XML.toString(jobRequestDocument));
+		if (Pipeline2WS.logger().logsLevel(Pipeline2WSLogger.LEVEL.DEBUG))
+			Pipeline2WS.logger().debug(XML.toString(jobRequestDocument));
 		
 		if (contextZipFile == null) {
 			return Pipeline2WS.postXml(endpoint, "/jobs", username, secret, jobRequestDocument);
@@ -230,7 +231,7 @@ public class Jobs {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse getLog(String endpoint, String username, String secret, String id) throws Pipeline2WSException {
-		if (Pipeline2WS.debug) System.err.println("getting log...");
+		Pipeline2WS.logger().debug("getting log...");
 		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/log", username, secret, null);
 	}
 	

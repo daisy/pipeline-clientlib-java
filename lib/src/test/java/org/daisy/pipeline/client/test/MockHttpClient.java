@@ -34,11 +34,11 @@ public class MockHttpClient implements DP2HttpClient {
 	 */
 	private InputStream get(String path) {
 		File responseFile = new File("src/test/resources/responses"+path+".xml");
-		if (Pipeline2WS.debug) System.out.println("Reading mock response: "+responseFile.getAbsolutePath());
+		Pipeline2WS.logger().info("Reading mock response: "+responseFile.getAbsolutePath());
 		try {
 			return new FileInputStream(responseFile);
 		} catch (FileNotFoundException e) {
-			if (Pipeline2WS.debug) System.out.println("Unable to read mock response for: "+path);
+			Pipeline2WS.logger().info("Unable to read mock response for: "+path);
 			e.printStackTrace();
 			return null;
 		}

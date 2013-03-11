@@ -1,6 +1,8 @@
 package org.daisy.pipeline.client;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.SignatureException;
@@ -26,9 +28,6 @@ import org.daisy.pipeline.client.http.*;
  */
 public class Pipeline2WS {
 	
-	/** Set to true to enable debugging */
-	public static boolean debug = false;
-	
 	/** Used to provide a the namespace when querying a document using XPath. */
 	public static final Map<String, String> ns; 
 	static {
@@ -45,6 +44,36 @@ public class Pipeline2WS {
 		iso8601.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 	
+	
+	// HTTP-related stuff:
+	
+	/** The HTTP Client implementation */
+	private static DP2HttpClient httpClient = null;
+	
+	/** The HTTP Server implementation for handling callbacks */
+	private static DP2HttpCallbackServer callbackServer = null;
+	
+	/** The Handler that handles the callbacks. Set it with handleCallbacks(...) */
+	public static Pipeline2WSCallbackHandler callbackHandler = null;
+	
+	
+	// Logging-related stuff:
+	
+	/** The logger implementation. Set it with setLogger(...) */
+	private static Pipeline2WSLogger logger;
+	
+	public static void init() {
+		if (logger == null)
+			logger = new Pipeline2WSLoggerImpl();
+		if (httpClient == null)
+			httpClient = new DP2HttpClientImpl();
+	}
+	
+	public static Pipeline2WSLogger logger() {
+		init();
+		return logger;
+	}
+	
 	/**
 	 * Sign a URL for communication with a Pipeline 2 Web Service running in authenticated mode.
 	 * 
@@ -57,6 +86,7 @@ public class Pipeline2WS {
 	 * @throws Pipeline2WSException
 	 */
 	public static String url(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
+		init();
 		boolean hasAuth = !(username == null || "".equals(username) || secret == null || "".equals(secret));
 		
 		String url = endpoint + path;
@@ -137,8 +167,6 @@ public class Pipeline2WS {
         }
         return new String(result);
     }
-    
-    private static DP2HttpClient httpClient = new DP2HttpClientImpl();
 
 	public static void setHttpClientImplementation(DP2HttpClient httpClientImpl) {
 		Pipeline2WS.httpClient = httpClientImpl;
@@ -155,7 +183,8 @@ public class Pipeline2WS {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
-		if (Pipeline2WS.debug) System.err.println("getting: "+endpoint+path);
+		init();
+		logger.debug("getting from "+endpoint+path);
 		return httpClient.get(endpoint, path, username, secret, parameters);
 	}
 	
@@ -170,6 +199,8 @@ public class Pipeline2WS {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {
+		init();
+		logger.debug("posting XML to "+endpoint+path);
 		return httpClient.postXml(endpoint, path, username, secret, xml);
 	}
 	
@@ -184,14 +215,19 @@ public class Pipeline2WS {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) throws Pipeline2WSException {
+		init();
+		logger.debug("posting files to "+endpoint+path);
 		return httpClient.postMultipart(endpoint, path, username, secret, parts);
 	}
 	
-	/** The Pipeline2WSCallbackHandler that handles the callbacks. Set it with handleCallbacks(...) */
-	public static Pipeline2WSCallbackHandler callbackHandler;
-	
-	/** The callback server */
-	private static DP2HttpCallbackServerImpl callbackServer;
+	/**
+	 * Set the HTTP server implementation to use for handling callbacks. Defaults to DP2HttpCallbackServer.
+	 * @param callbackServerImpl
+	 */
+	public static void setHttpCallbackServerImplementation(DP2HttpCallbackServer callbackServerImpl) {
+		callbackServer = callbackServerImpl;
+		logger.debug("set callback server implementation to "+(callbackServer==null?null:callbackServerImpl.getClass().getCanonicalName()));
+	}
 	
 	/**
 	 * To handle callbacks, pass an instance of your Pipeline2WSCallbackHandler to this method.
@@ -205,17 +241,23 @@ public class Pipeline2WS {
 			return;
 		
 		Pipeline2WS.callbackHandler = callbackHandler;
+		logger.debug("set callback handler implementation to "+(callbackHandler==null?null:callbackHandler.getClass().getCanonicalName()));
 		
-		// Start the callback webservice
-		Pipeline2WS.callbackServer = new DP2HttpCallbackServerImpl();
-        try {
-        	Pipeline2WS.callbackServer.init(port);
+		// Use default callback server implementation if nothing else is set
+		if (callbackServer == null)
+			setHttpCallbackServerImplementation(new DP2HttpCallbackServerImpl());
+		
+		// Initialize callback server on the provided port
+		try {
+			logger.debug("initializing callback server on port "+port);
+        	callbackServer.init(port);
 			
 		} catch (Exception e) {
-			if (Pipeline2WS.debug) {
-				System.err.println("Could not start the component");
-				e.printStackTrace(System.err);
-			}
+			logger.error("Could not start the component");
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			logger.error(sw.toString());
 		}
 	}
 	
@@ -224,6 +266,18 @@ public class Pipeline2WS {
 	 * @throws Exception 
 	 */
 	public static void stopCallbacks() throws Exception {
+		logger.debug("stopping callbacks");
 		Pipeline2WS.callbackServer.close();
+	}
+	
+	/**
+	 * Set the logger implementation.
+	 * @param logger The logger.
+	 */
+	public static void setLoggerImplementation(Pipeline2WSLogger loggerImpl) {
+		logger = loggerImpl;
+		if (logger == null)
+			logger = new Pipeline2WSLoggerImpl();
+		logger.debug("set logger implementation to "+loggerImpl.getClass().getCanonicalName());
 	}
 }

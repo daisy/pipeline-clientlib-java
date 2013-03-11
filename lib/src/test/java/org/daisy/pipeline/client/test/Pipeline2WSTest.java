@@ -20,6 +20,7 @@ import junit.framework.Assert;
 import org.daisy.pipeline.client.Jobs;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSLogger;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Scripts;
 import org.daisy.pipeline.client.models.Script;
@@ -73,7 +74,7 @@ public class Pipeline2WSTest {
 	@Test
 	public void testParseJobRequest() {
 		try {
-			Pipeline2WS.debug = true;
+			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
 			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
 			System.out.println("response: "+response.asText());
@@ -185,7 +186,7 @@ public class Pipeline2WSTest {
 	@Test
 	public void testOutputPorts() {
 		try {
-			Pipeline2WS.debug = true;
+			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
 			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-validator");
 			System.out.println("response: "+response.asText());

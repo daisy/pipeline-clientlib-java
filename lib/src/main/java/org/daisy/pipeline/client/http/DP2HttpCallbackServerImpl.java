@@ -1,6 +1,9 @@
 package org.daisy.pipeline.client.http;
 
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -39,15 +42,15 @@ public class DP2HttpCallbackServerImpl extends Application implements DP2HttpCal
 	 * @param port The port to start the web service on.
 	 */
 	public void init(int port) {
-		if (Pipeline2WS.debug) System.out.println(String.format("Starting callback webservice on port %d", port));
+		Pipeline2WS.logger().info(String.format("Starting callback webservice on port %d", port));
 		component = new Component();
 
 		if (true) {
 			component.getServers().add(Protocol.HTTP, port);
-			if (Pipeline2WS.debug) System.out.println("Using HTTP");
+			Pipeline2WS.logger().debug("Using HTTP");
 
 		} else {
-			if (Pipeline2WS.debug) System.out.println("Using HTTPS");
+			Pipeline2WS.logger().debug("Using HTTPS");
 		}
 
 		component.getDefaultHost().attach("", this);
@@ -55,7 +58,11 @@ public class DP2HttpCallbackServerImpl extends Application implements DP2HttpCal
 			component.start();
 
 		} catch (Exception e) {
-			if (Pipeline2WS.debug) System.err.println("Callback webservice not started because of: "+e.getMessage());
+			Pipeline2WS.logger().error("Callback webservice could not be started.");
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			Pipeline2WS.logger().error(sw.toString());
 		}
 	}
 
@@ -68,7 +75,7 @@ public class DP2HttpCallbackServerImpl extends Application implements DP2HttpCal
 		if (this.component!=null)
 			this.component.stop();
 		this.stop();
-		if (Pipeline2WS.debug) System.out.println("Callback webservice stopped.");
+		Pipeline2WS.logger().info("Callback webservice stopped.");
 
 	}
 
