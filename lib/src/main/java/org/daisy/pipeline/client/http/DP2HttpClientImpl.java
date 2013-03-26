@@ -81,7 +81,9 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 		Pipeline2WSResponse response = new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), representation==null?null:representation.getMediaType()==null?null:representation.getMediaType().toString(), in);
 		if (Pipeline2WS.logger().logsLevel(Pipeline2WSLogger.LEVEL.DEBUG)) {
 			try {
-				if (representation != null && representation.getMediaType() == MediaType.APPLICATION_ALL_XML) {
+				if (representation == null) {
+					Pipeline2WS.logger().debug("---- Received: null ----\n");
+				} else if (representation.getMediaType() == MediaType.APPLICATION_ALL_XML) {
 					Pipeline2WS.logger().debug("---- Received: ----\n"+response.asText());
 				} else {
 					Pipeline2WS.logger().debug("---- Received: "+representation.getMediaType()+" ("+representation.getSize()+" bytes) ----");
