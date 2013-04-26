@@ -205,8 +205,8 @@ public class Jobs {
 	 * HTTP 401 Unauthorized: Client was not authorized to perform request.
 	 * HTTP 404 Not Found: Resource not found
 	 */
-	public static Pipeline2WSResponse delete(String endpoint, String username, String secret, String id) {
-		return null; //TODO Pipeline2WS.delete(endpoint, "/jobs/"+id, username, secret);
+	public static Pipeline2WSResponse delete(String endpoint, String username, String secret, String id) throws Pipeline2WSException {
+		return Pipeline2WS.delete(endpoint, "/jobs/"+id, username, secret, null);
 	}
 	
 	/**

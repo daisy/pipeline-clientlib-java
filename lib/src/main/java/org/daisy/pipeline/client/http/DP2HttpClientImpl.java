@@ -38,9 +38,17 @@ import org.w3c.dom.Document;
  */
 public class DP2HttpClientImpl implements DP2HttpClient {
 	
-	private static Client client = new Client(Protocol.HTTP); // TODO: add support for HTTPS WS
+	private static Client client = new Client(Protocol.HTTP); // TODO: add support for HTTPS WS ?
 	
 	public Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
+		return getDelete("GET", endpoint, path, username, secret, parameters);
+	}
+	
+	public Pipeline2WSResponse delete(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
+		return getDelete("DELETE", endpoint, path, username, secret, parameters);
+	}
+	
+	private Pipeline2WSResponse getDelete(String method, String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
 		String url = Pipeline2WS.url(endpoint, path, username, secret, parameters);
 		if (endpoint == null) {
 			return new Pipeline2WSResponse(503, "Endpoint is not set", "Please provide a Pipeline 2 endpoint.", null, null);
@@ -52,7 +60,11 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 		InputStream in = null;
 		boolean error = false;
 		try {
-			representation = resource.get();
+			if ("DELETE".equals(method)) {
+				representation = resource.delete();
+			} else { // "GET"
+				representation = resource.get();
+			}
 			if (representation != null)
 				in = representation.getStream();
 			

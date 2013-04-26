@@ -18,6 +18,10 @@ public class MockHttpClient implements DP2HttpClient {
 		return new Pipeline2WSResponse(200, "OK", "Mock object retrieved successfully", "application/xml", get(path));
 	}
 	
+	public Pipeline2WSResponse delete(String endpoint, String path, String username, String secret, Map<String, String> parameters) throws Pipeline2WSException {
+		return new Pipeline2WSResponse(200, "OK", "Mock object retrieved successfully", "application/xml", get(path));
+	}
+	
 	public Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {
 		return null;
 	}
