@@ -41,6 +41,14 @@ public class ArgFile extends Argument {
 			
 			element.setTextContent(href+"");
 			
+		} else if ("output".equals(kind)) {
+			element = document.createElement("output");
+			element.setAttribute("name", name);
+			
+			Element item = document.createElement("item");
+			item.setAttribute("value", href+"");
+			element.appendChild(item);
+			
 		} else {
 			element = document.createElement("input");
 			element.setAttribute("name", name);

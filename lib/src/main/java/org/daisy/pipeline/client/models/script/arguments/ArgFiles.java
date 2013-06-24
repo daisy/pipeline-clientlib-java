@@ -46,6 +46,8 @@ public class ArgFiles extends Argument {
 		Element element;
 		if ("option".equals(kind))
 			element = document.createElement("option");
+		else if ("output".equals(kind))
+			element = document.createElement("output");
 		else
 			element = document.createElement("input");
 		
