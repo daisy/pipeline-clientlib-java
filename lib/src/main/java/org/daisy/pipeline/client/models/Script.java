@@ -1,6 +1,7 @@
 package org.daisy.pipeline.client.models;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
@@ -23,7 +24,7 @@ import org.w3c.dom.Node;
  * 
  * @author jostein
  */
-public class Script {
+public class Script implements Comparable<Script> {
 	
 	public String id;
 	public String href;
@@ -157,7 +158,9 @@ public class Script {
 	public static List<Script> getScripts(Pipeline2WSResponse response) throws Pipeline2WSException {
 		if (response.status != 200)
 			throw new Pipeline2WSException(response.status+" "+response.statusName+": "+response.statusDescription);
-		return parseScriptsXml(response.asXml());
+		List<Script> scripts = parseScriptsXml(response.asXml());
+		Collections.sort(scripts);
+		return scripts;
 	}
 	
 	/**
@@ -182,6 +185,12 @@ public class Script {
 		}
 		
 		return scripts;
+	}
+
+	public int compareTo(Script other) {
+		if (id == null) return 1;
+		if (other.id == null) return -1;
+		return id.compareTo(other.id);
 	}
 	
 }

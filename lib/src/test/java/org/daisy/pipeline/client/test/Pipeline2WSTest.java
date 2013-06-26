@@ -48,6 +48,13 @@ public class Pipeline2WSTest {
 				fail("empty nicename id");
 			if (scripts.get(0).desc == null || scripts.get(0).desc.length() == 0)
 				fail("empty script description");
+			
+			String[] orderedScripts = new String[]{"daisy202-to-epub3", "dtbook-to-epub3", "dtbook-to-zedai", "zedai-to-epub3", "zedai-to-pef"};
+			for (int s = 0; s < orderedScripts.length; s++) {
+				if (!orderedScripts[s].equals(scripts.get(s).id))
+					fail("scripts list must be ordered alphabetically by id ("+scripts.get(s).id+" at position "+s+")");
+			}
+			
 			assertNotNull(scripts.get(0).id);
 
 		} catch (Pipeline2WSException e) {
