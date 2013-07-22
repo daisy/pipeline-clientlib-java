@@ -80,6 +80,12 @@ public class Jobs {
 		}
 		
 		jobRequestDocument = XML.getXml(XML.toString(jobRequestDocument)); // fixes namespaces somehow
+		
+		if (Pipeline2WS.logger().logsLevel(Pipeline2WSLogger.LEVEL.DEBUG)) {
+			Pipeline2WS.logger().debug("created jobRequest document:");
+			Pipeline2WS.logger().debug(XML.toString(jobRequestDocument));
+		}
+		
 		return jobRequestDocument;
 	}
 	

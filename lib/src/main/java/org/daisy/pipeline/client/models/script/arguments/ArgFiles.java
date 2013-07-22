@@ -1,5 +1,10 @@
 package org.daisy.pipeline.client.models.script.arguments;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,7 +93,7 @@ public class ArgFiles extends Argument {
 		}
 		
 		if (value != null)
-			hrefs.set(i, value.toString());
+			hrefs.set(i, decode83(value.toString()));
 	}
 	
 	@Override
@@ -100,12 +105,12 @@ public class ArgFiles extends Argument {
 	@Override
 	public void add(Object value) {
 		if (value != null)
-			hrefs.add(value.toString());
+			hrefs.add(decode83(value.toString()));
 	}
 
 	@Override
 	public void remove(Object value) {
-		hrefs.remove(value);
+		hrefs.remove(decode83(value instanceof String ? (String)value : null));
 	}
 
 	@Override
@@ -133,6 +138,26 @@ public class ArgFiles extends Argument {
 	@Override
 	public int size() {
 		return hrefs.size();
+	}
+	
+	/**
+	 * Decodes Windows 8.3 filepaths; for instance file:/C:/DOCUME~1/user into file:/C:/Documents%20and%20Settings/user
+	 * @param href
+	 * @return
+	 */
+	private String decode83(String href) {
+		if (System.getProperty("os.name").startsWith("Windows") && href != null && href.startsWith("file:") && href.contains("~")) {
+			try {
+				href = new File(new File(new URI(href)).getCanonicalPath()).toURI().toURL().toString();
+			} catch (MalformedURLException e) {
+				// ignore
+			} catch (IOException e) {
+				// ignore
+			} catch (URISyntaxException e) {
+				// ignore
+			}
+		}
+		return href;
 	}
 	
 }

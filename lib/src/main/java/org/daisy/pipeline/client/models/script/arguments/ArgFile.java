@@ -1,5 +1,11 @@
 package org.daisy.pipeline.client.models.script.arguments;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.models.script.Argument;
@@ -97,6 +103,17 @@ public class ArgFile extends Argument {
 	@Override
 	public void set(Object value) {
 		href = value == null ? null : value.toString();
+		if (System.getProperty("os.name").startsWith("Windows") && href != null && href.startsWith("file:") && href.contains("~")) {
+			try {
+				href = new File(new File(new URI(href)).getCanonicalPath()).toURI().toURL().toString();
+			} catch (MalformedURLException e) {
+				// ignore
+			} catch (IOException e) {
+				// ignore
+			} catch (URISyntaxException e) {
+				// ignore
+			}
+		}
 	}
 
 	@Override
