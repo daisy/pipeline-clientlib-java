@@ -1,6 +1,8 @@
 Pipeline 2 - Java Client Library
 -----------------
 
+[![Build Status](https://travis-ci.org/daisy-consortium/pipeline-clientlib-java.png?branch=master)](https://travis-ci.org/daisy-consortium/pipeline-clientlib-java)
+
 This project provides a Java library for communicating with the DAISY Pipeline 2 Web Service.
 
 Example; getting a list of all scripts:
