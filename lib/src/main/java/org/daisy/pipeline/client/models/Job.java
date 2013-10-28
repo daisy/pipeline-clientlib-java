@@ -7,6 +7,7 @@ import java.util.List;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.models.job.JobResult;
 import org.daisy.pipeline.client.models.job.Message;
 import org.daisy.pipeline.utils.XPath;
 import org.w3c.dom.Document;
@@ -28,7 +29,7 @@ public class Job {
 	public Script script;
 	public List<Message> messages;
 	public String logHref;
-	public String resultHref;
+	public JobResult results;
 	
 	/**
 	 * Create an empty representation of a job.
@@ -79,9 +80,14 @@ public class Job {
 		}
 		script.id = XPath.selectText("d:script/@id", jobXml, Pipeline2WS.ns);
 		script.href = XPath.selectText("d:script/@href", jobXml, Pipeline2WS.ns);
+		script.nicename = XPath.selectText("d:script/d:nicename", jobXml, Pipeline2WS.ns);
 		script.desc = XPath.selectText("d:script/d:description", jobXml, Pipeline2WS.ns);
 		logHref = XPath.selectText("d:log/@href", jobXml, Pipeline2WS.ns);
-		resultHref = XPath.selectText("d:result/@href", jobXml, Pipeline2WS.ns);
+		
+		List<Node> results = XPath.selectNodes("d:results", jobXml, Pipeline2WS.ns);
+		if (results.size() > 0) {
+			this.results = JobResult.parseResultXml(results.get(0));
+		}
 		
 		List<Node> messageNodes = XPath.selectNodes("d:messages/d:message", jobXml, Pipeline2WS.ns);
 		for (Node messageNode : messageNodes) {

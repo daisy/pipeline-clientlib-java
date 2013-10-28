@@ -21,6 +21,8 @@ import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSLogger;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Scripts;
+import org.daisy.pipeline.client.models.Job;
+import org.daisy.pipeline.client.models.Job.Status;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
 import org.daisy.pipeline.utils.NamespaceContextMap;
@@ -71,7 +73,79 @@ public class Pipeline2WSTest {
 		return false;
 	}
 	
-//	Pattern xmlDeclaration = Pattern.compile(".*<\\?xml.*");
+	
+	@Test
+	public void testParseJobResponse() {
+		try {
+			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
+			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
+			Pipeline2WSResponse response = Jobs.get("http://localhost:8182/ws", "clientid", "supersecret", "job1", null);
+			Job job = new Job(response);
+			
+			assertNotNull(job);
+			assertEquals("job1", job.id);
+			assertEquals("http://localhost:8181/ws/jobs/job1", job.href);
+			assertEquals(Status.DONE, job.status);
+			assertNotNull(job.script);
+			assertEquals("http://localhost:8181/ws/scripts/dtbook-to-zedai", job.script.href);
+			assertEquals("dtbook-to-zedai", job.script.id);
+			assertEquals("DTBook to ZedAI", job.script.nicename);
+			assertEquals("Transforms DTBook XML into ZedAI XML.", job.script.desc);
+			assertNotNull(job.messages);
+			assertEquals(62, job.messages.size());
+			assertEquals("http://localhost:8181/ws/jobs/job1/log", job.logHref);
+			
+			assertEquals("", job.results.from);
+			assertEquals("", job.results.file);
+			assertEquals("application/zip", job.results.mimeType);
+			assertEquals(new Long(178073), job.results.size);
+			assertEquals("", job.results.name);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result", job.results.href);
+			assertEquals("result", job.results.relativeHref);
+			assertEquals("result", job.results.filename);
+			assertEquals(1, job.results.results.size());
+
+			assertEquals("option", job.results.results.get(0).from);
+			assertEquals("", job.results.results.get(0).file);
+			assertEquals("application/zip", job.results.results.get(0).mimeType);
+			assertEquals(new Long(178073), job.results.results.get(0).size);
+			assertEquals("output-dir", job.results.results.get(0).name);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir", job.results.results.get(0).href);
+			assertEquals("result/option/output-dir", job.results.results.get(0).relativeHref);
+			assertEquals("output-dir", job.results.results.get(0).filename);
+			assertEquals(3, job.results.results.get(0).results.size());
+			
+			assertEquals("", job.results.results.get(0).results.get(0).from);
+			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(0).file);
+			assertEquals("", job.results.results.get(0).results.get(0).mimeType);
+			assertEquals(new Long(442), job.results.results.get(0).results.get(0).size);
+			assertEquals("", job.results.results.get(0).results.get(0).name);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(0).href);
+			assertEquals("result/option/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(0).relativeHref);
+			assertEquals("zedai-mods.xml", job.results.results.get(0).results.get(0).filename);
+			
+			assertEquals("", job.results.results.get(0).results.get(1).from);
+			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai.xml", job.results.results.get(0).results.get(1).file);
+			assertEquals("", job.results.results.get(0).results.get(1).mimeType);
+			assertEquals(new Long(151891), job.results.results.get(0).results.get(1).size);
+			assertEquals("", job.results.results.get(0).results.get(1).name);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai.xml", job.results.results.get(0).results.get(1).href);
+			assertEquals("result/option/output-dir/zedai.xml", job.results.results.get(0).results.get(1).relativeHref);
+			assertEquals("zedai.xml", job.results.results.get(0).results.get(1).filename);
+
+			assertEquals("", job.results.results.get(0).results.get(2).from);
+			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/valentin.jpg", job.results.results.get(0).results.get(2).file);
+			assertEquals("", job.results.results.get(0).results.get(2).mimeType);
+			assertEquals(new Long(25740), job.results.results.get(0).results.get(2).size);
+			assertEquals("", job.results.results.get(0).results.get(2).name);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/valentin.jpg", job.results.results.get(0).results.get(2).href);
+			assertEquals("result/option/output-dir/valentin.jpg", job.results.results.get(0).results.get(2).relativeHref);
+			assertEquals("valentin.jpg", job.results.results.get(0).results.get(2).filename);
+
+		} catch (Pipeline2WSException e) {
+			fail(e.getMessage());
+		}
+	}
 	
 	@Test
 	public void testParseJobRequest() {
