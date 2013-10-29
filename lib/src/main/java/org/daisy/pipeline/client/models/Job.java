@@ -20,7 +20,7 @@ import org.w3c.dom.Node;
  */
 public class Job {
 	
-	public enum Status { IDLE, RUNNING, DONE, ERROR };
+	public enum Status { IDLE, RUNNING, DONE, ERROR, VALIDATION_FAIL };
 	
 	public String id;
 	public String href; // xs:anyURI

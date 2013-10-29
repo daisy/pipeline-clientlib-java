@@ -224,8 +224,8 @@ public class Jobs {
 	 * @return 
 	 * @throws Pipeline2WSException 
 	 */
-	public static Pipeline2WSResponse getResult(String endpoint, String username, String secret, String id) throws Pipeline2WSException {
-		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result", username, secret, null);
+	public static Pipeline2WSResponse getResult(String endpoint, String username, String secret, String id, String href) throws Pipeline2WSException {
+		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result/"+href, username, secret, null);
 	}
 	
 	/**
