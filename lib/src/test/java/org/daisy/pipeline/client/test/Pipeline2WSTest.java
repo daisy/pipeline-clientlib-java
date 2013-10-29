@@ -112,35 +112,48 @@ public class Pipeline2WSTest {
 			assertEquals("output-dir", job.results.results.get(0).name);
 			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir", job.results.results.get(0).href);
 			assertEquals("result/option/output-dir", job.results.results.get(0).relativeHref);
-			assertEquals("output-dir", job.results.results.get(0).filename);
+			assertEquals("option/output-dir", job.results.results.get(0).filename);
 			assertEquals(3, job.results.results.get(0).results.size());
 			
-			assertEquals("", job.results.results.get(0).results.get(0).from);
-			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(0).file);
+			assertEquals("", job.results.results.get(0).results.get(2).from);
+			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/valentin.jpg", job.results.results.get(0).results.get(0).file);
 			assertEquals("", job.results.results.get(0).results.get(0).mimeType);
-			assertEquals(new Long(442), job.results.results.get(0).results.get(0).size);
+			assertEquals(new Long(25740), job.results.results.get(0).results.get(0).size);
 			assertEquals("", job.results.results.get(0).results.get(0).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(0).href);
-			assertEquals("result/option/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(0).relativeHref);
-			assertEquals("zedai-mods.xml", job.results.results.get(0).results.get(0).filename);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/valentin.jpg", job.results.results.get(0).results.get(0).href);
+			assertEquals("result/option/output-dir/valentin.jpg", job.results.results.get(0).results.get(0).relativeHref);
+			assertEquals("valentin.jpg", job.results.results.get(0).results.get(0).filename);
 			
 			assertEquals("", job.results.results.get(0).results.get(1).from);
-			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai.xml", job.results.results.get(0).results.get(1).file);
+			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(1).file);
 			assertEquals("", job.results.results.get(0).results.get(1).mimeType);
-			assertEquals(new Long(151891), job.results.results.get(0).results.get(1).size);
+			assertEquals(new Long(442), job.results.results.get(0).results.get(1).size);
 			assertEquals("", job.results.results.get(0).results.get(1).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai.xml", job.results.results.get(0).results.get(1).href);
-			assertEquals("result/option/output-dir/zedai.xml", job.results.results.get(0).results.get(1).relativeHref);
-			assertEquals("zedai.xml", job.results.results.get(0).results.get(1).filename);
-
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(1).href);
+			assertEquals("result/option/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(1).relativeHref);
+			assertEquals("zedai-mods.xml", job.results.results.get(0).results.get(1).filename);
+			
 			assertEquals("", job.results.results.get(0).results.get(2).from);
-			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/valentin.jpg", job.results.results.get(0).results.get(2).file);
+			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai.xml", job.results.results.get(0).results.get(2).file);
 			assertEquals("", job.results.results.get(0).results.get(2).mimeType);
-			assertEquals(new Long(25740), job.results.results.get(0).results.get(2).size);
+			assertEquals(new Long(151891), job.results.results.get(0).results.get(2).size);
 			assertEquals("", job.results.results.get(0).results.get(2).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/valentin.jpg", job.results.results.get(0).results.get(2).href);
-			assertEquals("result/option/output-dir/valentin.jpg", job.results.results.get(0).results.get(2).relativeHref);
-			assertEquals("valentin.jpg", job.results.results.get(0).results.get(2).filename);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai.xml", job.results.results.get(0).results.get(2).href);
+			assertEquals("result/option/output-dir/zedai.xml", job.results.results.get(0).results.get(2).relativeHref);
+			assertEquals("zedai.xml", job.results.results.get(0).results.get(2).filename);
+			
+			response = Jobs.get("http://localhost:8182/ws", "clientid", "supersecret", "job2", null);
+			job = new Job(response);
+			
+			assertNotNull(job.results);
+			assertEquals("result", job.results.filename);
+			assertEquals("result", job.results.relativeHref);
+			assertEquals("option/output-dir", job.results.results.get(0).filename);
+			assertEquals("result/option/output-dir", job.results.results.get(0).relativeHref);
+			assertEquals("idx/output-dir/epub/mimetype", job.results.results.get(0).results.get(25).filename);
+			assertEquals("result/option/output-dir/idx/output-dir/epub/mimetype", job.results.results.get(0).results.get(25).relativeHref);
+			assertEquals("idx/output-dir/epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", job.results.results.get(0).results.get(19).filename);
+			assertEquals("result/option/output-dir/idx/output-dir/epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", job.results.results.get(0).results.get(19).relativeHref);
 
 		} catch (Pipeline2WSException e) {
 			fail(e.getMessage());

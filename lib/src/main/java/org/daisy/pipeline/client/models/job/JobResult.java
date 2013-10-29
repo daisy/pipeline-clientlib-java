@@ -1,6 +1,8 @@
 package org.daisy.pipeline.client.models.job;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -14,7 +16,7 @@ import org.w3c.dom.Node;
  * 
  * @author jostein
  */
-public class JobResult {
+public class JobResult implements Comparable<JobResult> {
 	
 	public String href;
 	public String file;
@@ -32,10 +34,10 @@ public class JobResult {
 	private static Pattern filenamePattern = Pattern.compile(".*/");
 
     public static JobResult parseResultXml(Node resultNode) throws Pipeline2WSException {
-    	return parseResultXml(resultNode, null);
+    	return parseResultXml(resultNode, null, null);
     }
     
-	private static JobResult parseResultXml(Node resultNode, String relativePath) throws Pipeline2WSException {
+	private static JobResult parseResultXml(Node resultNode, String relativePath, String parentHref) throws Pipeline2WSException {
 		JobResult item = new JobResult();
 		
 		item.href = XPath.selectText("@href", resultNode, Pipeline2WS.ns);
@@ -44,7 +46,11 @@ public class JobResult {
 		item.name = XPath.selectText("@name", resultNode, Pipeline2WS.ns);
 		item.from = XPath.selectText("@from", resultNode, Pipeline2WS.ns);
 		
-		item.filename = item.href == null ? null : filenamePattern.matcher(item.href).replaceAll("");
+		if (parentHref == null) {
+			item.filename = item.href == null ? null : filenamePattern.matcher(item.href).replaceAll("");
+		} else {
+			item.filename = item.href.substring(parentHref.length()+1);
+		}
 		
 		if (relativePath == null) {
 			relativePath = item.href.substring(0, item.href.length()-item.filename.length());
@@ -53,8 +59,9 @@ public class JobResult {
 		
 		List<Node> childNodes = XPath.selectNodes("d:result", resultNode, Pipeline2WS.ns);
 		for (Node childNode : childNodes) {
-			item.results.add(JobResult.parseResultXml(childNode, relativePath));
+			item.results.add(JobResult.parseResultXml(childNode, relativePath, item.href));
 		}
+		Collections.sort(item.results);
 		
 		String sizeText = XPath.selectText("@size", resultNode, Pipeline2WS.ns);
 		if (sizeText != null && sizeText.length() > 0) {
@@ -68,6 +75,10 @@ public class JobResult {
 		}
 		
 		return item;
+	}
+
+	public int compareTo(JobResult other) {
+		return href.compareTo(other.href);
 	}
 	
 }
