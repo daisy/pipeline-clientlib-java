@@ -22,6 +22,7 @@ import org.w3c.dom.Document;
 
 public class Pipeline2WSResponse {
 	
+	public String url;
 	public int status;
 	public String statusName;
 	public String statusDescription;
@@ -38,7 +39,7 @@ public class Pipeline2WSResponse {
 	 * @param statusDescription
 	 * @param bodyStream
 	 */
-	public Pipeline2WSResponse(int status, String statusName, String statusDescription, String contentType, InputStream bodyStream) {
+	public Pipeline2WSResponse(String url, int status, String statusName, String statusDescription, String contentType, InputStream bodyStream) {
 		this.status = status;
 		this.statusName = statusName;
 		this.statusDescription = statusDescription;

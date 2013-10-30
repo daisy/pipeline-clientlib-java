@@ -17,7 +17,7 @@ public class DP2HttpJobMessagesCallbackResource extends ServerResource {
 	public void accept(Representation request) {
 		try {
 			Status status = Status.SUCCESS_OK;
-			Pipeline2WSResponse response = new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), request==null?null:request.getMediaType().toString(), request.getStream());
+			Pipeline2WSResponse response = new Pipeline2WSResponse(null, status.getCode(), status.getName(), status.getDescription(), request==null?null:request.getMediaType().toString(), request.getStream());
 			setStatus(status);
 			if (Pipeline2WS.callbackHandler != null)
 				Pipeline2WS.callbackHandler.jobMessages(response);
