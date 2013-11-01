@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Map;
 
 import org.daisy.pipeline.client.Pipeline2WS;
@@ -15,11 +17,21 @@ import org.w3c.dom.Document;
 public class MockHttpClient implements DP2HttpClient {
 
 	public Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
-		return new Pipeline2WSResponse(endpoint+path, 200, "OK", "Mock object retrieved successfully", "application/xml", get(path));
+		try {
+			return new Pipeline2WSResponse(endpoint+path, 200, "OK", "Mock object retrieved successfully", "application/xml", get(URLDecoder.decode(path,"UTF-8")));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	public Pipeline2WSResponse delete(String endpoint, String path, String username, String secret, Map<String, String> parameters) throws Pipeline2WSException {
-		return new Pipeline2WSResponse(endpoint+path, 200, "OK", "Mock object retrieved successfully", "application/xml", get(path));
+		try {
+			return new Pipeline2WSResponse(endpoint+path, 200, "OK", "Mock object retrieved successfully", "application/xml", get(URLDecoder.decode(path,"UTF-8")));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	public Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {

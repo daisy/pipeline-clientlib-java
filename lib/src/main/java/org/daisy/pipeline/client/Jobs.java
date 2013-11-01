@@ -3,6 +3,8 @@ package org.daisy.pipeline.client;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -225,6 +227,7 @@ public class Jobs {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse getResult(String endpoint, String username, String secret, String id, String href) throws Pipeline2WSException {
+		href = href.replace(" ", "%20");
 		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result/"+href, username, secret, null);
 	}
 	

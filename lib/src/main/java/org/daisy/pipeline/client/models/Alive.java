@@ -14,14 +14,9 @@ import org.w3c.dom.Node;
  */
 public class Alive {
 	
-	public enum Mode {
-		LOCAL, REMOTE
-	};
-	
 	public Boolean error = null;
-	
 	public Boolean authentication = null;
-	public Mode mode = null;
+	public Boolean localfs = null;
 	public String version = null;
 	
 	// ---------- Constructors ----------
@@ -62,10 +57,7 @@ public class Alive {
 			aliveXml = XPath.selectNode("/d:alive", aliveXml, Pipeline2WS.ns);
 		
 		this.authentication = "true".equals(XPath.selectText("@authentication", aliveXml, Pipeline2WS.ns));
-		String mode = XPath.selectText("@mode", aliveXml, Pipeline2WS.ns);
-		if (mode == null || "".equals(mode))
-			mode = XPath.selectText("@local", aliveXml, Pipeline2WS.ns);
-		this.mode = ("local".equals(mode) || "true".equals(mode)) ? Mode.LOCAL : Mode.REMOTE;
+		this.localfs = "true".equals(XPath.selectText("@localfs", aliveXml, Pipeline2WS.ns));
 		this.version = XPath.selectText("@version", aliveXml, Pipeline2WS.ns);
 	}
 	

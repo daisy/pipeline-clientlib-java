@@ -15,6 +15,7 @@ import javax.xml.xpath.XPathFactory;
 
 import junit.framework.Assert;
 
+import org.daisy.pipeline.client.Alive;
 import org.daisy.pipeline.client.Jobs;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
@@ -73,6 +74,27 @@ public class Pipeline2WSTest {
 		return false;
 	}
 	
+	@Test
+	public void testParseAliveResponse() {
+		try {
+			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
+			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
+			Pipeline2WSResponse response = Alive.get("http://localhost:8182/ws");
+			org.daisy.pipeline.client.models.Alive alive = new org.daisy.pipeline.client.models.Alive(response);
+			
+			assertNotNull(alive);
+			assertEquals(false, alive.authentication);
+			assertEquals(true, alive.localfs);
+			assertEquals(false, alive.error);
+			assertEquals("1.6", alive.version);
+			
+			assertEquals(true, Alive.allowsAccessToLocalFilesystem("http://localhost:8182/ws"));;
+			assertEquals(false, Alive.usesAuthentication("http://localhost:8182/ws"));
+
+		} catch (Pipeline2WSException e) {
+			fail(e.getMessage());
+		}
+	}
 	
 	@Test
 	public void testParseJobResponse() {
@@ -321,6 +343,20 @@ public class Pipeline2WSTest {
 				}
 			}
 
+		} catch (Pipeline2WSException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testGetResults() {
+		try {
+			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
+			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
+			
+			Pipeline2WSResponse response = Jobs.getResult("http://localhost:8182/ws", "clientid", "supersecret", "job1", "F00000 - Don't Worry, Be Happy Lyrics.epub");
+			assertEquals("TEST", response.asText());
+			
 		} catch (Pipeline2WSException e) {
 			fail(e.getMessage());
 		}

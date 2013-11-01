@@ -1,7 +1,5 @@
 package org.daisy.pipeline.client;
 
-import org.daisy.pipeline.client.models.Alive.Mode;
-
 /**
  * Methods for communicating with the "/alive" resource in a Pipeline 2 Web Service.
  * 
@@ -53,12 +51,12 @@ public class Alive {
 	}
 	
 	/**
-	 * Convenience wrapper around get(endpoint). Returns whether or not the WS at `endpoint` is running in local mode. 
+	 * Convenience wrapper around get(endpoint). Returns whether or not the WS at `endpoint` exposes file URIs referencing the local filesystem (previously known as "local mode"). 
 	 */
-	public static Boolean isLocal(String endpoint) {
+	public static Boolean allowsAccessToLocalFilesystem(String endpoint) {
 		try {
 			org.daisy.pipeline.client.models.Alive alive = new org.daisy.pipeline.client.models.Alive(get(endpoint));
-			return alive.mode == Mode.LOCAL;
+			return alive.localfs;
 			
 		} catch (Pipeline2WSException e) {
 			return null;
