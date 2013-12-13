@@ -51,7 +51,7 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 	private Pipeline2WSResponse getDelete(String method, String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
 		String url = Pipeline2WS.url(endpoint, path, username, secret, parameters);
 		if (endpoint == null) {
-			return new Pipeline2WSResponse(url, 503, "Endpoint is not set", "Please provide a Pipeline 2 endpoint.", null, null);
+			return new Pipeline2WSResponse(url, 503, "Endpoint is not set", "Please provide a Pipeline 2 endpoint.", null, null, null);
 		}
 		
 		ClientResource resource = new ClientResource(url);
@@ -90,7 +90,11 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 	        }
 		}
 		
-		Pipeline2WSResponse response = new Pipeline2WSResponse(url, status.getCode(), status.getName(), status.getDescription(), representation==null?null:representation.getMediaType()==null?null:representation.getMediaType().toString(), in);
+		Pipeline2WSResponse response = new Pipeline2WSResponse(
+				url, status.getCode(), status.getName(), status.getDescription(),
+				representation==null?null:representation.getMediaType()==null?null:representation.getMediaType().toString(),
+				representation.getSize()>=0?representation.getSize():null,
+				in);
 		if (Pipeline2WS.logger().logsLevel(Pipeline2WSLogger.LEVEL.DEBUG)) {
 			try {
 				if (representation == null) {
@@ -138,7 +142,10 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 		
 		Status status = resource.getStatus();
 		
-		return new Pipeline2WSResponse(url, status.getCode(), status.getName(), status.getDescription(), representation==null?null:representation.getMediaType().toString(), in);
+		return new Pipeline2WSResponse(url, status.getCode(), status.getName(), status.getDescription(),
+				representation==null?null:representation.getMediaType().toString(),
+				representation.getSize()>=0?representation.getSize():null,
+				in);
 	}
 	
 	public Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) throws Pipeline2WSException {
@@ -172,7 +179,10 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 		
 		Status status = Status.valueOf(response.getStatusLine().getStatusCode());
 		
-		return new Pipeline2WSResponse(url, status.getCode(), status.getName(), status.getDescription(), response.getFirstHeader("Content-Type").getValue(), bodyStream);
+		return new Pipeline2WSResponse(url, status.getCode(), status.getName(), status.getDescription(),
+				response.getFirstHeader("Content-Type").getValue(),
+				resEntity.getContentLength()>=0?resEntity.getContentLength():null,
+				bodyStream);
 	}
 	
 }

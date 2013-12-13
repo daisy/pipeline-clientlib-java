@@ -18,7 +18,7 @@ public class MockHttpClient implements DP2HttpClient {
 
 	public Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
 		try {
-			return new Pipeline2WSResponse(endpoint+path, 200, "OK", "Mock object retrieved successfully", "application/xml", get(URLDecoder.decode(path,"UTF-8")));
+			return new Pipeline2WSResponse(endpoint+path, 200, "OK", "Mock object retrieved successfully", "application/xml", null, get(URLDecoder.decode(path,"UTF-8")));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 			return null;
@@ -27,7 +27,7 @@ public class MockHttpClient implements DP2HttpClient {
 	
 	public Pipeline2WSResponse delete(String endpoint, String path, String username, String secret, Map<String, String> parameters) throws Pipeline2WSException {
 		try {
-			return new Pipeline2WSResponse(endpoint+path, 200, "OK", "Mock object retrieved successfully", "application/xml", get(URLDecoder.decode(path,"UTF-8")));
+			return new Pipeline2WSResponse(endpoint+path, 200, "OK", "Mock object retrieved successfully", "application/xml", null, get(URLDecoder.decode(path,"UTF-8")));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 			return null;

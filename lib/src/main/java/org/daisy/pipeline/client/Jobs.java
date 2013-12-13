@@ -227,8 +227,11 @@ public class Jobs {
 	 * @throws Pipeline2WSException 
 	 */
 	public static Pipeline2WSResponse getResult(String endpoint, String username, String secret, String id, String href) throws Pipeline2WSException {
-		href = href.replace(" ", "%20");
-		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result/"+href, username, secret, null);
+		if (href == null || "".equals(href))
+			href = "";
+		else
+			href = "/"+href.replace(" ", "%20");
+		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result"+href, username, secret, null);
 	}
 	
 	/**
