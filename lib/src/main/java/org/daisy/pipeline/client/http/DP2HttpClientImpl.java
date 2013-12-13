@@ -93,7 +93,7 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 		Pipeline2WSResponse response = new Pipeline2WSResponse(
 				url, status.getCode(), status.getName(), status.getDescription(),
 				representation==null?null:representation.getMediaType()==null?null:representation.getMediaType().toString(),
-				representation.getSize()>=0?representation.getSize():null,
+				representation==null?null:representation.getSize()>=0?representation.getSize():null,
 				in);
 		if (Pipeline2WS.logger().logsLevel(Pipeline2WSLogger.LEVEL.DEBUG)) {
 			try {
@@ -144,7 +144,7 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 		
 		return new Pipeline2WSResponse(url, status.getCode(), status.getName(), status.getDescription(),
 				representation==null?null:representation.getMediaType().toString(),
-				representation.getSize()>=0?representation.getSize():null,
+				representation==null?null:representation.getSize()>=0?representation.getSize():null,
 				in);
 	}
 	
