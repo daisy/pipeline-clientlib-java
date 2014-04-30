@@ -1,11 +1,8 @@
 package org.daisy.pipeline.client.http;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
@@ -13,22 +10,20 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.HTTP;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Pipeline2WSLogger;
 import org.daisy.pipeline.utils.XML;
-import org.restlet.Client;
-import org.restlet.data.MediaType;
-import org.restlet.data.Protocol;
-import org.restlet.data.Status;
-import org.restlet.representation.Representation;
-import org.restlet.resource.ClientResource;
-import org.restlet.resource.ResourceException;
 import org.w3c.dom.Document;
 
 /**
@@ -37,8 +32,6 @@ import org.w3c.dom.Document;
  * @author jostein
  */
 public class DP2HttpClientImpl implements DP2HttpClient {
-	
-	private static Client client = new Client(Protocol.HTTP); // TODO: add support for HTTPS WS ?
 	
 	public Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2WSException {
 		return getDelete("GET", endpoint, path, username, secret, parameters);
@@ -54,66 +47,38 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 			return new Pipeline2WSResponse(url, 503, "Endpoint is not set", "Please provide a Pipeline 2 endpoint.", null, null, null);
 		}
 		
-		ClientResource resource = new ClientResource(url);
-		resource.setNext(client);
-		Representation representation = null;
-		InputStream in = null;
-		boolean error = false;
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpRequestBase http;
+		
+		if ("DELETE".equals(method)) {
+			http = new HttpDelete(url);
+		} else { // "GET"
+			http = new HttpGet(url);
+		}
+		
+		HttpResponse response = null;
 		try {
-			if ("DELETE".equals(method)) {
-				representation = resource.delete();
-			} else { // "GET"
-				representation = resource.get();
-			}
-			if (representation != null)
-				in = representation.getStream();
-			
-		} catch (ResourceException e) {
-			// Unauthorized etc.
-			error = true;
+			response = httpclient.execute(http);
+		} catch (ClientProtocolException e) {
+			throw new Pipeline2WSException("Error while "+method+"ing.", e);
 		} catch (IOException e) {
-			e.printStackTrace();
-			error = true;
+			throw new Pipeline2WSException("Error while "+method+"ing.", e);
+		}
+		HttpEntity resEntity = response.getEntity();
+		
+		InputStream bodyStream = null;
+		try {
+			bodyStream = resEntity.getContent();
+		} catch (IOException e) {
+			throw new Pipeline2WSException("Error while reading response body", e); 
 		}
 		
-		Status status = resource.getStatus();
-		
-		if (error) {
-			try {
-				if (status != null && status.getCode() >= 1000) {
-					in = new ByteArrayInputStream("Could not communicate with the Pipeline 2 framework.".getBytes("utf-8"));
-				} else {
-					in = new ByteArrayInputStream("An unknown problem occured while communicating with the Pipeline 2 framework.".getBytes("utf-8"));
-				}
-	        } catch(UnsupportedEncodingException e) {
-	            throw new Pipeline2WSException("Unable to create error body string as stream", e);
-	        }
-		}
-		
-		Pipeline2WSResponse response = new Pipeline2WSResponse(
-				url, status.getCode(), status.getName(), status.getDescription(),
-				representation==null?null:representation.getMediaType()==null?null:representation.getMediaType().toString(),
-				representation==null?null:representation.getSize()>=0?representation.getSize():null,
-				in);
-		if (Pipeline2WS.logger().logsLevel(Pipeline2WSLogger.LEVEL.DEBUG)) {
-			try {
-				if (representation == null) {
-					Pipeline2WS.logger().debug("---- Received: null ----\n");
-				} else if (representation.getMediaType() == MediaType.APPLICATION_ALL_XML) {
-					Pipeline2WS.logger().debug("---- Received: ----\n"+response.asText());
-				} else {
-					Pipeline2WS.logger().debug("---- Received: "+representation.getMediaType()+" ("+representation.getSize()+" bytes) ----");
-				}
-			} catch (Exception e) {
-				Pipeline2WS.logger().error("---- Received: ["+e.getClass()+": "+e.getMessage()+"] ----");
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				e.printStackTrace(pw);
-				Pipeline2WS.logger().error(sw.toString());
-			}
-		}
-		return response;
+		return new Pipeline2WSResponse(url, response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase(), null,
+				response.getFirstHeader("Content-Type").getValue(),
+				resEntity.getContentLength()>=0?resEntity.getContentLength():null,
+				bodyStream);
 	}
+	
 	
 	public Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) throws Pipeline2WSException {
 		String url = Pipeline2WS.url(endpoint, path, username, secret, null);
@@ -123,30 +88,41 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 			Pipeline2WS.logger().debug(XML.toString(xml));
 		}
 		
-		ClientResource resource = new ClientResource(url);
-		Representation representation = null;
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpPost httppost = new HttpPost(url);
+		
+		StringEntity entity;
 		try {
-			representation = resource.post(XML.toString(xml));
-		} catch (org.restlet.resource.ResourceException e) {
-			throw new Pipeline2WSException(e.getMessage(), e);
+			entity = new StringEntity(XML.toString(xml), "application/xml", HTTP.UTF_8);
+		} catch (UnsupportedEncodingException e) {
+			throw new Pipeline2WSException("Error while serializing XML for POSTing.", e);
 		}
 		
-		InputStream in = null;
-		if (representation != null) {
-			try {
-				in = representation.getStream();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		httppost.setEntity(entity);
+		
+		HttpResponse response = null;
+		try {
+			response = httpclient.execute(httppost);
+		} catch (ClientProtocolException e) {
+			throw new Pipeline2WSException("Error while POSTing.", e);
+		} catch (IOException e) {
+			throw new Pipeline2WSException("Error while POSTing.", e);
+		}
+		HttpEntity resEntity = response.getEntity();
+		
+		InputStream bodyStream = null;
+		try {
+			bodyStream = resEntity.getContent();
+		} catch (IOException e) {
+			throw new Pipeline2WSException("Error while reading response body", e); 
 		}
 		
-		Status status = resource.getStatus();
-		
-		return new Pipeline2WSResponse(url, status.getCode(), status.getName(), status.getDescription(),
-				representation==null?null:representation.getMediaType().toString(),
-				representation==null?null:representation.getSize()>=0?representation.getSize():null,
-				in);
+		return new Pipeline2WSResponse(url, response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase(), null,
+				response.getFirstHeader("Content-Type").getValue(),
+				resEntity.getContentLength()>=0?resEntity.getContentLength():null,
+				bodyStream);
 	}
+	
 	
 	public Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) throws Pipeline2WSException {
 		String url = Pipeline2WS.url(endpoint, path, username, secret, null);
@@ -177,9 +153,7 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 			throw new Pipeline2WSException("Error while reading response body", e); 
 		}
 		
-		Status status = Status.valueOf(response.getStatusLine().getStatusCode());
-		
-		return new Pipeline2WSResponse(url, status.getCode(), status.getName(), status.getDescription(),
+		return new Pipeline2WSResponse(url, response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase(), null,
 				response.getFirstHeader("Content-Type").getValue(),
 				resEntity.getContentLength()>=0?resEntity.getContentLength():null,
 				bodyStream);

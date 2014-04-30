@@ -2,6 +2,7 @@ package org.daisy.pipeline.client.test;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,12 +34,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 public class Pipeline2WSTest {
+	
+	private static String resourceBaseUri = new File("src/test/resources/responses/").toURI().toString();
 
 	@Test
 	public void getScripts() {
 		try {
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
-			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret");
+			Pipeline2WSResponse response = Scripts.get("http://localhost:8181/ws", "clientid", "supersecret");
 			if (response.status != 200)
 				fail(response.status+": "+response.statusName+" ("+response.statusDescription+")");
 			
@@ -79,7 +82,7 @@ public class Pipeline2WSTest {
 		try {
 			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
-			Pipeline2WSResponse response = Alive.get("http://localhost:8182/ws");
+			Pipeline2WSResponse response = Alive.get("http://localhost:8181/ws");
 			org.daisy.pipeline.client.models.Alive alive = new org.daisy.pipeline.client.models.Alive(response);
 			
 			assertNotNull(alive);
@@ -88,8 +91,8 @@ public class Pipeline2WSTest {
 			assertEquals(false, alive.error);
 			assertEquals("1.6", alive.version);
 			
-			assertEquals(true, Alive.allowsAccessToLocalFilesystem("http://localhost:8182/ws"));;
-			assertEquals(false, Alive.usesAuthentication("http://localhost:8182/ws"));
+			assertEquals(true, Alive.allowsAccessToLocalFilesystem("http://localhost:8181/ws"));;
+			assertEquals(false, Alive.usesAuthentication("http://localhost:8181/ws"));
 
 		} catch (Pipeline2WSException e) {
 			fail(e.getMessage());
@@ -101,7 +104,7 @@ public class Pipeline2WSTest {
 		try {
 			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
-			Pipeline2WSResponse response = Jobs.get("http://localhost:8182/ws", "clientid", "supersecret", "job1", null);
+			Pipeline2WSResponse response = Jobs.get("http://localhost:8181/ws", "clientid", "supersecret", "job1", null);
 			Job job = new Job(response);
 			
 			assertNotNull(job);
@@ -138,33 +141,33 @@ public class Pipeline2WSTest {
 			assertEquals(3, job.results.results.get(0).results.size());
 			
 			assertEquals("", job.results.results.get(0).results.get(2).from);
-			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/valentin.jpg", job.results.results.get(0).results.get(0).file);
+			assertEquals(resourceBaseUri+"jobs/job1/result/option/output-dir/idx/output/valentin.jpg", job.results.results.get(0).results.get(0).file);
 			assertEquals("", job.results.results.get(0).results.get(0).mimeType);
 			assertEquals(new Long(25740), job.results.results.get(0).results.get(0).size);
 			assertEquals("", job.results.results.get(0).results.get(0).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/valentin.jpg", job.results.results.get(0).results.get(0).href);
-			assertEquals("result/option/output-dir/valentin.jpg", job.results.results.get(0).results.get(0).relativeHref);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output/valentin.jpg", job.results.results.get(0).results.get(0).href);
+			assertEquals("result/option/output-dir/idx/output/valentin.jpg", job.results.results.get(0).results.get(0).relativeHref);
 			assertEquals("valentin.jpg", job.results.results.get(0).results.get(0).filename);
 			
 			assertEquals("", job.results.results.get(0).results.get(1).from);
-			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(1).file);
+			assertEquals(resourceBaseUri+"jobs/job1/result/option/output-dir/idx/output/zedai-mods.xml", job.results.results.get(0).results.get(1).file);
 			assertEquals("", job.results.results.get(0).results.get(1).mimeType);
 			assertEquals(new Long(442), job.results.results.get(0).results.get(1).size);
 			assertEquals("", job.results.results.get(0).results.get(1).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(1).href);
-			assertEquals("result/option/output-dir/zedai-mods.xml", job.results.results.get(0).results.get(1).relativeHref);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output/zedai-mods.xml", job.results.results.get(0).results.get(1).href);
+			assertEquals("result/option/output-dir/idx/output/zedai-mods.xml", job.results.results.get(0).results.get(1).relativeHref);
 			assertEquals("zedai-mods.xml", job.results.results.get(0).results.get(1).filename);
 			
 			assertEquals("", job.results.results.get(0).results.get(2).from);
-			assertEquals("file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai.xml", job.results.results.get(0).results.get(2).file);
+			assertEquals(resourceBaseUri+"jobs/job1/result/option/output-dir/idx/output/zedai.xml", job.results.results.get(0).results.get(2).file);
 			assertEquals("", job.results.results.get(0).results.get(2).mimeType);
 			assertEquals(new Long(151891), job.results.results.get(0).results.get(2).size);
 			assertEquals("", job.results.results.get(0).results.get(2).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai.xml", job.results.results.get(0).results.get(2).href);
-			assertEquals("result/option/output-dir/zedai.xml", job.results.results.get(0).results.get(2).relativeHref);
+			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output/zedai.xml", job.results.results.get(0).results.get(2).href);
+			assertEquals("result/option/output-dir/idx/output/zedai.xml", job.results.results.get(0).results.get(2).relativeHref);
 			assertEquals("zedai.xml", job.results.results.get(0).results.get(2).filename);
 			
-			response = Jobs.get("http://localhost:8182/ws", "clientid", "supersecret", "job2", null);
+			response = Jobs.get("http://localhost:8181/ws", "clientid", "supersecret", "job2", null);
 			job = new Job(response);
 			
 			assertNotNull(job.results);
@@ -172,10 +175,10 @@ public class Pipeline2WSTest {
 			assertEquals("result", job.results.relativeHref);
 			assertEquals("option/output-dir", job.results.results.get(0).filename);
 			assertEquals("result/option/output-dir", job.results.results.get(0).relativeHref);
-			assertEquals("idx/output-dir/epub/mimetype", job.results.results.get(0).results.get(25).filename);
-			assertEquals("result/option/output-dir/idx/output-dir/epub/mimetype", job.results.results.get(0).results.get(25).relativeHref);
-			assertEquals("idx/output-dir/epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", job.results.results.get(0).results.get(19).filename);
-			assertEquals("result/option/output-dir/idx/output-dir/epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", job.results.results.get(0).results.get(19).relativeHref);
+			assertEquals("output-dir/epub/mimetype", job.results.results.get(0).results.get(25).filename);
+			assertEquals("result/option/output-dir/idx/output/output-dir/epub/mimetype", job.results.results.get(0).results.get(25).relativeHref);
+			assertEquals("output-dir/epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", job.results.results.get(0).results.get(19).filename);
+			assertEquals("result/option/output-dir/idx/output/output-dir/epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", job.results.results.get(0).results.get(19).relativeHref);
 
 		} catch (Pipeline2WSException e) {
 			fail(e.getMessage());
@@ -187,7 +190,7 @@ public class Pipeline2WSTest {
 		try {
 			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
-			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-to-zedai");
+			Pipeline2WSResponse response = Scripts.get("http://localhost:8181/ws", "clientid", "supersecret", "dtbook-to-zedai");
 			System.out.println("response: "+response.asText());
 			Script script = new Script(response);
 			
@@ -299,7 +302,7 @@ public class Pipeline2WSTest {
 		try {
 			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
-			Pipeline2WSResponse response = Scripts.get("http://localhost:8182/ws", "clientid", "supersecret", "dtbook-validator");
+			Pipeline2WSResponse response = Scripts.get("http://localhost:8181/ws", "clientid", "supersecret", "dtbook-validator");
 			System.out.println("response: "+response.asText());
 			Script script = new Script(response);
 			
@@ -354,8 +357,23 @@ public class Pipeline2WSTest {
 			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
 			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
 			
-			Pipeline2WSResponse response = Jobs.getResult("http://localhost:8182/ws", "clientid", "supersecret", "job1", "F00000 - Don't Worry, Be Happy Lyrics.epub");
+			Pipeline2WSResponse response = Jobs.getResult("http://localhost:8181/ws", "clientid", "supersecret", "job1", "F00000 - Don't Worry, Be Happy Lyrics.epub");
 			assertEquals("TEST", response.asText());
+			
+		} catch (Pipeline2WSException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testGetResultsFromFile() {
+		try {
+			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.ALL);
+			Pipeline2WS.setHttpClientImplementation(new MockHttpClient());
+			
+			File response = Jobs.getResultFromFile("http://localhost:8181/ws", "clientid", "supersecret", "job1", "option/output-dir/idx/output/zedai.xml");
+			assertNotNull(response);
+			assertTrue(response != null && response.exists());
 			
 		} catch (Pipeline2WSException e) {
 			fail(e.getMessage());
