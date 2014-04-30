@@ -3,8 +3,9 @@ package org.daisy.pipeline.client;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,11 +19,16 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.io.FileUtils;
+import org.daisy.pipeline.client.models.Job;
+import org.daisy.pipeline.client.models.job.JobResult;
 import org.daisy.pipeline.client.models.script.Argument;
 import org.daisy.pipeline.utils.XML;
+import org.daisy.pipeline.utils.XPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import org.daisy.pipeline.utils.Files;
 
 /**
  * Methods for communicating with the "/jobs" resource in a Pipeline 2 Web Service.
@@ -232,6 +238,112 @@ public class Jobs {
 		else
 			href = "/"+href.replace(" ", "%20");
 		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result"+href, username, secret, null);
+	}
+	
+	/**
+	 * Get the result for a job directly from disk (only works when fsallow=true)
+	 * 
+	 * @return The File if you are authorized to read the file and the file exists. Otherwise, null.
+	 * @throws Pipeline2WSException 
+	 */
+	public static File getResultFromFile(String endpoint, String username, String secret, String id, String href) throws Pipeline2WSException {
+		if (href == null) href = "";
+		Pipeline2WSResponse jobResponse = get(endpoint, username, secret, id, null);
+		Job job = new Job(jobResponse);
+		Pipeline2WS.logger().debug("job.getResultByHref(\""+href+"\",\""+job.href+"/result"+"\")");
+		JobResult result = job.getResultByHref(href, job.href+"/result");
+		if (result == null) {
+			throw new Pipeline2WSException("Could not find href in job results.");
+		}
+		
+		File resultFile;
+		
+		if (result.file != null && result.file.length() > 0) {
+			// single file download
+			try {
+				Pipeline2WS.logger().debug("Reading file from disk: \""+result.file+"\" (href: \""+href+"\")");
+				resultFile = new File(new URI(result.file));
+			} catch (URISyntaxException e) {
+				throw new Pipeline2WSException("Unable to parse result file path; please make sure that the Pipeline 2 engine is running on the same system as the the client (i.e. the Web UI).", e);
+			} catch (IllegalArgumentException e) {
+				throw new Pipeline2WSException("Could not read file from disk: "+result.file, e);
+			}
+		}
+		
+		else if (result.from != null && result.from.length() > 0) {
+			// option or port
+			try {
+				File tempDirForZip = File.createTempFile("webui-result-zip", null);
+				Pipeline2WS.logger().debug("creating temp dir for zip: "+tempDirForZip.getAbsolutePath());
+				tempDirForZip.delete();
+				tempDirForZip.mkdir();
+				
+				resultFile = new File(new URI(tempDirForZip.toURI().toString()+"/"+id+"-"+result.name+".zip"));
+				Pipeline2WS.logger().debug("touching zip: "+resultFile.getAbsolutePath());
+				resultFile.createNewFile();
+				
+				JobResult firstChild = result.results.get(0);
+				if (firstChild != null) {
+					String directoryPath = firstChild.file.substring(0, firstChild.file.length()-firstChild.filename.length());
+					Files.addDirectoryToZip(resultFile, new File(new URI(directoryPath)));
+				}
+				
+			} catch (IOException e) {
+				throw new Pipeline2WSException("Unable to create result ZIP archive for "+result.from+" "+result.name, e);
+			} catch (URISyntaxException e) {
+				throw new Pipeline2WSException("Unable to create result ZIP archive for "+result.from+" "+result.name, e);
+			}
+		}
+		
+		else {
+			// entire result
+			try {
+				File tempDirForZip = File.createTempFile("webui-result-zip", null);
+				Pipeline2WS.logger().debug("creating temp dir for zip: "+tempDirForZip.getAbsolutePath());
+				tempDirForZip.delete();
+				tempDirForZip.mkdir();
+				
+				resultFile = new File(new URI(tempDirForZip.toURI().toString()+"/"+id+"-"+result.name+".zip"));
+				Pipeline2WS.logger().debug("touching zip: "+resultFile.getAbsolutePath());
+				resultFile.createNewFile();
+				
+				boolean optionAndPortWithSameName = false;
+				List<String> optionAndPortNames = new ArrayList<String>();
+				for (JobResult optionOrPort : result.results) {
+					if (optionAndPortNames.contains(optionOrPort.name)) {
+						optionAndPortWithSameName = true;
+						break;
+					} else {
+						optionAndPortNames.add(optionOrPort.name);
+					}
+				}
+				
+				for (JobResult optionOrPort : result.results) {
+					JobResult firstChild = optionOrPort.results.get(0);
+					if (firstChild != null) {
+						String directoryPath = firstChild.file.substring(0, firstChild.file.length()-firstChild.filename.length());
+						File directory = new File(new URI(directoryPath));
+						Map<String, File> files = Files.listFilesRecursively(directory, directory.getParentFile().toURI(), true);
+						Map<String, File> filesInDir = new HashMap<String, File>();
+						if (optionAndPortWithSameName) {
+							for (String fileHref : files.keySet()) {
+								filesInDir.put(optionOrPort.from+"/"+fileHref, files.get(fileHref));
+							}
+						} else {
+							filesInDir = files;
+						}
+						Files.addFilesToZip(resultFile, filesInDir);
+					}
+				}
+				
+			} catch (IOException e) {
+				throw new Pipeline2WSException("Unable to create result ZIP archive for "+result.from+" "+result.name, e);
+			} catch (URISyntaxException e) {
+				throw new Pipeline2WSException("Unable to create result ZIP archive for "+result.from+" "+result.name, e);
+			}
+		}
+		
+		return resultFile;
 	}
 	
 	/**

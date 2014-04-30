@@ -46,10 +46,6 @@
 	    <url>http://code.google.com/p/daisy-pipeline/issues/list</url>
   	</issueManagement>
 
-    <properties>
-        <!--<restlet.version>2.1-RC6</restlet.version>-->
-    </properties>
-
     <build>
     	<plugins>
     		<plugin>
@@ -107,39 +103,10 @@
         </dependency>
         
         <dependency>
-            <groupId>org.restlet.jse</groupId>
-            <artifactId>org.restlet</artifactId>
-            <version>2.1-M3</version>
-        </dependency>
-        
-        <!-- for callbacks -->
-        <dependency>
-            <groupId>org.restlet.jse</groupId>
-            <artifactId>org.restlet.ext.xml</artifactId>
-            <version>2.1-M3</version>
-        </dependency>
-        
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.8.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <repositories>
-        <!-- 
-        Restlet is not on Maven Central
-        https://github.com/restlet/restlet-framework-java/issues/481
-        -->
-        <repository>
-            <id>central</id>
-            <name>Maven Central</name>
-            <url>http://repo.maven.apache.org/maven2/</url>
-        </repository>
-        <repository>
-            <id>restlet-repo</id>
-            <name>Public online Restlet repository</name>
-            <url>http://maven.restlet.org</url>
-        </repository>
-    </repositories>
 </project>

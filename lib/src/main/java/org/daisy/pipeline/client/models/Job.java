@@ -64,6 +64,21 @@ public class Job {
 		parseJobXml(jobXml);
 	}
 	
+	/**
+	 * Get the job result matching the given href.
+	 */
+	public JobResult getResultByHref(String href, String base) {
+		if (href == null || href.equals("")) {
+			Pipeline2WS.logger().debug("getResultByHref: returning d:results element");
+			return results;
+		}
+		if (results == null) {
+			Pipeline2WS.logger().debug("getResultByHref: returning null (no d:results element)");
+			return null;
+		}
+		else return results.getResultByHref(href, base);
+	}
+	
 	private void parseJobXml(Node jobXml) throws Pipeline2WSException {
 		// select root element if the node is a document node
 		if (jobXml instanceof Document)
