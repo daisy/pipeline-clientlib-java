@@ -137,9 +137,9 @@
     <log href="http://localhost:8181/ws/jobs/job1/log"/>
     <results href="http://localhost:8181/ws/jobs/job1/result" mime-type="application/zip">
         <result from="option" href="http://localhost:8181/ws/jobs/job1/result/option/output-dir" mime-type="application/zip" name="output-dir">
-            <result file="file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai-mods.xml" href="http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai-mods.xml" size="442"/>
-            <result file="file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/zedai.xml" href="http://localhost:8181/ws/jobs/job1/result/option/output-dir/zedai.xml" size="151891"/>
-            <result file="file:/home/jostein/pipeline-assembly/target/dev-launcher/data/data/job1/output/output-dir/valentin.jpg" href="http://localhost:8181/ws/jobs/job1/result/option/output-dir/valentin.jpg" size="25740"/>
+            <result file="/jobs/job1/result/option/output-dir/idx/output/zedai-mods.xml" href="http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output/zedai-mods.xml" size="442"/>
+            <result file="/jobs/job1/result/option/output-dir/idx/output/zedai.xml" href="http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output/zedai.xml" size="151891"/>
+            <result file="/jobs/job1/result/option/output-dir/idx/output/valentin.jpg" href="http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output/valentin.jpg" size="25740"/>
         </result>
     </results>
 </job>

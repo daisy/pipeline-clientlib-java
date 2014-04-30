@@ -1,7 +1,6 @@
 package org.daisy.pipeline.client.models.job;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -31,6 +30,36 @@ public class JobResult implements Comparable<JobResult> {
 	public String filename;
 	public String relativeHref;
 	
+	/**
+	 * Get the job result matching the given href (either this JobResult or any of its descendants).
+	 * Please use Job#getResultByHref instead to search all results in the job.
+	 */
+	public JobResult getResultByHref(String href, String base) {
+		String fullHref = base+"/"+href;
+		
+		if (fullHref.equals(this.href)) {
+			Pipeline2WS.logger().debug("getResultByHref: returning d:result element");
+			return this;
+		}
+		
+		if (results == null) {
+			Pipeline2WS.logger().debug("getResultByHref: returning null (no descendant d:result element)");
+			return null;
+		}
+		
+		for (JobResult result : results) {
+			JobResult r = result.getResultByHref(href, base);
+			if (r != null) {
+				Pipeline2WS.logger().debug("getResultByHref: found d:result !");
+				return r;
+			} else {
+				Pipeline2WS.logger().debug("getResultByHref: wrong d:result: "+result.href);
+			}
+		}
+		
+		return null;
+	}
+	
 	private static Pattern filenamePattern = Pattern.compile(".*/");
 
     public static JobResult parseResultXml(Node resultNode) throws Pipeline2WSException {
@@ -50,6 +79,10 @@ public class JobResult implements Comparable<JobResult> {
 			item.filename = item.href == null ? null : filenamePattern.matcher(item.href).replaceAll("");
 		} else {
 			item.filename = item.href.substring(parentHref.length()+1);
+		}
+		
+		if (XPath.selectNode("self::d:result[not(string(@size)='') and not(@from)]", resultNode, Pipeline2WS.ns) != null) {
+			item.filename = item.filename.replaceFirst("^idx/[^/]+/", "");
 		}
 		
 		if (relativePath == null) {

@@ -1,8 +1,6 @@
 package org.daisy.pipeline.client;
 
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.SignatureException;
@@ -49,9 +47,6 @@ public class Pipeline2WS {
 	
 	/** The HTTP Client implementation */
 	private static DP2HttpClient httpClient = null;
-	
-	/** The HTTP Server implementation for handling callbacks */
-	private static DP2HttpCallbackServer callbackServer = null;
 	
 	/** The Handler that handles the callbacks. Set it with handleCallbacks(...) */
 	public static Pipeline2WSCallbackHandler callbackHandler = null;
@@ -234,56 +229,6 @@ public class Pipeline2WS {
 		init();
 		logger.debug("deleting from "+endpoint+path);
 		return httpClient.delete(endpoint, path, username, secret, parameters);
-	}
-	
-	/**
-	 * Set the HTTP server implementation to use for handling callbacks. Defaults to DP2HttpCallbackServer.
-	 * @param callbackServerImpl
-	 */
-	public static void setHttpCallbackServerImplementation(DP2HttpCallbackServer callbackServerImpl) {
-		callbackServer = callbackServerImpl;
-		logger.debug("set callback server implementation to "+(callbackServer==null?null:callbackServerImpl.getClass().getCanonicalName()));
-	}
-	
-	/**
-	 * To handle callbacks, pass an instance of your Pipeline2WSCallbackHandler to this method.
-	 * A web service will be started on the given port to handle the callbacks.
-	 * 
-	 * @param callbackHandler Your callback handler.
-	 * @param port The port to start the callback handler web service on.
-	 */
-	public static void handleCallbacks(Pipeline2WSCallbackHandler callbackHandler, int port) {
-		if (callbackHandler == null)
-			return;
-		
-		Pipeline2WS.callbackHandler = callbackHandler;
-		logger.debug("set callback handler implementation to "+(callbackHandler==null?null:callbackHandler.getClass().getCanonicalName()));
-		
-		// Use default callback server implementation if nothing else is set
-		if (callbackServer == null)
-			setHttpCallbackServerImplementation(new DP2HttpCallbackServerImpl());
-		
-		// Initialize callback server on the provided port
-		try {
-			logger.debug("initializing callback server on port "+port);
-        	callbackServer.init(port);
-			
-		} catch (Exception e) {
-			logger.error("Could not start the component");
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			e.printStackTrace(pw);
-			logger.error(sw.toString());
-		}
-	}
-	
-	/**
-	 * Stop handling callbacks. Shuts down the web service that handles callbacks.
-	 * @throws Exception 
-	 */
-	public static void stopCallbacks() throws Exception {
-		logger.debug("stopping callbacks");
-		Pipeline2WS.callbackServer.close();
 	}
 	
 	/**
