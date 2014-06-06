@@ -17,7 +17,7 @@
     
     <name>DAISY Pipeline 2 :: Java Client Library</name>
     <description>A Java library for communicating with the DAISY Pipeline 2.</description>
-    <url>https://github.com/daisy-consortium/pipeline-clientlib-java</url>
+    <url>https://github.com/daisy/pipeline-clientlib-java</url>
     <inceptionYear>2012</inceptionYear>
     <organization>
     	<name>The DAISY Consortium</name>

@@ -15,7 +15,7 @@
   
   <name>DAISY Pipeline 2 :: Java Client Library Command Line Interface</name>
   <description>A command line interface for the Java Client Library.</description>
-  <url>https://github.com/daisy-consortium/pipeline-clientlib-java</url>
+  <url>https://github.com/daisy/pipeline-clientlib-java</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
