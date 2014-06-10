@@ -67,16 +67,21 @@ public class DP2HttpClientImpl implements DP2HttpClient {
 		HttpEntity resEntity = response.getEntity();
 		
 		InputStream bodyStream = null;
-		try {
-			bodyStream = resEntity.getContent();
-		} catch (IOException e) {
-			throw new Pipeline2WSException("Error while reading response body", e); 
+		if (resEntity != null) {
+			try {
+				bodyStream = resEntity.getContent();
+			} catch (IOException e) {
+				throw new Pipeline2WSException("Error while reading response body", e);
+			}
 		}
 		
-		return new Pipeline2WSResponse(url, response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase(), null,
-				response.getFirstHeader("Content-Type").getValue(),
-				resEntity.getContentLength()>=0?resEntity.getContentLength():null,
-				bodyStream);
+		int status = response.getStatusLine() != null ? response.getStatusLine().getStatusCode() : 204; // Not sure if it's ok to default to 204, but let's try!
+		String statusName = response.getStatusLine() != null ? response.getStatusLine().getReasonPhrase() : "";
+		String statusDescription = null;
+		String contentType = response.getFirstHeader("Content-Type") != null ? response.getFirstHeader("Content-Type").getValue() : "application/octet-stream";
+		Long size = (resEntity != null && resEntity.getContentLength() >= 0) ? resEntity.getContentLength() : null;
+		
+		return new Pipeline2WSResponse(url, status, statusName, statusDescription, contentType, size, bodyStream);
 	}
 	
 	
