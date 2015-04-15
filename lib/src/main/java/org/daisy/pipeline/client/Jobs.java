@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,6 @@ import org.daisy.pipeline.utils.XPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
 import org.daisy.pipeline.utils.Files;
 
 /**
@@ -241,19 +239,21 @@ public class Jobs {
 	}
 	
 	/**
-	 * Get the result for a job directly from disk (only works when fsallow=true)
+	 * Get the result for a job directly from disk (only works when localfs=true)
 	 * 
 	 * @return The File if you are authorized to read the file and the file exists. Otherwise, null.
 	 * @throws Pipeline2WSException 
 	 */
 	public static File getResultFromFile(String endpoint, String username, String secret, String id, String href) throws Pipeline2WSException {
 		if (href == null) href = "";
+		Pipeline2WS.logger().debug("getting jobXML for "+id);
 		Pipeline2WSResponse jobResponse = get(endpoint, username, secret, id, null);
-		Job job = new Job(jobResponse);
-		Pipeline2WS.logger().debug("job.getResultByHref(\""+href+"\",\""+job.href+"/result"+"\")");
-		JobResult result = job.getResultByHref(href, job.href+"/result");
+		
+		Pipeline2WS.logger().debug("finding result for href=\""+href+"\" in jobXML");
+		JobResult result = Job.getResultFromHref(jobResponse.asXml(), href);
+		
 		if (result == null) {
-			throw new Pipeline2WSException("Could not find href in job results.");
+			throw new Pipeline2WSException("Could not find href in job results: "+href);
 		}
 		
 		File resultFile;
@@ -282,9 +282,9 @@ public class Jobs {
 				Pipeline2WS.logger().debug("touching zip: "+resultFile.getAbsolutePath());
 				resultFile.createNewFile();
 				
-				JobResult firstChild = result.results.get(0);
-				if (firstChild != null) {
-					String directoryPath = firstChild.file.substring(0, firstChild.file.length()-firstChild.filename.length());
+				JobResult firstFile = JobResult.parseResultXml(XPath.selectNode("/*/d:results/d:result[@from='"+result.from+"']/d:result[1]", jobResponse.asXml(), Pipeline2WS.ns));
+				if (firstFile != null) {
+					String directoryPath = firstFile.file.substring(0, firstFile.file.indexOf(id) + id.length() + "/output/".length() + result.name.length() + 1);
 					Files.addDirectoryToZip(resultFile, new File(new URI(directoryPath)));
 				}
 				
@@ -303,37 +303,14 @@ public class Jobs {
 				tempDirForZip.delete();
 				tempDirForZip.mkdir();
 				
-				resultFile = new File(new URI(tempDirForZip.toURI().toString()+"/"+id+"-"+result.name+".zip"));
+				resultFile = new File(new URI(tempDirForZip.toURI().toString()+"/"+id+".zip"));
 				Pipeline2WS.logger().debug("touching zip: "+resultFile.getAbsolutePath());
 				resultFile.createNewFile();
 				
-				boolean optionAndPortWithSameName = false;
-				List<String> optionAndPortNames = new ArrayList<String>();
-				for (JobResult optionOrPort : result.results) {
-					if (optionAndPortNames.contains(optionOrPort.name)) {
-						optionAndPortWithSameName = true;
-						break;
-					} else {
-						optionAndPortNames.add(optionOrPort.name);
-					}
-				}
-				
-				for (JobResult optionOrPort : result.results) {
-					JobResult firstChild = optionOrPort.results.get(0);
-					if (firstChild != null) {
-						String directoryPath = firstChild.file.substring(0, firstChild.file.length()-firstChild.filename.length());
-						File directory = new File(new URI(directoryPath));
-						Map<String, File> files = Files.listFilesRecursively(directory, directory.getParentFile().toURI(), true);
-						Map<String, File> filesInDir = new HashMap<String, File>();
-						if (optionAndPortWithSameName) {
-							for (String fileHref : files.keySet()) {
-								filesInDir.put(optionOrPort.from+"/"+fileHref, files.get(fileHref));
-							}
-						} else {
-							filesInDir = files;
-						}
-						Files.addFilesToZip(resultFile, filesInDir);
-					}
+				JobResult firstFile = JobResult.parseResultXml(XPath.selectNode("/*/d:results/d:result/d:result[1]", jobResponse.asXml(), Pipeline2WS.ns));
+				if (firstFile != null) {
+					String directoryPath = firstFile.file.substring(0, firstFile.file.indexOf(id) + id.length() + "/output/".length());
+					Files.addDirectoryToZip(resultFile, new File(new URI(directoryPath)));
 				}
 				
 			} catch (IOException e) {
