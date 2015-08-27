@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jobRequest xmlns="http://www.daisy.org/ns/pipeline/data">
+    <script href="http://localhost:8181/ws/scripts/dtbook-to-epub3"/>
+    <nicename>Nicename</nicename>
+    <input name="source">
+        <item value="hauy_valid.xml"/>
+        <item value="dtbook.2005.basic.css"/>
+    </input>
+    <option name="language">en</option>
+    <option name="assert-valid">true</option>
+    <option name="audio">true</option>
+</jobRequest>
