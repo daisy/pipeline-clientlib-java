@@ -1,23 +1,16 @@
 package org.daisy.pipeline.client.models;
 
-import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.daisy.pipeline.client.Pipeline2Client;
 import org.daisy.pipeline.client.Pipeline2Exception;
-import org.daisy.pipeline.client.Pipeline2WSResponse;
-import org.daisy.pipeline.client.models.job.Callback;
-import org.daisy.pipeline.client.models.job.Result;
-import org.daisy.pipeline.client.models.job.Message;
-import org.daisy.pipeline.client.models.script.Argument;
-import org.daisy.pipeline.client.models.script.ArgumentValidator;
-import org.daisy.pipeline.client.persistence.Context;
+import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.filestorage.JobStorageInterface;
+import org.daisy.pipeline.client.filestorage.JobValidator;
 import org.daisy.pipeline.client.utils.XPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -54,7 +47,7 @@ public class Job implements Comparable<Job> {
 	private boolean lazyLoaded = false;
 	private Node jobNode = null;
 	
-	private Context context;
+	private JobStorageInterface context;
 	
 	private static final Map<String,String> ns;
 	static {
@@ -62,25 +55,8 @@ public class Job implements Comparable<Job> {
 		ns.put("d", "http://www.daisy.org/ns/pipeline/data");
 	}
 	
-	/**
-	 * Create an empty representation of a job.
-	 */
-	public Job() {
-		//script = new Script();
-	}
-	
-	/**
-	 * Parse the job described by the provided Pipeline2WSResponse.
-	 * 
-	 * @param response
-	 * @throws Pipeline2Exception
-	 */
-	public Job(Pipeline2WSResponse response) throws Pipeline2Exception {
-		this();
-		if (response.status != 200)
-			throw new Pipeline2Exception(response.status+" "+response.statusName+": "+response.statusDescription);
-		jobNode = response.asXml();
-	}
+	/** Create an empty representation of a job. */
+	public Job() {}
 	
 	/**
 	 * Parse the job described by the provided XML document/node.
@@ -104,24 +80,29 @@ public class Job implements Comparable<Job> {
 	 * @throws Pipeline2Exception
 	 * @throws URISyntaxException
 	 */
-	public static Result getResultFromHref(Node jobXml, String href) throws Pipeline2Exception {
+	public static Result getResultFromHref(Node jobXml, String href) {
 		if (href == null) {
 			href = "";
 		}
 		
-		if (jobXml instanceof Document) {
-			jobXml = XPath.selectNode("/d:job", jobXml, Pipeline2Client.ns);
-		}
-		
-		String base = XPath.selectText("@href", jobXml, Pipeline2Client.ns) + "/result";
-		if (!"".equals(href)) {
-			base += "/"; 
-		}
-		String fullHref = base + href;
-		
-		Node resultNode = XPath.selectNode("d:results//descendant-or-self::*[@href='"+fullHref.replaceAll("'", "''").replaceAll(" ", "%20")+"']", jobXml, Pipeline2Client.ns);
-		if (resultNode != null) {
-			return Result.parseResultXml(resultNode, base);
+		try {
+			if (jobXml instanceof Document) {
+				jobXml = XPath.selectNode("/d:job", jobXml, XPath.dp2ns);
+			}
+			
+			String base = XPath.selectText("@href", jobXml, XPath.dp2ns) + "/result";
+			if (!"".equals(href)) {
+				base += "/"; 
+			}
+			String fullHref = base + href;
+			
+			Node resultNode = XPath.selectNode("d:results//descendant-or-self::*[@href='"+fullHref.replaceAll("'", "''").replaceAll(" ", "%20")+"']", jobXml, XPath.dp2ns);
+			if (resultNode != null) {
+				return Result.parseResultXml(resultNode, base);
+			}
+			
+		} catch (Pipeline2Exception e) {
+			Pipeline2Logger.logger().error("Could not parse job XML for finding the job result '"+href+"'", e);
 		}
 		return null;
 	}
@@ -134,44 +115,44 @@ public class Job implements Comparable<Job> {
 		try {
 			// select root element if the node is a document node
 			if (jobNode instanceof Document)
-				jobNode = XPath.selectNode("/*", jobNode, Pipeline2Client.ns);
+				jobNode = XPath.selectNode("/*", jobNode, XPath.dp2ns);
 			
-			this.id = XPath.selectText("@id", jobNode, Pipeline2Client.ns);
-			this.href = XPath.selectText("@href", jobNode, Pipeline2Client.ns);
-			String status = XPath.selectText("@status", jobNode, Pipeline2Client.ns);
+			this.id = XPath.selectText("@id", jobNode, XPath.dp2ns);
+			this.href = XPath.selectText("@href", jobNode, XPath.dp2ns);
+			String status = XPath.selectText("@status", jobNode, XPath.dp2ns);
 			for (Status s : Status.values()) {
 				if (s.toString().equals(status)) {
 					this.status = s;
 					break;
 				}
 			}
-			String priority = XPath.selectText("@priority", jobNode, Pipeline2Client.ns);
+			String priority = XPath.selectText("@priority", jobNode, XPath.dp2ns);
 			for (Priority p : Priority.values()) {
 				if (p.toString().equals(priority)) {
 					this.priority = p;
 					break;
 				}
 			}
-			this.scriptNode = XPath.selectNode("d:script", jobNode, Pipeline2Client.ns);
-			this.niceName = XPath.selectText("d:nicename", jobNode, Pipeline2Client.ns);
-			this.logHref = XPath.selectText("d:log/@href", jobNode, Pipeline2Client.ns);
+			this.scriptNode = XPath.selectNode("d:script", jobNode, XPath.dp2ns);
+			this.niceName = XPath.selectText("d:nicename", jobNode, XPath.dp2ns);
+			this.logHref = XPath.selectText("d:log/@href", jobNode, XPath.dp2ns);
 			this.callback = new ArrayList<Callback>();
-			for (Node callbackNode : XPath.selectNodes("d:callback", jobNode, Pipeline2Client.ns)) {
+			for (Node callbackNode : XPath.selectNodes("d:callback", jobNode, XPath.dp2ns)) {
 				this.callback.add(new Callback(callbackNode));
 			}
-			this.messagesNode = XPath.selectNode("d:messages", jobNode, Pipeline2Client.ns);
-			this.resultsNode = XPath.selectNode("d:results", jobNode, Pipeline2Client.ns);
+			this.messagesNode = XPath.selectNode("d:messages", jobNode, XPath.dp2ns);
+			this.resultsNode = XPath.selectNode("d:results", jobNode, XPath.dp2ns);
 			
 			// Arguments are both part of the script XML and the jobRequest XML.
 			// We could keep a separate copy of the arguments here in the Job instance, but that seems a bit unneccessary.
 			// We could keep the argument values here in the Job instance and the argument definitions in the Script instance,
 			// but that will probably just complicate validation and separates things that are closely related.
 			// Instead, we just say that everything is stored in the Script instance (if there is one).
-			this.argumentsNodes = XPath.selectNodes("d:input | d:option | d:output", jobNode, Pipeline2Client.ns);
+			this.argumentsNodes = XPath.selectNodes("d:input | d:option | d:output", jobNode, XPath.dp2ns);
 			
 
 		} catch (Pipeline2Exception e) {
-			Pipeline2Client.logger().error("Unable to parse job XML", e);
+			Pipeline2Logger.logger().error("Unable to parse job XML", e);
 		}
 
 		lazyLoaded = true;
@@ -189,19 +170,19 @@ public class Job implements Comparable<Job> {
 			try {
 				
 				List<Message> messages = new ArrayList<Message>();
-				List<Node> messageNodes = XPath.selectNodes("d:message", this.messagesNode, Pipeline2Client.ns);
+				List<Node> messageNodes = XPath.selectNodes("d:message", this.messagesNode, XPath.dp2ns);
 				
 				for (Node messageNode : messageNodes) {
 					messages.add(new Message(
-						XPath.selectText("@level", messageNode, Pipeline2Client.ns),
-						XPath.selectText("@sequence", messageNode, Pipeline2Client.ns),
-						XPath.selectText(".", messageNode, Pipeline2Client.ns)
+						XPath.selectText("@level", messageNode, XPath.dp2ns),
+						XPath.selectText("@sequence", messageNode, XPath.dp2ns),
+						XPath.selectText(".", messageNode, XPath.dp2ns)
 					));
 				}
 				Collections.sort(messages);
 			
 			} catch (Pipeline2Exception e) {
-				Pipeline2Client.logger().error("Unable to parse messages XML", e);
+				Pipeline2Logger.logger().error("Unable to parse messages XML", e);
 			}
 		}
 		
@@ -214,12 +195,12 @@ public class Job implements Comparable<Job> {
 				Result outputs = Result.parseResultXml(this.resultsNode, href);
 				outputs.results = new ArrayList<Result>();
 				
-				List<Node> outputNodes = XPath.selectNodes("d:result", this.resultsNode, Pipeline2Client.ns);
+				List<Node> outputNodes = XPath.selectNodes("d:result", this.resultsNode, XPath.dp2ns);
 				for (Node outputNode : outputNodes) {
 					Result output = Result.parseResultXml(outputNode, href);
 					output.results = new ArrayList<Result>();
 					
-					List<Node> fileNodes = XPath.selectNodes("d:result", outputNode, Pipeline2Client.ns);
+					List<Node> fileNodes = XPath.selectNodes("d:result", outputNode, XPath.dp2ns);
 					for (Node fileNode : fileNodes) {
 						Result file = Result.parseResultXml(fileNode, href);
 						output.results.add(file);
@@ -230,7 +211,7 @@ public class Job implements Comparable<Job> {
 				}
 				
 			} catch (Pipeline2Exception e) {
-				Pipeline2Client.logger().error("Unable to parse results XML", e);
+				Pipeline2Logger.logger().error("Unable to parse results XML", e);
 			}
 		}
 	}
@@ -263,19 +244,6 @@ public class Job implements Comparable<Job> {
 	}
 	
 	/**
-	 * Parse the list of jobs described by the provided Pipeline2WSResponse.
-	 * 
-	 * @param response
-	 * @return
-	 * @throws Pipeline2Exception
-	 */
-	public static List<Job> getJobs(Pipeline2WSResponse response) throws Pipeline2Exception {
-		if (response.status != 200)
-			throw new Pipeline2Exception(response.status+" "+response.statusName+": "+response.statusDescription);
-		return parseJobsXml(response.asXml());
-	}
-	
-	/**
 	 * Parse the list of jobs described by the provided XML document/node.
 	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/jobs.xml
 	 * 
@@ -288,9 +256,9 @@ public class Job implements Comparable<Job> {
 		
 		// select root element if the node is a document node
 		if (jobsXml instanceof Document)
-			jobsXml = XPath.selectNode("/d:jobs", jobsXml, Pipeline2Client.ns);
+			jobsXml = XPath.selectNode("/d:jobs", jobsXml, XPath.dp2ns);
 		
-		List<Node> jobNodes = XPath.selectNodes("d:job", jobsXml, Pipeline2Client.ns);
+		List<Node> jobNodes = XPath.selectNodes("d:job", jobsXml, XPath.dp2ns);
 		for (Node jobNode : jobNodes) {
 			jobs.add(new Job(jobNode));
 		}
@@ -307,7 +275,7 @@ public class Job implements Comparable<Job> {
 	 */
 	public String validate() {
 		for (Argument argument : getArguments()) {
-			String error = ArgumentValidator.validate(argument, context);
+			String error = JobValidator.validate(argument, context);
 			if (error != null) {
 				return error;
 			}
@@ -325,7 +293,7 @@ public class Job implements Comparable<Job> {
 	public String validate(String name) {
 		for (Argument argument : getArguments()) {
 			if (argument.name.equals(name)) {
-				return ArgumentValidator.validate(argument, context);
+				return JobValidator.validate(argument, context);
 			}
 		}
 		return null;
@@ -336,14 +304,17 @@ public class Job implements Comparable<Job> {
 	public String getHref() { lazyLoad(); return href; }
 	public Status getStatus() { lazyLoad(); return status; }
 	public String getLogHref() { lazyLoad(); return logHref; }
-	public String getNicename() { lazyLoad(); return niceName; }
+	public String getNiceName() { lazyLoad(); return niceName; }
+	public String getBatchId() { lazyLoad(); return batchId; }
 	public Priority getPriority() { lazyLoad(); return priority; }
 	public List<Callback> getCallback() { lazyLoad(); return callback; }
-	public Context getContext() { lazyLoad(); return context; }
-	public void setNicename(String nicename) { lazyLoad(); this.niceName = nicename; }
+	public JobStorageInterface getContext() { lazyLoad(); return context; }
+	public void setId(String jobId) { lazyLoad(); this.id = id; }
+	public void setNiceName(String niceName) { lazyLoad(); this.niceName = niceName; }
+	public void setBatchId(String batchId) { lazyLoad(); this.batchId = batchId; }
 	public void setPriority(Priority priority) { lazyLoad(); this.priority = priority; }
 	public void setCallback(List<Callback> callback) { lazyLoad(); this.callback = callback; }
-	public void setContext(Context context) { lazyLoad(); this.context = context; }
+	public void setContext(JobStorageInterface context) { lazyLoad(); this.context = context; }
 	
 	private void lazyLoadScriptAndArguments() {
 		if (script == null && scriptNode != null) {
@@ -355,7 +326,7 @@ public class Job implements Comparable<Job> {
 				}
 				
 			} catch (Pipeline2Exception e) {
-				Pipeline2Client.logger().error("Unable to parse script XML", e);
+				Pipeline2Logger.logger().error("Unable to parse script XML", e);
 			}
 		}
 	}
@@ -385,4 +356,22 @@ public class Job implements Comparable<Job> {
 		
 		return id.compareTo(o.id);
 	}
+	
+	public Result getResultFromHref(String href2) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Document serializeJobXml() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String serializeJobRequestXml() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
+
 }

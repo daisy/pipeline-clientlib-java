@@ -1,5 +1,9 @@
 package org.daisy.pipeline.client.models;
 
+import java.util.Map;
+
+import org.w3c.dom.Document;
+
 /**
  * A representation of the "/admin/sizes" response from the Pipeline 2 Web Service.
  * 
@@ -29,12 +33,22 @@ package org.daisy.pipeline.client.models;
  * </jobSizes>
  */
 public class JobSizes {
-    
-	public String id;
-	public Long context;
-	public Long log;
-	public Long output;
 	
-	// TODO: methods
+	public class JobSize {
+		public String id;
+		public Long context;
+		public Long log;
+		public Long output;
+	}
+    
+	public String href;
+	public Long total;
+	public Map<String, JobSize> jobSize;
+	
+	public JobSizes(Document xml) {
+		// TODO Auto-generated constructor stub
+	}
+	
+	// TODO: add methods ?
 	
 }

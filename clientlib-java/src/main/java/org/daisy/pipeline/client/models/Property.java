@@ -1,11 +1,8 @@
 package org.daisy.pipeline.client.models;
 
-import org.daisy.pipeline.client.Pipeline2Client;
-import org.daisy.pipeline.client.Pipeline2Exception;
-import org.daisy.pipeline.client.Pipeline2WSResponse;
-import org.daisy.pipeline.client.utils.XPath;
+import java.util.List;
+
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 /**
  * A representation of the "/admin/properties" response from the Pipeline 2 Web Service.
@@ -26,6 +23,11 @@ public class Property {
     public long bundleId;
     public String bundleName;
     
-    // TODO: methods?
+	public static List<Property> parsePropertiesXml(Document xml) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+    
+    // TODO: any other methods?
 	
 }

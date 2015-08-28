@@ -1,14 +1,9 @@
 package org.daisy.pipeline.client.models;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-
-import org.daisy.pipeline.client.Pipeline2Client;
 import org.daisy.pipeline.client.Pipeline2Exception;
-import org.daisy.pipeline.client.Pipeline2WSResponse;
-import org.daisy.pipeline.client.models.script.Argument;
+import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.utils.XPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -29,30 +24,12 @@ public class Script implements Comparable<Script> {
 	private String description;
 	private String version;
 	private String homepage; // xs:anyURI
-	private Map<String, Argument> inputs = new HashMap<String, Argument>();
-	private Map<String, Argument> outputs = new HashMap<String, Argument>();
+	private List<Argument> inputs = new ArrayList<Argument>();
+	private List<Argument> outputs = new ArrayList<Argument>();
 	
 	// lazy load document; don't parse it until necessary
 	private Node scriptNode = null;
 	private boolean lazyLoaded = false;
-	
-	// TODO: implement these somewhere (maybe in some API/interface, or maybe here) to harmonize with ScriptRegistry.java
-	public Script getScript(URI href);
-    public Script getScript(String name);
-    public List<Script> getScripts();
-	
-	/**
-	 * Parse the script described by the provided Pipeline2WSResponse.
-	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/script.xml
-	 * 
-	 * @param response
-	 * @throws Pipeline2Exception
-	 */
-	public Script(Pipeline2WSResponse response) throws Pipeline2Exception {
-		if (response.status != 200)
-			throw new Pipeline2Exception(response.status+" "+response.statusName+": "+response.statusDescription);
-		scriptNode = response.asXml();
-	}
 	
 	/**
 	 * Parse the script described by the provided XML document/node.
@@ -73,32 +50,35 @@ public class Script implements Comparable<Script> {
 		try {
 			// select root element if the node is a document node
 			if (scriptNode instanceof Document)
-				scriptNode = XPath.selectNode("/d:script", scriptNode, Pipeline2Client.ns);
+				scriptNode = XPath.selectNode("/d:script", scriptNode, XPath.dp2ns);
 			
-			this.id = XPath.selectText("@id", scriptNode, Pipeline2Client.ns);
-			this.href = XPath.selectText("@href", scriptNode, Pipeline2Client.ns);
-			this.niceName = XPath.selectText("d:nicename", scriptNode, Pipeline2Client.ns);
-			this.description = XPath.selectText("d:description", scriptNode, Pipeline2Client.ns);
-			this.homepage = XPath.selectText("d:homepage", scriptNode, Pipeline2Client.ns);
+			this.id = XPath.selectText("@id", scriptNode, XPath.dp2ns);
+			this.href = XPath.selectText("@href", scriptNode, XPath.dp2ns);
+			this.niceName = XPath.selectText("d:nicename", scriptNode, XPath.dp2ns);
+			this.description = XPath.selectText("d:description", scriptNode, XPath.dp2ns);
+			this.homepage = XPath.selectText("d:homepage", scriptNode, XPath.dp2ns);
 			
-			List<Node> inputNodes = XPath.selectNodes("d:input", scriptNode, Pipeline2Client.ns);
-			List<Node> optionNodes = XPath.selectNodes("d:option", scriptNode, Pipeline2Client.ns);
-			List<Node> outputNodes = XPath.selectNodes("d:output", scriptNode, Pipeline2Client.ns);
+			List<Node> inputNodes = XPath.selectNodes("d:input", scriptNode, XPath.dp2ns);
+			List<Node> optionNodes = XPath.selectNodes("d:option", scriptNode, XPath.dp2ns);
+			List<Node> outputNodes = XPath.selectNodes("d:output", scriptNode, XPath.dp2ns);
 			
 			for (Node inputNode : inputNodes) {
-				this.inputs.add(new Argument(inputNode));
+				Argument argument = new Argument(inputNode);
+				this.inputs.add(argument);
 			}
 	
 			for (Node optionNode : optionNodes) {
-				this.inputs.add(new Argument(optionNode));
+				Argument argument = new Argument(optionNode);
+				this.inputs.add(argument);
 			}
 	
 			for (Node outputNode : outputNodes) {
-				this.outputs.add(new Argument(outputNode));
+				Argument argument = new Argument(outputNode);
+				this.outputs.add(argument);
 			}
 			
 		} catch (Pipeline2Exception e) {
-			Pipeline2Client.logger().error("Unable to parse script XML", e);
+			Pipeline2Logger.logger().error("Unable to parse script XML", e);
 		}
 		
 		lazyLoaded = true;
@@ -128,29 +108,16 @@ public class Script implements Comparable<Script> {
 	 */
 	public Argument getArgument(String name) {
 		for (Argument arg : inputs) {
-			if (name.equals(arg.name))
+			if (arg.name.equals(name)) {
 				return arg;
+			}
 		}
 		for (Argument arg : outputs) {
-			if (name.equals(arg.name))
+			if (arg.name.equals(name)) {
 				return arg;
+			}
 		}
 		return null;
-	}
-	
-	/**
-	 * Parse the list of scripts described by the provided Pipeline2WSResponse.
-	 * 
-	 * @param response
-	 * @return
-	 * @throws Pipeline2Exception
-	 */
-	public static List<Script> getScripts(Pipeline2WSResponse response) throws Pipeline2Exception {
-		if (response.status != 200)
-			throw new Pipeline2Exception(response.status+" "+response.statusName+": "+response.statusDescription);
-		List<Script> scripts = parseScriptsXml(response.asXml());
-		Collections.sort(scripts);
-		return scripts;
 	}
 	
 	/**
@@ -167,9 +134,9 @@ public class Script implements Comparable<Script> {
 		
 		// select root element if the node is a document node
 		if (scriptsXml instanceof Document)
-			scriptsXml = XPath.selectNode("/d:scripts", scriptsXml, Pipeline2Client.ns);
+			scriptsXml = XPath.selectNode("/d:scripts", scriptsXml, XPath.dp2ns);
 		
-		List<Node> scriptNodes = XPath.selectNodes("d:script", scriptsXml, Pipeline2Client.ns);
+		List<Node> scriptNodes = XPath.selectNodes("d:script", scriptsXml, XPath.dp2ns);
 		for (Node scriptNode : scriptNodes) {
 			scripts.add(new Script(scriptNode));
 		}

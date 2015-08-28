@@ -1,6 +1,7 @@
 package org.daisy.pipeline.client.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,14 @@ import org.w3c.dom.NodeList;
  * @author jostein
  */
 public class XPath {
+	
+	/** Default namespace for the Pipeline 2 Web API. */
+	public static final Map<String, String> dp2ns; 
+	static {
+    	Map<String, String> nsMap = new HashMap<String, String>();
+    	nsMap.put("d", "http://www.daisy.org/ns/pipeline/data");
+    	dp2ns = Collections.unmodifiableMap(nsMap);
+	}
 	
 	private static Map<String,XPathExpression> expressions = new HashMap<String,XPathExpression>();
 	public Map<String,String> namespaces = new HashMap<String,String>();

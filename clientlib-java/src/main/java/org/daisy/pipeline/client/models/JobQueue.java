@@ -1,5 +1,9 @@
 package org.daisy.pipeline.client.models;
 
+import java.util.List;
+
+import org.w3c.dom.Node;
+
 /**
  * A representation of the "/queue" response from the Pipeline 2 Web Service.
  * 
@@ -18,20 +22,23 @@ public class JobQueue {
 	
 	public enum Priority { LOW, MEDIUM, HIGH };
 	
-	String id; // "464c72f9-ed59-44ff-8b7b-207abb4add7f"
-	String href; // "http://localhost:8181/ws/jobs/464c72f9-ed59-44ff-8b7b-207abb4add7f"
-	Double computedPriority; // "-43.333333333333336"
-	Client.Priority jobPriority; // "medium"
-	Priority clientPriority; // "medium"
-	Double relativeTime; // "1.0"
-	Long timestamp; // "1398930862759"
-	String moveUp; // "http://localhost:8181/ws/queue/up/464c72f9-ed59-44ff-8b7b-207abb4add7f"
-	String moveDown; // "http://localhost:8181/ws/queue/down/464c72f9-ed59-44ff-8b7b-207abb4add7f"
+	public class QueuedJob {
+		String id; // "464c72f9-ed59-44ff-8b7b-207abb4add7f"
+		String href; // "http://localhost:8181/ws/jobs/464c72f9-ed59-44ff-8b7b-207abb4add7f"
+		Double computedPriority; // "-43.333333333333336"
+		Priority jobPriority; // "medium"
+		Priority clientPriority; // "medium"
+		Double relativeTime; // "1.0"
+		Long timestamp; // "1398930862759"
+		String moveUp; // "http://localhost:8181/ws/queue/up/464c72f9-ed59-44ff-8b7b-207abb4add7f"
+		String moveDown; // "http://localhost:8181/ws/queue/down/464c72f9-ed59-44ff-8b7b-207abb4add7f"
+	}
+	
+	public String href;
+	public List<QueuedJob> queue;
     
-	// TODO: implement these somewhere? (maybe in some API/interface, or maybe here) to harmonize with JobQueue.java
-    public void moveUp(JobId id);
-    public void moveDown(JobId id);
-    public void cancel(JobId id);
-    public Collection<? extends Prioritizable<Job>> asCollection();
+	public JobQueue(Node asXml) {
+		// TODO Auto-generated constructor stub
+	}
 	
 }
