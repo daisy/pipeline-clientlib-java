@@ -2,7 +2,10 @@ package org.daisy.pipeline.client.models;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /** A callback for job updates. */
@@ -42,6 +45,23 @@ public class Callback implements Comparable<Callback> {
 		assert(href != null);
 		assert(type != null);
 		return (this.type+this.href).compareTo((other.type+other.href));
+	}
+
+	public Document toXml() {
+		Document callbackDocument = XML.getXml("<d:callback xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
+		Element callbackElement = callbackDocument.getDocumentElement();
+
+		if (href != null) {
+			callbackElement.setAttribute("href", href);
+		}
+		if (type != null) {
+			callbackElement.setAttribute("type", type.toString());
+		}
+		if (frequency != null) {
+			callbackElement.setAttribute("frequency", frequency);
+		}
+		
+		return callbackDocument;
 	}
 	
 }

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.models.Job;
@@ -84,7 +85,7 @@ public class JobStorage implements JobStorageInterface {
 		lazyLoad();
 
 		File jobFile = new File(directory, "job.xml");
-		Document jobDocument = job.serializeJobXml();
+		Document jobDocument = job.toXml();
 
 		try {
 			String jobRequestString = XML.toString(jobDocument);
@@ -105,24 +106,21 @@ public class JobStorage implements JobStorageInterface {
 						continue;
 					}
 
-					File contextFileOrDirectory = new File(contextDir, contextPath);
-					if (file.isDirectory()) {
-						contextFileOrDirectory.mkdirs();
-					}
+					File contextFile = new File(contextDir, contextPath);
 					try {
-						assert contextFileOrDirectory.getCanonicalPath().startsWith(contextDir.getCanonicalPath() + File.separator); // contextFile is inside contextDir
+						assert contextFile.getCanonicalPath().startsWith(contextDir.getCanonicalPath() + File.separator); // contextFile is inside contextDir
 
-						if (!file.getCanonicalPath().equals(contextFileOrDirectory.getCanonicalPath())) {
+						if (!file.getCanonicalPath().equals(contextFile.getCanonicalPath())) {
 							if (moveFiles) {
-								// TODO: move the file. the file should be a file here; see addContextFile(...)
+								Files.move(file.toPath(), contextFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+								
 							} else {
-								// TODO: copy the file. the file should be a file here; see addContextFile(...)
+								Files.copy(file.toPath(), contextFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.COPY_ATTRIBUTES);
 							}
-							org.daisy.pipeline.client.utils.Files.copy(file, contextFileOrDirectory);
 						}
 
 					} catch (IOException e) {
-						Pipeline2Logger.logger().error("Unable to copy from '"+file.getAbsolutePath()+"' to '"+contextFileOrDirectory.getAbsolutePath(), e);
+						Pipeline2Logger.logger().error("Unable to copy from '"+file.getAbsolutePath()+"' to '"+contextFile.getAbsolutePath(), e);
 					}
 				}
 			}
@@ -180,13 +178,17 @@ public class JobStorage implements JobStorageInterface {
 	public void addContextFile(File file, String contextPath) {
 		if (contextPath == null) {
 			contextPath = file.getName();
-			
-		} else if (contextPath.endsWith("/")) {
-			contextPath = contextPath + file.getName();
 		}
 		
-		// TODO: files should be added individually here so that contextFiles only contains files and is easily searchable
-		contextFiles.put(contextPath, file);
+		if (file.isFile()) {
+			contextFiles.put(contextPath, file);
+			
+		} else if (file.isDirectory()) {
+			for (File f : file.listFiles()) {
+				addContextFile(f, new File(contextPath, f.getName()).toString());
+			}
+			
+		} 
 	}
 
 	@Override

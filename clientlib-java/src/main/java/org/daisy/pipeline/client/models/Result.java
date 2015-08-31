@@ -1,11 +1,11 @@
 package org.daisy.pipeline.client.models;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.utils.XPath;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 public class Result implements Comparable<Result> {
@@ -16,8 +16,6 @@ public class Result implements Comparable<Result> {
 	public String name;
 	public String from;
 	public Long size;
-
-	public List<Result> results = new ArrayList<Result>();
 
 	// convenience variables
 	public String filename;
@@ -65,6 +63,27 @@ public class Result implements Comparable<Result> {
 
 	public int compareTo(Result other) {
 		return href.compareTo(other.href);
+	}
+
+	public void toXml(Element resultElement) {
+		if (href != null) {
+		    resultElement.setAttribute("href", href);
+		}
+		if (file != null) {
+		    resultElement.setAttribute("file", file);
+		}
+		if (mimeType != null) {
+		    resultElement.setAttribute("mime-type", mimeType);
+		}
+		if (name != null) {
+		    resultElement.setAttribute("name", name);
+		}
+		if (from != null) {
+		    resultElement.setAttribute("from", from);
+		}
+		if (size != null) {
+		    resultElement.setAttribute("size", size+"");
+		}
 	}
 
 }

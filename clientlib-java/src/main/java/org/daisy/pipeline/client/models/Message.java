@@ -8,40 +8,21 @@ public class Message implements Comparable<Message> {
 	public enum Level { ERROR, WARNING, INFO, DEBUG, TRACE };
 	
 	public Level level;
-	public int sequence;
+	public Integer sequence;
     public String text;
-    public int line;
-    public int column;
+    public Integer line;
+    public Integer column;
     public String timeStamp;
     public String file;
     
     public Date timeStampDate() {
-    	// TODO
+    	// TODO: if timeStamp is actually exposed through the web api (I don't think it currently is), then this method might be useful.
     	return null;
     }
-	
-	public Message(Level level, int sequence, String text) {
-		this.level = level;
-		this.sequence = sequence;
-		this.text = text;
-	}
-	
-	public Message(String level, String sequence, String text) {
-		for (Level l : Level.values()) {
-			if (l.toString().equals(level)) {
-				this.level = l;
-				break;
-			}
-		}
-		
-		this.sequence = Integer.parseInt(sequence);
-		
-		this.text = text;
-	}
 
 	@Override
 	public int compareTo(Message other) {
 		return this.sequence - other.sequence;
 	}
-	
+
 }

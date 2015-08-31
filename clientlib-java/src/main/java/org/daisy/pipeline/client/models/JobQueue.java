@@ -1,7 +1,11 @@
 package org.daisy.pipeline.client.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.utils.XPath;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
@@ -37,8 +41,32 @@ public class JobQueue {
 	public String href;
 	public List<QueuedJob> queue;
     
-	public JobQueue(Node asXml) {
-		// TODO Auto-generated constructor stub
+	public JobQueue(Node queueNode) {
+		queue = new ArrayList<QueuedJob>();
+		
+		try {
+			// select root element if the node is a document node
+			if (queueNode instanceof Document)
+				queueNode = XPath.selectNode("/d:jobs", queueNode, XPath.dp2ns);
+
+			List<Node> queuedJobNodes = XPath.selectNodes("d:job", queueNode, XPath.dp2ns);
+			for (Node queuedJobNode : queuedJobNodes) {
+				QueuedJob queuedJob = new QueuedJob();
+				queuedJob.id = XPath.selectText("@id", queuedJobNode, XPath.dp2ns);
+				queuedJob.href = XPath.selectText("@href", queuedJobNode, XPath.dp2ns);
+				queuedJob.computedPriority = Double.valueOf(XPath.selectText("@computedPriority", queuedJobNode, XPath.dp2ns));
+				queuedJob.jobPriority = Priority.valueOf(XPath.selectText("@jobPriority", queuedJobNode, XPath.dp2ns));
+				queuedJob.clientPriority = Priority.valueOf(XPath.selectText("@clientPriority", queuedJobNode, XPath.dp2ns));
+				queuedJob.relativeTime = Double.valueOf(XPath.selectText("@relativeTime", queuedJobNode, XPath.dp2ns));
+				queuedJob.timestamp = Long.valueOf(XPath.selectText("@timestamp", queuedJobNode, XPath.dp2ns));
+				queuedJob.moveUp = XPath.selectText("@moveUp", queuedJobNode, XPath.dp2ns);
+				queuedJob.moveDown = XPath.selectText("@moveDown", queuedJobNode, XPath.dp2ns);
+				queue.add(queuedJob);
+			}
+			
+		} catch (Exception e) {
+			Pipeline2Logger.logger().error("Failed to parse the job queue XML", e);
+		}
 	}
 	
 }

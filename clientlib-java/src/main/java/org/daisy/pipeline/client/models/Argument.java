@@ -7,8 +7,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
+import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.filestorage.JobStorageInterface;
 import org.daisy.pipeline.client.models.Argument;
+import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,97 +20,112 @@ import org.w3c.dom.Node;
 public class Argument {
 	
 	/** The name of the option. This isn't necessarily unique; since inputs and options can have the same name. */
-	public String name;
+	private String name;
 	
 	/** This is the value from the px:role="name" in the script documentation. */
-	public String niceName;
+	private String niceName;
 	
 	/** A description of the option. */
-	public String desc;
+	private String desc;
 	
 	/** whether or not this option is required */
-	public Boolean required;
+	private Boolean required;
 	
 	/** whether or not multiple selections can be made */
-	public Boolean sequence;
+	private Boolean sequence;
 	
 	/** MIME types accepted (only relevant if type=anyDirURI or anyFileURI) */
-	public List<String> mediaTypes;
+	private List<String> mediaTypes;
 	
 	/** Options with a output value of "result" or "temp" will only be included when the framework is running in local mode. */
-	public Output output;
+	private Output output;
 	public enum Output { result, temp };
 	
 	/** Type of underlying option. Either "input", "option" or "output". ("parameters" currently not supported) */
-	public Kind kind;
+	private Kind kind;
 	public enum Kind { input, /*parameters,*/ option, output };
 	
 	/** whether or not the ordering matters (only relevant if sequence==true) */
-	public Boolean ordered;
+	private Boolean ordered;
 	
 	/** XSD type */
-	public String type;
+	private String type;
     
+	private Node argumentNode;
+	private boolean lazyLoaded = false;
+	
 	private List<String> values = null;
 	
 	/** Create option instance from option node. */
-	public Argument(Node optionNode) throws Pipeline2Exception {
-		this.name = parseTypeString(XPath.selectText("@name", optionNode, XPath.dp2ns));
+	public Argument(Node argumentNode) throws Pipeline2Exception {
+		this.argumentNode = argumentNode;
+	}
+	
+	private void lazyLoad() {
+		if (!lazyLoaded) {
+			try {
+				this.name = parseTypeString(XPath.selectText("@name", argumentNode, XPath.dp2ns));
+				
+				this.niceName = parseTypeString(XPath.selectText("@nicename", argumentNode, XPath.dp2ns));
+				if (this.niceName == null || "".equals(this.niceName))
+					this.niceName = this.name;
+				
+				this.desc = parseTypeString(XPath.selectText("@desc", argumentNode, XPath.dp2ns));
+				if (this.desc == null)
+					this.desc = "";
+				
+				this.required = parseTypeBoolean(XPath.selectText("@required", argumentNode, XPath.dp2ns));
+				if (this.required == null)
+					this.required = true;
+				
+				this.sequence = parseTypeBoolean(XPath.selectText("@sequence", argumentNode, XPath.dp2ns));
+				if (this.sequence == null)
+					this.sequence = false;
+				
+				this.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", argumentNode, XPath.dp2ns));
 		
-		this.niceName = parseTypeString(XPath.selectText("@nicename", optionNode, XPath.dp2ns));
-		if (this.niceName == null || "".equals(this.niceName))
-			this.niceName = this.name;
+				try {
+					this.output = Output.valueOf(parseTypeString(XPath.selectText("@outputType", argumentNode, XPath.dp2ns)));
+				} catch (IllegalArgumentException e) {
+				} catch (NullPointerException e) {
+				} finally {
+					this.output = null;
+				}
 		
-		this.desc = parseTypeString(XPath.selectText("@desc", optionNode, XPath.dp2ns));
-		if (this.desc == null)
-			this.desc = "";
+				try {
+					this.kind = Kind.valueOf(argumentNode.getLocalName()); // TODO "parameters": how to determine that a port is a parameter port?
+				} catch (IllegalArgumentException e) {
+				} catch (NullPointerException e) {
+				} finally {
+					this.kind = null;
+				}
 		
-		this.required = parseTypeBoolean(XPath.selectText("@required", optionNode, XPath.dp2ns));
-		if (this.required == null)
-			this.required = true;
+				this.ordered = parseTypeBoolean(XPath.selectText("@ordered", argumentNode, XPath.dp2ns));
+				if (this.ordered == null)
+					this.ordered = true;
 		
-		this.sequence = parseTypeBoolean(XPath.selectText("@sequence", optionNode, XPath.dp2ns));
-		if (this.sequence == null)
-			this.sequence = false;
-		
-		this.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", optionNode, XPath.dp2ns));
-
-		try {
-			this.output = Output.valueOf(parseTypeString(XPath.selectText("@outputType", optionNode, XPath.dp2ns)));
-		} catch (IllegalArgumentException e) {
-		} catch (NullPointerException e) {
-		} finally {
-			this.output = null;
-		}
-
-		try {
-			this.kind = Kind.valueOf(optionNode.getLocalName()); // TODO "parameters": how to determine that a port is a parameter port?
-		} catch (IllegalArgumentException e) {
-		} catch (NullPointerException e) {
-		} finally {
-			this.kind = null;
-		}
-
-		this.ordered = parseTypeBoolean(XPath.selectText("@ordered", optionNode, XPath.dp2ns));
-		if (this.ordered == null)
-			this.ordered = true;
-
-		this.type = parseTypeString(XPath.selectText("@type", optionNode, XPath.dp2ns));
-		if (this.type == null)
-			this.type = "string";
-		
-		
-		if (this.kind == Kind.input || this.kind == Kind.output) {
-			this.type = "anyFileURI";
-			
-			if (this.mediaTypes.size() == 0)
-				this.mediaTypes.add("application/xml");
-		}
-		
-		if ("output".equals(this.kind)) {
-			this.required = false;
-			if (this.output == null)
-				this.output = Output.result;
+				this.type = parseTypeString(XPath.selectText("@type", argumentNode, XPath.dp2ns));
+				if (this.type == null)
+					this.type = "string";
+				
+				
+				if (this.kind == Kind.input || this.kind == Kind.output) {
+					this.type = "anyFileURI";
+					
+					if (this.mediaTypes.size() == 0)
+						this.mediaTypes.add("application/xml");
+				}
+				
+				if ("output".equals(this.kind)) {
+					this.required = false;
+					if (this.output == null)
+						this.output = Output.result;
+				}
+				
+			} catch (Pipeline2Exception e) {
+				Pipeline2Logger.logger().error("Failed to parse argument node", e);
+			}
+			lazyLoaded = true;
 		}
 	}
 	
@@ -182,6 +199,7 @@ public class Argument {
      * @return
      */
     public Element asDocumentElement(Document document) {
+    	lazyLoad();
     	if (values.size() == 0)
     		return null;
 
@@ -200,27 +218,6 @@ public class Argument {
         }
         
         return element;
-    }
-    
-    /**
-     * Populates the argument with the values from the provided document element.
-     * This is the inverse of the "Element asDocumentElement(Document)" method.
-     * 
-     * @param option
-     * @return
-     * @throws Pipeline2Exception
-     */
-    public void parseFromJobRequest(Node jobRequest) throws Pipeline2Exception {
-    	values.clear();
-    	List<Node> items = XPath.selectNodes("/*/*[@name='"+name+"']/d:item", jobRequest, XPath.dp2ns);
-    	for (Node item : items) {
-	        String href = XPath.selectText("@value", item, XPath.dp2ns);
-	        add(href);
-    	}
-    	if (size() == 0) {
-    		String value = XPath.selectText("/*/*[@name='"+name+"']", jobRequest, XPath.dp2ns);
-    		set(value);
-    	}
     }
 
     /**
@@ -266,6 +263,7 @@ public class Argument {
 	 * @return True if the argument is defined/set. False otherwise.
 	 */
 	public boolean isDefined() {
+		lazyLoad();
 		return values != null;
 	}
 	
@@ -285,10 +283,6 @@ public class Argument {
 		} else {
 			values.clear();
 		}
-	}
-	
-	private void lazyLoad() {
-		// TODO
 	}
 	
 	/** Replace the value at the given position with the provided Integer value.
@@ -411,21 +405,6 @@ public class Argument {
 			set(context.getContextFilePath(file));
 		}
 	}
-	
-//  public void set(String value) {
-//  href = value == null ? null : value.toString();
-//  if (System.getProperty("os.name").startsWith("Windows") && href != null && href.startsWith("file:") && href.contains("~")) {
-//      try {
-//          href = new File(new File(new URI(href)).getCanonicalPath()).toURI().toURL().toString();
-//      } catch (MalformedURLException e) {
-//          // ignore
-//      } catch (IOException e) {
-//          // ignore
-//      } catch (URISyntaxException e) {
-//          // ignore
-//      }
-//  }
-//}
 	
 	/** Replace the value with the provided String value.
 	 *  @param value the value to use */
@@ -703,6 +682,7 @@ public class Argument {
 	 * @param to which position to move the value
 	 */
 	public void moveTo(int from, int to) {
+		lazyLoad();
 		if (from < 0 || from >= values.size()) {
 			return;
 		}
@@ -717,6 +697,83 @@ public class Argument {
 			shiftDistance = 1;
 		}
 		Collections.rotate(values.subList(from, to+1), shiftDistance);
+	}
+	
+	// getters and setters to ensure lazy loading
+	public String getName() { lazyLoad(); return name; }
+	public String getNiceName() { lazyLoad(); return niceName; }
+	public String getDesc() { lazyLoad(); return desc; }
+	public Boolean getRequired() { lazyLoad(); return required; }
+	public Boolean getSequence() { lazyLoad(); return sequence; }
+	public List<String> getMediaTypes() { lazyLoad(); return mediaTypes; }
+	public Output getOutput() { lazyLoad(); return output; }
+	public Kind getKind() { lazyLoad(); return kind; }
+	public Boolean getOrdered() { lazyLoad(); return ordered; }
+	public String getType() { lazyLoad(); return type; }
+	public void setName(String name) { lazyLoad(); this.name = name; }
+	public void setNiceName(String niceName) { lazyLoad(); this.niceName = niceName; }
+	public void setDesc(String desc) { lazyLoad(); this.desc = desc; }
+	public void setRequired(Boolean required) { lazyLoad(); this.required = required; }
+	public void setSequence(Boolean sequence) { lazyLoad(); this.sequence = sequence; }
+	public void setMediaTypes(List<String> mediaTypes) { lazyLoad(); this.mediaTypes = mediaTypes; }
+	public void setOutput(Output output) { lazyLoad(); this.output = output; }
+	public void setKind(Kind kind) { lazyLoad(); this.kind = kind; }
+	public void setOrdered(Boolean ordered) { lazyLoad(); this.ordered = ordered; }
+	public void setType(String type) { lazyLoad(); this.type = type; }
+
+	public Document toXml() {
+		lazyLoad();
+		
+		Document argDoc = XML.getXml("<d:"+kind+" xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
+		Element argElem = argDoc.getDocumentElement();
+		
+		if (name != null) {
+		    argElem.setAttribute("name", name);
+		}
+		if (niceName != null) {
+		    argElem.setAttribute("nicename", niceName);
+		}
+		if (desc != null) {
+		    argElem.setAttribute("desc", desc);
+		}
+		if (required != null) {
+		    argElem.setAttribute("required", required+"");
+		}
+		if (sequence != null) {
+		    argElem.setAttribute("sequence", sequence+"");
+		}
+		if (mediaTypes != null) {
+			String mediaTypesJoined = "";
+			for (int i = 0; i < mediaTypes.size(); i++) {
+				if (i > 0) {
+					mediaTypesJoined += " ";
+				}
+				mediaTypesJoined += mediaTypes.get(i);
+			}
+		    argElem.setAttribute("mediaType", mediaTypesJoined);
+		}
+		if (output != null) {
+		    argElem.setAttribute("outputType", output+"");
+		}
+		if (ordered != null) {
+		    argElem.setAttribute("ordered", ordered+"");
+		}
+		if (type != null) {
+		    argElem.setAttribute("type", type);
+		}
+		
+		if (values.size() == 1 && !sequence) {
+			argElem.setTextContent(values.get(0));
+			
+		} else {
+			for (String value : values) {
+				Element item = argDoc.createElementNS(XPath.dp2ns.get("d"), "item");
+				item.setAttribute("value", value);
+				argElem.appendChild(item);
+			}
+		}
+		
+		return argDoc;
 	}
 
 }

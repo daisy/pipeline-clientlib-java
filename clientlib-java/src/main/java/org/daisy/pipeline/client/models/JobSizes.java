@@ -1,8 +1,13 @@
 package org.daisy.pipeline.client.models;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.utils.XPath;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 /**
  * A representation of the "/admin/sizes" response from the Pipeline 2 Web Service.
@@ -43,12 +48,32 @@ public class JobSizes {
     
 	public String href;
 	public Long total;
-	public Map<String, JobSize> jobSize;
+	public Map<String, JobSize> jobSizes;
 	
-	public JobSizes(Document xml) {
-		// TODO Auto-generated constructor stub
+	public JobSizes(Node jobSizesNode) {
+		jobSizes = new HashMap<String, JobSize>();
+		
+		try {
+			// select root element if the node is a document node
+			if (jobSizesNode instanceof Document)
+				jobSizesNode = XPath.selectNode("/d:jobs", jobSizesNode, XPath.dp2ns);
+			
+			this.href = XPath.selectText("@href", jobSizesNode, XPath.dp2ns);
+			this.total = Long.valueOf(XPath.selectText("@total", jobSizesNode, XPath.dp2ns));
+
+			List<Node> jobSizeNodes = XPath.selectNodes("d:job", jobSizesNode, XPath.dp2ns);
+			for (Node jobSizeNode : jobSizeNodes) {
+				JobSize jobSize = new JobSize();
+				jobSize.id = XPath.selectText("@id", jobSizeNode, XPath.dp2ns);
+				jobSize.context = Long.valueOf(XPath.selectText("@context", jobSizeNode, XPath.dp2ns));
+				jobSize.log = Long.valueOf(XPath.selectText("@log", jobSizeNode, XPath.dp2ns));
+				jobSize.output = Long.valueOf(XPath.selectText("@output", jobSizeNode, XPath.dp2ns));
+				jobSizes.put(jobSize.id, jobSize);
+			}
+			
+		} catch (Exception e) {
+			Pipeline2Logger.logger().error("Failed to parse the job sizes XML", e);
+		}
 	}
-	
-	// TODO: add methods ?
 	
 }

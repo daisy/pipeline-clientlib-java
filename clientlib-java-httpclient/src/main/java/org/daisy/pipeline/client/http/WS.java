@@ -233,7 +233,7 @@ public class WS implements WSInterface {
 		try {
 			WSResponse response = null;
 
-			Document jobRequestDocument = job.serializeJobXml();
+			Document jobRequestDocument = job.toXml();
 
 			if (contextZipFile == null) {
 				response = Pipeline2HttpClient.postXml(endpoint, "/jobs", username, secret, jobRequestDocument);

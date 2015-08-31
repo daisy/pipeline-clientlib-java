@@ -110,19 +110,19 @@ public class JobValidator {
 	 * @return a message describing the error, or null if there is no error
 	 */
 	public static String validate(Argument arg, JobStorageInterface context) {
-		String beginText = "The "+arg.kind+" '"+(arg.niceName == null || "".equals(arg.niceName) ? arg.name : arg.niceName)+"'";
+		String beginText = "The "+arg.getKind()+" '"+(arg.getNiceName() == null || "".equals(arg.getNiceName()) ? arg.getName() : arg.getNiceName())+"'";
 
 		// is required ?
-		if (!arg.isDefined() && "true".equals(arg.required)) {
+		if (!arg.isDefined() && "true".equals(arg.getRequired())) {
 			return beginText+" is required.";
 		}
 
 		// is sequence ?
-		if (!arg.sequence && arg.size() != 1) {
+		if (!arg.getSequence() && arg.size() != 1) {
 			return beginText+" must have exactly one value, "+(arg.size() == 0 ? "no value" : arg.size()+" values")+" are currently given.";
 		}
 
-		String type = arg.type;
+		String type = arg.getType();
 		if (type != null) {
 			String[] typeSplit = type.split(":");
 			type = typeSplit[typeSplit.length-1];
@@ -132,7 +132,7 @@ public class JobValidator {
 					return beginText+" contains a undefined value.";
 				}
 				
-				switch (arg.type) {
+				switch (arg.getType()) {
 
 				case "string":
 					// nothing to validate, all strings are strings
@@ -309,7 +309,7 @@ public class JobValidator {
 					try {
 						URI uri = new URI(value);
 						
-						if ("".equals(arg.output)) { // input type => validate that it refers to context files
+						if ("".equals(arg.getOutput())) { // input type => validate that it refers to context files
 							if (uri.getScheme() != null || value.startsWith("/")) {
 								return beginText+" must be a relative URI";
 							}
@@ -343,7 +343,7 @@ public class JobValidator {
 					try {
 						URI uri = new URI(value);
 						
-						if ("".equals(arg.output)) { // input type => validate that it refers to context files
+						if ("".equals(arg.getOutput())) { // input type => validate that it refers to context files
 							if (uri.getScheme() != null || value.startsWith("/")) {
 								return beginText+" must be a relative URI";
 							}
@@ -377,7 +377,7 @@ public class JobValidator {
 					try {
 						URI uri = new URI(value);
 						
-						if ("".equals(arg.output)) { // input type => validate that it refers to context files
+						if ("".equals(arg.getOutput())) { // input type => validate that it refers to context files
 							if (uri.getScheme() != null || value.startsWith("/")) {
 								return beginText+" must be a relative URI";
 							}

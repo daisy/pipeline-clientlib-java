@@ -2,10 +2,13 @@ package org.daisy.pipeline.client.models;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 
@@ -108,12 +111,12 @@ public class Script implements Comparable<Script> {
 	 */
 	public Argument getArgument(String name) {
 		for (Argument arg : inputs) {
-			if (arg.name.equals(name)) {
+			if (arg.getName().equals(name)) {
 				return arg;
 			}
 		}
 		for (Argument arg : outputs) {
-			if (arg.name.equals(name)) {
+			if (arg.getName().equals(name)) {
 				return arg;
 			}
 		}
@@ -171,5 +174,71 @@ public class Script implements Comparable<Script> {
 //  public void setHomepage(String homepage) { lazyLoad(); this.homepage = homepage; }
 //  public void setInputs(List<Argument> inputs) { lazyLoad(); this.inputs = inputs; }
 //  public void setOutputs(List<Argument> outputs) { lazyLoad(); this.outputs = outputs; }
+
+	public Document toXml() {
+		lazyLoad();
+		
+		Document scriptDocument = XML.getXml("<d:script xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
+		Element scriptElement = scriptDocument.getDocumentElement();
+
+		if (id != null) {
+		    scriptElement.setAttribute("id", id);
+		}
+		if (href != null) {
+		    scriptElement.setAttribute("href", href);
+		}
+		if (inputFilesets != null) {
+		    String inputFilesetsJoined = "";
+		    for (int i = 0; i < inputFilesets.size(); i++) {
+		        if (i > 0) {
+		            inputFilesetsJoined += " ";
+		        }
+		        inputFilesetsJoined += inputFilesets.get(i);
+		    }
+		    scriptElement.setAttribute("input-filesets", inputFilesetsJoined);
+		}
+		if (outputFilesets != null) {
+		    String outputFilesetsJoined = "";
+		    for (int i = 0; i < outputFilesets.size(); i++) {
+		        if (i > 0) {
+		            outputFilesetsJoined += " ";
+		        }
+		        outputFilesetsJoined += outputFilesets.get(i);
+		    }
+		    scriptElement.setAttribute("output-filesets", outputFilesetsJoined);
+		}
+		if (niceName != null) {
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "nicename");
+		    e.setTextContent(niceName);
+		    scriptElement.appendChild(e);
+		}
+		if (description != null) {
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "description");
+		    e.setTextContent(description);
+		    scriptElement.appendChild(e);
+		}
+		if (version != null) {
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "version");
+		    e.setTextContent(version);
+		    scriptElement.appendChild(e);
+		}
+		if (homepage != null) {
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "homepage");
+		    e.setTextContent(homepage);
+		    scriptElement.appendChild(e);
+		}
+		if (inputs != null) {
+		    for (Argument arg : inputs) {
+		        scriptElement.appendChild(arg.toXml().getDocumentElement());
+		    }
+		}
+		if (outputs != null) {
+		    for (Argument arg : outputs) {
+		        scriptElement.appendChild(arg.toXml().getDocumentElement());
+		    }
+		}
+		
+		return scriptDocument;
+	}
 	
 }
