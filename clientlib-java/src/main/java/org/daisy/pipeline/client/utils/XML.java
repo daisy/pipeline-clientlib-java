@@ -16,6 +16,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
@@ -99,6 +100,16 @@ public class XML {
 			e.printStackTrace();
 			return null;
 		}
+    }
+    
+    /**
+     * Cross-document appendChild. Appends child into parent.
+     * 
+     * @param parent
+     * @param child
+     */
+    public static void appendChildAcrossDocuments(Element parent, Node child) {
+    	parent.appendChild(parent.getOwnerDocument().importNode(child, true));
     }
     
 }

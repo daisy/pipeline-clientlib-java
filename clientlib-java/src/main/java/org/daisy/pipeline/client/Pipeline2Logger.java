@@ -22,6 +22,9 @@ public abstract class Pipeline2Logger {
 
 
 	private static Pipeline2Logger logger;
+	static {
+		logger = new Pipeline2ConsoleLogger();
+	}
 	
 	/**
 	 * Get the currently used Pipeline2Logger instance in use.
@@ -46,7 +49,7 @@ public abstract class Pipeline2Logger {
 	}
 
 	/** Default logging implementation that logs to the console. */
-	public class Pipeline2ConsoleLogger extends Pipeline2Logger {
+	public static class Pipeline2ConsoleLogger extends Pipeline2Logger {
 		private LEVEL level = LEVEL.INFO;
 		
 		@Override

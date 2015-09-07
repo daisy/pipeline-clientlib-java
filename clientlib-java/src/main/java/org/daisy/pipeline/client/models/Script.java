@@ -110,6 +110,7 @@ public class Script implements Comparable<Script> {
 	 * @return
 	 */
 	public Argument getArgument(String name) {
+		lazyLoad();
 		for (Argument arg : inputs) {
 			if (arg.getName().equals(name)) {
 				return arg;
@@ -208,33 +209,33 @@ public class Script implements Comparable<Script> {
 		    scriptElement.setAttribute("output-filesets", outputFilesetsJoined);
 		}
 		if (niceName != null) {
-		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "nicename");
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:nicename");
 		    e.setTextContent(niceName);
 		    scriptElement.appendChild(e);
 		}
 		if (description != null) {
-		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "description");
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:description");
 		    e.setTextContent(description);
 		    scriptElement.appendChild(e);
 		}
 		if (version != null) {
-		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "version");
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:version");
 		    e.setTextContent(version);
 		    scriptElement.appendChild(e);
 		}
 		if (homepage != null) {
-		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "homepage");
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:homepage");
 		    e.setTextContent(homepage);
 		    scriptElement.appendChild(e);
 		}
 		if (inputs != null) {
 		    for (Argument arg : inputs) {
-		        scriptElement.appendChild(arg.toXml().getDocumentElement());
+		        XML.appendChildAcrossDocuments(scriptElement, arg.toXml().getDocumentElement());
 		    }
 		}
 		if (outputs != null) {
 		    for (Argument arg : outputs) {
-		        scriptElement.appendChild(arg.toXml().getDocumentElement());
+		    	XML.appendChildAcrossDocuments(scriptElement, arg.toXml().getDocumentElement());
 		    }
 		}
 		

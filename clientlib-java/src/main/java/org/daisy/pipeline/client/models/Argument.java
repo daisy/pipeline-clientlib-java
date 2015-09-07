@@ -18,117 +18,133 @@ import org.w3c.dom.Node;
 
 /** An argument of type "string" */
 public class Argument {
-	
+
 	/** The name of the option. This isn't necessarily unique; since inputs and options can have the same name. */
 	private String name;
-	
+
 	/** This is the value from the px:role="name" in the script documentation. */
 	private String niceName;
-	
+
 	/** A description of the option. */
 	private String desc;
-	
+
 	/** whether or not this option is required */
 	private Boolean required;
-	
+
 	/** whether or not multiple selections can be made */
 	private Boolean sequence;
-	
+
 	/** MIME types accepted (only relevant if type=anyDirURI or anyFileURI) */
 	private List<String> mediaTypes;
-	
+
 	/** Options with a output value of "result" or "temp" will only be included when the framework is running in local mode. */
 	private Output output;
 	public enum Output { result, temp };
-	
+
 	/** Type of underlying option. Either "input", "option" or "output". ("parameters" currently not supported) */
 	private Kind kind;
 	public enum Kind { input, /*parameters,*/ option, output };
-	
+
 	/** whether or not the ordering matters (only relevant if sequence==true) */
 	private Boolean ordered;
-	
+
 	/** XSD type */
 	private String type;
-    
+
 	private Node argumentNode;
 	private boolean lazyLoaded = false;
-	
+
 	private List<String> values = null;
-	
+
 	/** Create option instance from option node. */
 	public Argument(Node argumentNode) throws Pipeline2Exception {
 		this.argumentNode = argumentNode;
 	}
-	
+
 	private void lazyLoad() {
-		if (!lazyLoaded) {
+		if (!lazyLoaded && argumentNode != null) {
 			try {
 				this.name = parseTypeString(XPath.selectText("@name", argumentNode, XPath.dp2ns));
-				
+
 				this.niceName = parseTypeString(XPath.selectText("@nicename", argumentNode, XPath.dp2ns));
 				if (this.niceName == null || "".equals(this.niceName))
 					this.niceName = this.name;
-				
+
 				this.desc = parseTypeString(XPath.selectText("@desc", argumentNode, XPath.dp2ns));
 				if (this.desc == null)
 					this.desc = "";
-				
+
 				this.required = parseTypeBoolean(XPath.selectText("@required", argumentNode, XPath.dp2ns));
 				if (this.required == null)
 					this.required = true;
-				
+
 				this.sequence = parseTypeBoolean(XPath.selectText("@sequence", argumentNode, XPath.dp2ns));
 				if (this.sequence == null)
 					this.sequence = false;
-				
+
 				this.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", argumentNode, XPath.dp2ns));
-		
+
 				try {
 					this.output = Output.valueOf(parseTypeString(XPath.selectText("@outputType", argumentNode, XPath.dp2ns)));
 				} catch (IllegalArgumentException e) {
+					this.kind = null;
 				} catch (NullPointerException e) {
-				} finally {
-					this.output = null;
+					this.kind = null;
 				}
-		
+
 				try {
 					this.kind = Kind.valueOf(argumentNode.getLocalName()); // TODO "parameters": how to determine that a port is a parameter port?
 				} catch (IllegalArgumentException e) {
+					this.kind = null;
 				} catch (NullPointerException e) {
-				} finally {
 					this.kind = null;
 				}
-		
+
 				this.ordered = parseTypeBoolean(XPath.selectText("@ordered", argumentNode, XPath.dp2ns));
 				if (this.ordered == null)
 					this.ordered = true;
-		
+
 				this.type = parseTypeString(XPath.selectText("@type", argumentNode, XPath.dp2ns));
 				if (this.type == null)
 					this.type = "string";
-				
-				
+
+
 				if (this.kind == Kind.input || this.kind == Kind.output) {
 					this.type = "anyFileURI";
-					
+
 					if (this.mediaTypes.size() == 0)
 						this.mediaTypes.add("application/xml");
 				}
-				
+
 				if ("output".equals(this.kind)) {
 					this.required = false;
 					if (this.output == null)
 						this.output = Output.result;
 				}
-				
+
+				List<Node> valueNodes = XPath.selectNodes("d:item", argumentNode, XPath.dp2ns);
+				if (valueNodes.isEmpty()) {
+					String value = XPath.selectText("text()", argumentNode, XPath.dp2ns);
+					if (value != null && !"".equals(value)) {
+						this.values = new ArrayList<String>();
+						this.values.add(value);
+					}
+
+				} else {
+					this.values = new ArrayList<String>();
+					for (Node valueNode : valueNodes) {
+						String value = XPath.selectText("@value", valueNode, XPath.dp2ns);
+						this.values.add(value);
+					}
+				}
+
 			} catch (Pipeline2Exception e) {
 				Pipeline2Logger.logger().error("Failed to parse argument node", e);
 			}
 			lazyLoaded = true;
 		}
 	}
-	
+
 	/** Helper function for the Script(Document) constructor */
 	private static String parseTypeString(String string) {
 		if (!(string instanceof String))
@@ -137,7 +153,7 @@ public class Argument {
 		if ("".equals(string)) return null;
 		else return string;
 	}
-	
+
 	/** Helper function for the Script(Document) constructor */
 	private static Boolean parseTypeBoolean(String bool) {
 		if (!(bool instanceof String))
@@ -148,7 +164,7 @@ public class Argument {
 			return true;
 		return null;
 	}
-	
+
 	/** Helper function for the Script(Document) constructor */
 	private static List<String> parseTypeMediaTypes(String mediaTypesString) {
 		if (!(mediaTypesString instanceof String))
@@ -159,7 +175,7 @@ public class Argument {
 		for (String mediaType : mediaTypes) {
 			if ("".equals(mediaType))
 				continue;
-			
+
 			if ("text/xml".equals(mediaType))
 				mediaTypesList.add("application/xml");
 			else
@@ -167,66 +183,61 @@ public class Argument {
 		}
 		return mediaTypesList;
 	}
-	
+
+	//	/**
+	//	 * Returns an XML Element representation of the option, input or output, compatible with a jobRequest document.
+	//	 * 
+	//	 * Examples:
+	//	 * 
+	//	 * <d:option name="language">
+	//	 *     <d:item value="en"/>
+	//	 * </d:option>
+	//	 * 
+	//	 * <d:option name="colors">
+	//	 *     <d:item value="red"/>
+	//	 *     <d:item value="green"/>
+	//	 *     <d:item value="blue"/>
+	//	 * </d:option>
+	//	 * 
+	//	 * <d:option name="include-illustrations">
+	//	 * 	   <d:item value="true"/>
+	//	 * </d:option>
+	//	 * 
+	//	 * <d:option name="stylesheet">
+	//	 * 	   <d:item value="main.css"/>
+	//	 * </d:option>
+	//	 * 
+	//	 * <d:input name="source">
+	//	 *     <d:item value="content.xhtml"/>
+	//	 * </d:input>
+	//	 * 
+	//	 * @param document The document used to create the element.
+	//	 * @return
+	//	 */
+	//	public Element asDocumentElement(Document document) {
+	//		lazyLoad();
+	//		if (values == null)
+	//			return null;
+	//
+	//		Element element = document.createElement(kind == null ? "option" : kind.toString());
+	//		element.setAttribute("name", name);
+	//
+	//		for (String value : values) {
+	//			Element item = document.createElement("item");
+	//			item.setAttribute("value", value);
+	//			element.appendChild(item);
+	//		}
+	//
+	//		return element;
+	//	}
+
 	/**
-     * Returns an XML Element representation of the option, input or output, compatible with a jobRequest document.
-     * 
-     * Examples:
-     * 
-     * <d:option name="language">
-     *     <d:item value="en"/>
-     * </d:option>
-     * 
-     * <d:option name="colors">
-     *     <d:item value="red"/>
-     *     <d:item value="green"/>
-     *     <d:item value="blue"/>
-     * </d:option>
-     * 
-     * <d:option name="include-illustrations">
-     * 	   <d:item value="true"/>
-     * </d:option>
-     * 
-     * <d:option name="stylesheet">
-     * 	   <d:item value="main.css"/>
-     * </d:option>
-     * 
-     * <d:input name="source">
-     *     <d:item value="content.xhtml"/>
-     * </d:input>
-     * 
-     * @param document The document used to create the element.
-     * @return
-     */
-    public Element asDocumentElement(Document document) {
-    	lazyLoad();
-    	if (values.size() == 0)
-    		return null;
-
-    	Element element = document.createElement(kind == null ? "option" : kind.toString());
-    	element.setAttribute("name", name);
-
-        if (Boolean.FALSE.equals(required) && values.size() == 0) {
-        	return null;
-        	
-        } else {
-	        for (String value : values) {
-	            Element item = document.createElement("item");
-	            item.setAttribute("value", value);
-	            element.appendChild(item);
-	        }
-        }
-        
-        return element;
-    }
-
-    /**
-     * Returns the number of values defined for the option or input.
-     * 
-     * @param name the name of the option or input
-     * @return number of values
-     */
-    public int size() {
+	 * Returns the number of values defined for the option or input.
+	 * 
+	 * @param name the name of the option or input
+	 * @return number of values
+	 */
+	public int size() {
 		lazyLoad();
 		if (values == null) {
 			return 0;
@@ -234,8 +245,8 @@ public class Argument {
 		} else {
 			return values.size();
 		}
-    }
-    
+	}
+
 	/**
 	 * Unset the given option or input.
 	 * 
@@ -247,10 +258,12 @@ public class Argument {
 	 */
 	public void unset() {
 		lazyLoad();
-		values.clear();
+		if (values != null) {
+			values.clear();
+		}
 		values = null;
 	}
-	
+
 	/**
 	 * Unset the given option or input.
 	 * 
@@ -266,7 +279,7 @@ public class Argument {
 		lazyLoad();
 		return values != null;
 	}
-	
+
 	/**
 	 * Clear the given option or input.
 	 * 
@@ -284,7 +297,7 @@ public class Argument {
 			values.clear();
 		}
 	}
-	
+
 	/** Replace the value at the given position with the provided Integer value.
 	 *  @param position
 	 *  @param value the value to use */
@@ -295,7 +308,7 @@ public class Argument {
 			set(position, value+"");
 		}
 	}
-	
+
 	/** Replace the value at the given position with the provided Long value.
 	 *  @param position
 	 *  @param value the value to use */
@@ -306,7 +319,7 @@ public class Argument {
 			set(position, value+"");
 		}
 	}
-	
+
 	/** Replace the value at the given position with the provided Double value.
 	 *  @param position
 	 *  @param value the value to use */
@@ -317,7 +330,7 @@ public class Argument {
 			set(position, value+"");
 		}
 	}
-	
+
 	/** Replace the value at the given position with the provided Boolean value.
 	 *  @param position
 	 *  @param value the value to use */
@@ -328,7 +341,7 @@ public class Argument {
 			set(position, value+"");
 		}
 	}
-	
+
 	/** Replace the value at the given position with the provided File value.
 	 *  @param position
 	 *  @param file the value to use */
@@ -340,7 +353,7 @@ public class Argument {
 			set(position, context.getContextFilePath(file));
 		}
 	}
-	
+
 	/** Replace the value at the given position with the provided String value.
 	 *  @param position
 	 *  @param value the value to use */
@@ -364,7 +377,7 @@ public class Argument {
 			set(value+"");
 		}
 	}
-	
+
 	/** Replace the value with the provided Long value.
 	 *  @param value the value to use */
 	public void set(Long value) {
@@ -374,7 +387,7 @@ public class Argument {
 			set(value+"");
 		}
 	}
-	
+
 	/** Replace the value with the provided Double value.
 	 *  @param value the value to use */
 	public void set(Double value) {
@@ -384,7 +397,7 @@ public class Argument {
 			set(value+"");
 		}
 	}
-	
+
 	/** Replace the value with the provided Boolean value.
 	 *  @param value the value to use */
 	public void set(Boolean value) {
@@ -394,34 +407,42 @@ public class Argument {
 			set(value+"");
 		}
 	}
-	
+
 	/** Replace the value with the provided File value.
 	 *  @param file the value to use */
 	public void set(File file, JobStorageInterface context) {
 		if (file == null) {
 			clear();
+			
+		} else if (getOutput() != null) {
+			set(file.toURI().toString());
+			
 		} else {
 			context.addContextFile(file, file.getName());
 			set(context.getContextFilePath(file));
 		}
 	}
-	
+
 	/** Replace the value with the provided String value.
 	 *  @param value the value to use */
 	public void set(String value) {
 		clear();
 		if (value != null) {
+			if (values == null) {
+				values = new ArrayList<String>();
+			}
 			values.add(value);
 		}
 	}
-	
+
 	/** Replace the values with all the provided String values.
 	 *  @param values the value to use */
 	public void setAll(Collection<String> values) {
 		clear();
-		if (values != null) {
-			values.addAll(values);
+		if (this.values == null) {
+			this.values = new ArrayList<String>();
 		}
+		this.values.addAll(values);
 	}
 
 	/** Add to the list of values the provided Integer value.
@@ -431,7 +452,7 @@ public class Argument {
 			add(value+"");
 		}
 	}
-	
+
 	/** Add to the list of values the provided Long value.
 	 *  @param value the value to use */
 	public void add(Long value) {
@@ -439,7 +460,7 @@ public class Argument {
 			add(value+"");
 		}
 	}
-	
+
 	/** Add to the list of values the provided Double value.
 	 *  @param value the value to use */
 	public void add(Double value) {
@@ -447,7 +468,7 @@ public class Argument {
 			add(value+"");
 		}
 	}
-	
+
 	/** Add to the list of values the provided Boolean value.
 	 *  @param value the value to use */
 	public void add(Boolean value) {
@@ -455,7 +476,7 @@ public class Argument {
 			add(value+"");
 		}
 	}
-	
+
 	/** Add to the list of values the provided File value.
 	 *  @param file the value to use */
 	public void add(File file, JobStorageInterface context) {
@@ -465,24 +486,30 @@ public class Argument {
 			add(context.getContextFilePath(file));
 		}
 	}
-	
+
 	/** Add to the list of values the provided String value.
 	 *  @param value the value to use */
 	public void add(String value) {
 		if (value != null) {
 			lazyLoad();
+			if (this.values == null) {
+				this.values = new ArrayList<String>();
+			}
 			values.add(value);
 		}
 	}
-	
+
 	/** Add to the list of values all the provided String values.
 	 *  @param values the value to use */
 	public void addAll(Collection<String> values) {
 		if (values != null) {
+			if (this.values == null) {
+				this.values = new ArrayList<String>();
+			}
 			values.addAll(values);
 		}
 	}
-	
+
 	/** Remove all occurences of the provided Integer value from the list of values.
 	 *  @param value the value to use */
 	public void remove(Integer value) {
@@ -490,7 +517,7 @@ public class Argument {
 			remove(value+"");
 		}
 	}
-	
+
 	/** Remove all occurences of the provided Long value from the list of values.
 	 *  @param value the value to use */
 	public void remove(Long value) {
@@ -498,7 +525,7 @@ public class Argument {
 			remove(value+"");
 		}
 	}
-	
+
 	/** Remove all occurences of the provided Double value from the list of values.
 	 *  @param value the value to use */
 	public void remove(Double value) {
@@ -506,7 +533,7 @@ public class Argument {
 			remove(value+"");
 		}
 	}
-	
+
 	/** Remove all occurences of the provided Boolean value from the list of values.
 	 *  @param value the value to use */
 	public void remove(Boolean value) {
@@ -514,7 +541,7 @@ public class Argument {
 			remove(value+"");
 		}
 	}
-	
+
 	/** Remove all occurences of the provided File value from the list of values.
 	 *  @param file the value to use */
 	public void remove(File file, JobStorageInterface context) {
@@ -522,7 +549,7 @@ public class Argument {
 			remove(context.getContextFilePath(file));
 		}
 	}
-	
+
 	/** Remove all occurences of the provided String value from the list of values.
 	 *  @param value the value to use */
 	public void remove(String value) {
@@ -534,12 +561,12 @@ public class Argument {
 			}
 		}
 	}
-	
+
 	/** Remove the first occurences of all the provided String values from the list of values.
 	 *  @param values the value to use */
 	public void removeAll(Collection<String> values) {
-		if (values != null) {
-			values.removeAll(values);
+		if (values != null && this.values != null) {
+			this.values.removeAll(values);
 		}
 	}
 
@@ -560,7 +587,7 @@ public class Argument {
 			return null;
 		}
 	}
-	
+
 	/** Get the value as a Long.
 	 *
 	 *  Returns the first value if there are more than one.
@@ -577,7 +604,7 @@ public class Argument {
 			return null;
 		}
 	}
-	
+
 	/** Get the value as a Double.
 	 *
 	 *  Returns the first value if there are more than one.
@@ -595,7 +622,7 @@ public class Argument {
 			return null;
 		}
 	}
-	
+
 	/** Get the value as a Boolean.
 	 *
 	 *  Returns the first value if there are more than one.
@@ -614,7 +641,7 @@ public class Argument {
 			return null;
 		}
 	}
-	
+
 	/** Get the value as a File.
 	 * 
 	 *  Returns the first value if there are more than one.
@@ -630,7 +657,7 @@ public class Argument {
 			return context.getContextFile(values.get(0));
 		}
 	}
-	
+
 	/** Get the value as a String.
 	 * 
 	 *  Returns the first value if there are more than one.
@@ -655,7 +682,7 @@ public class Argument {
 		lazyLoad();
 		return values;
 	}
-	
+
 	/** Get all the values as a List of Files.
 	 * 
 	 *  @return null if any of the values cannot be parsed as a File, or if the value is not set. */
@@ -674,7 +701,7 @@ public class Argument {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Move a value from one position in the value list to another.
 	 * 
@@ -683,6 +710,9 @@ public class Argument {
 	 */
 	public void moveTo(int from, int to) {
 		lazyLoad();
+		if (values == null) {
+			return;
+		}
 		if (from < 0 || from >= values.size()) {
 			return;
 		}
@@ -698,7 +728,7 @@ public class Argument {
 		}
 		Collections.rotate(values.subList(from, to+1), shiftDistance);
 	}
-	
+
 	// getters and setters to ensure lazy loading
 	public String getName() { lazyLoad(); return name; }
 	public String getNiceName() { lazyLoad(); return niceName; }
@@ -707,7 +737,7 @@ public class Argument {
 	public Boolean getSequence() { lazyLoad(); return sequence; }
 	public List<String> getMediaTypes() { lazyLoad(); return mediaTypes; }
 	public Output getOutput() { lazyLoad(); return output; }
-	public Kind getKind() { lazyLoad(); return kind; }
+	public Kind getKind() { lazyLoad(); return this.kind; }
 	public Boolean getOrdered() { lazyLoad(); return ordered; }
 	public String getType() { lazyLoad(); return type; }
 	public void setName(String name) { lazyLoad(); this.name = name; }
@@ -723,24 +753,24 @@ public class Argument {
 
 	public Document toXml() {
 		lazyLoad();
-		
+
 		Document argDoc = XML.getXml("<d:"+kind+" xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
 		Element argElem = argDoc.getDocumentElement();
-		
+
 		if (name != null) {
-		    argElem.setAttribute("name", name);
+			argElem.setAttribute("name", name);
 		}
 		if (niceName != null) {
-		    argElem.setAttribute("nicename", niceName);
+			argElem.setAttribute("nicename", niceName);
 		}
 		if (desc != null) {
-		    argElem.setAttribute("desc", desc);
+			argElem.setAttribute("desc", desc);
 		}
 		if (required != null) {
-		    argElem.setAttribute("required", required+"");
+			argElem.setAttribute("required", required+"");
 		}
 		if (sequence != null) {
-		    argElem.setAttribute("sequence", sequence+"");
+			argElem.setAttribute("sequence", sequence+"");
 		}
 		if (mediaTypes != null) {
 			String mediaTypesJoined = "";
@@ -750,29 +780,32 @@ public class Argument {
 				}
 				mediaTypesJoined += mediaTypes.get(i);
 			}
-		    argElem.setAttribute("mediaType", mediaTypesJoined);
+			argElem.setAttribute("mediaType", mediaTypesJoined);
 		}
 		if (output != null) {
-		    argElem.setAttribute("outputType", output+"");
+			argElem.setAttribute("outputType", output+"");
 		}
 		if (ordered != null) {
-		    argElem.setAttribute("ordered", ordered+"");
+			argElem.setAttribute("ordered", ordered+"");
 		}
 		if (type != null) {
-		    argElem.setAttribute("type", type);
+			argElem.setAttribute("type", type);
 		}
-		
-		if (values.size() == 1 && !sequence) {
+
+		if (values == null) {
+			// do nothing
+
+		} else if (values.size() == 1 && !sequence) {
 			argElem.setTextContent(values.get(0));
-			
+
 		} else {
 			for (String value : values) {
-				Element item = argDoc.createElementNS(XPath.dp2ns.get("d"), "item");
+				Element item = argDoc.createElementNS(XPath.dp2ns.get("d"), "d:item");
 				item.setAttribute("value", value);
 				argElem.appendChild(item);
 			}
 		}
-		
+
 		return argDoc;
 	}
 

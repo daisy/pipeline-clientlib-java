@@ -105,19 +105,18 @@ public class XPath {
 			return null;
 		
 		try {
-			String nodeText = (String) xpath(expr,ns).evaluate(doc, XPathConstants.STRING);
-			return nodeText;
-//			if (nodeList.getLength() == 0) return null;
-//			else return nodeList.item(0);
+			if (((NodeList)xpath(expr,ns).evaluate(doc, XPathConstants.NODESET)).getLength() == 0) {
+				return null;
+				
+			} else {
+				String nodeText = (String) xpath(expr,ns).evaluate(doc, XPathConstants.STRING);
+				return nodeText;
+			}
 			
 		} catch (XPathExpressionException e) {
 			e.printStackTrace();
 			throw new Pipeline2Exception(e);
 		}
-		
-//		Node node = selectNode(expr, doc, ns);
-//		if (node == null) return null;
-//		return node.getTextContent();
 	}
 	
 	/**

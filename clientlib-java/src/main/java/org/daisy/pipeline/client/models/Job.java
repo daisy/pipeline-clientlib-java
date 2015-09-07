@@ -70,7 +70,7 @@ public class Job implements Comparable<Job> {
 	 */
 	public Job(Node jobXml) throws Pipeline2Exception {
 		this();
-		jobNode = jobXml;
+		setJobXml(jobXml);
 	}
 	
 	/**
@@ -111,6 +111,10 @@ public class Job implements Comparable<Job> {
 	}
 	
 	private void lazyLoad() {
+		if (context != null) {
+			context.lazyLoad();
+		}
+		
 		if (lazyLoaded || jobNode == null) {
 			return;
 		}
@@ -120,7 +124,10 @@ public class Job implements Comparable<Job> {
 			if (jobNode instanceof Document)
 				jobNode = XPath.selectNode("/*", jobNode, XPath.dp2ns);
 			
-			this.id = XPath.selectText("@id", jobNode, XPath.dp2ns);
+			String id = XPath.selectText("@id", jobNode, XPath.dp2ns);
+			if (id != null) {
+				this.id = id;
+			}
 			this.href = XPath.selectText("@href", jobNode, XPath.dp2ns);
 			String status = XPath.selectText("@status", jobNode, XPath.dp2ns);
 			for (Status s : Status.values()) {
@@ -146,6 +153,7 @@ public class Job implements Comparable<Job> {
 					}
 				}
 			}
+
 			if (XPath.selectNode("d:script/*", jobNode, XPath.dp2ns) == null) {
 				scriptHref = XPath.selectText("d:script/@href", jobNode, XPath.dp2ns);
 				
@@ -350,6 +358,7 @@ public class Job implements Comparable<Job> {
 	// simple getters and setters (to ensure lazy loading is performed)
 	public String getId() { lazyLoad(); return id; }
 	public String getHref() { lazyLoad(); return href; }
+	public String getScriptHref() { lazyLoad(); if (script != null) return script.getHref(); else return scriptHref; }
 	public Status getStatus() { lazyLoad(); return status; }
 	public String getLogHref() { lazyLoad(); return logHref; }
 	public String getNiceName() { lazyLoad(); return niceName; }
@@ -364,9 +373,20 @@ public class Job implements Comparable<Job> {
 	public void setCallback(List<Callback> callback) { lazyLoad(); this.callback = callback; }
 	public void setContext(JobStorageInterface context) { lazyLoad(); this.context = context; }
 	
+	/** Set job XML and re-enable lazy loading for the new XML. */
+	public void setJobXml(Node jobXml) {
+		this.jobNode = jobXml;
+		this.lazyLoaded = false;
+	}
+	
 	public Script getScript() {
 		lazyLoad();
 		return script;
+	}
+	
+	public void setScript(Script script) {
+		lazyLoad();
+		this.script = script;
 	}
 	
 	public List<Argument> getInputs() {
@@ -380,6 +400,7 @@ public class Job implements Comparable<Job> {
 	}
 	
 	public Argument getArgument(String name) {
+		lazyLoad();
 		for (Argument arg : getInputs()) {
 			if (arg.getName().equals(name)) {
 				return arg;
@@ -451,37 +472,37 @@ public class Job implements Comparable<Job> {
 		}
 		
 		if (script != null) {
-			jobElement.appendChild(script.toXml().getDocumentElement());
+			XML.appendChildAcrossDocuments(jobElement, script.toXml().getDocumentElement());
 		}
 		
 		if (niceName != null) {
-			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "nicename");
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:nicename");
 			e.setTextContent(niceName);
 			jobElement.appendChild(e);
 		}
 		
 		if (batchId != null) {
-			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "batchId");
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:batchId");
 			e.setTextContent(batchId);
 			jobElement.appendChild(e);
 		}
 		
 		if (logHref != null) {
-			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "log");
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:log");
 			e.setAttribute("href", logHref);
 			jobElement.appendChild(e);
 		}
 		
 		if (callback != null) {
 			for (Callback c : callback) {
-				jobElement.appendChild(c.toXml().getDocumentElement());
+				XML.appendChildAcrossDocuments(jobElement, c.toXml().getDocumentElement());
 			}
 		}
 		
 		if (messages != null) {
-			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "messages");
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:messages");
 			for (Message m : messages) {
-				Element mElement = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "message");
+				Element mElement = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:message");
 				if (m.level != null) {
 					mElement.setAttribute("level", m.level.toString());
 				}
@@ -508,13 +529,13 @@ public class Job implements Comparable<Job> {
 		}
 		
 		if (results != null) {
-			Element resultsElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "results");
+			Element resultsElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "d:results");
 			result.toXml(resultsElement);
 			for (Result r : results.keySet()) {
-				Element resultElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "result");
+				Element resultElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "d:result");
 				r.toXml(resultElement);
 				for (Result fileResult : results.get(r)) {
-					Element fileElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "result");
+					Element fileElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "d:result");
 					fileResult.toXml(fileElement);
 				}
 				resultsElement.appendChild(resultElement);
@@ -526,12 +547,12 @@ public class Job implements Comparable<Job> {
 		if (script == null) {
 			if (argumentInputs != null) {
 				for (Argument arg : argumentInputs) {
-					jobElement.appendChild(arg.toXml().getDocumentElement());
+					XML.appendChildAcrossDocuments(jobElement, arg.toXml().getDocumentElement());
 				}
 			}
 			if (argumentOutputs != null) {
 				for (Argument arg : argumentOutputs) {
-					jobElement.appendChild(arg.toXml().getDocumentElement());
+					XML.appendChildAcrossDocuments(jobElement, arg.toXml().getDocumentElement());
 				}
 			}
 		}
@@ -546,30 +567,30 @@ public class Job implements Comparable<Job> {
 		Element jobRequestElement = jobRequestDocument.getDocumentElement();
 
 		if (script != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "script");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:script");
 			e.setAttribute("href", script.getHref());
 			jobRequestElement.appendChild(e);
 			
 		} else if (scriptHref != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "script");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:script");
 			e.setAttribute("href", scriptHref);
 			jobRequestElement.appendChild(e);
 		}
 		
 		if (niceName != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "nicename");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:nicename");
 			e.setTextContent(niceName);
 			jobRequestElement.appendChild(e);
 		}
 		
 		if (priority != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "priority");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:priority");
 			e.setTextContent(priority.toString());
 			jobRequestElement.appendChild(e);
 		}
 		
 		if (batchId != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "batchId");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:batchId");
 			e.setTextContent(batchId);
 			jobRequestElement.appendChild(e);
 		}
@@ -586,11 +607,11 @@ public class Job implements Comparable<Job> {
 		}
 		for (Argument input : inputs) {
 			if (input.isDefined()) {
-				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "input");
+				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:input");
 				arg.setAttribute("name", input.getName());
 
 				for (String value : input.getAsList()) {
-					Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
+					Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
 					item.setAttribute("value", value);
 					arg.appendChild(item);
 				}
@@ -599,11 +620,11 @@ public class Job implements Comparable<Job> {
 		}
 		for (Argument option : options) {
 			if (option.isDefined()) {
-				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "option");
+				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:option");
 				arg.setAttribute("name", option.getName());
 				if (option.getSequence()) {
 					for (String value : option.getAsList()) {
-						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
+						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
 						item.setAttribute("value", value);
 						arg.appendChild(item);
 					}
@@ -615,10 +636,10 @@ public class Job implements Comparable<Job> {
 		}
 		for (Argument output : outputs) {
 			if (output.isDefined()) {
-				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "output");
+				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:output");
 				arg.setAttribute("name", output.getName());
 				for (String value : output.getAsList()) {
-					Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
+					Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
 					item.setAttribute("value", value);
 					arg.appendChild(item);
 				}
@@ -634,6 +655,5 @@ public class Job implements Comparable<Job> {
 		
 		return jobRequestDocument;
 	}
-	
 
 }

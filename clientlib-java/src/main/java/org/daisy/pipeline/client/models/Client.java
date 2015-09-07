@@ -57,8 +57,8 @@ public class Client {
 				try {
 					this.role = Role.valueOf(XPath.selectText("@role", clientNode, XPath.dp2ns));
 				} catch (IllegalArgumentException e) {
+					this.role = null;
 				} catch (NullPointerException e) {
-				} finally {
 					this.role = null;
 				}
 				

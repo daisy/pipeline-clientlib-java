@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.filestorage.JobStorage;
@@ -89,7 +91,6 @@ public class JobCreationTest {
 			assert false;
 		}
 		job.setId("job3");
-//		JobStorage jobStorage = new JobStorage(job, jobStorageDir);
 
 		// set to a boolean value
 		Argument argBoolean = job.getArgument("boolean");
@@ -102,64 +103,86 @@ public class JobCreationTest {
 		assertArrayEquals(new String[]{"true"}, argBoolean.getAsList().toArray());
 	}
 
-//	@Test
-//	public void testBuildJobString() {
-//		Job job = Job.createJob("job3", jobStorage, loadResource("scripts/dtbook-to-epub3.xml"));
-//
-//		// set to a string value
-//		job.set("string", "value");
-//		assertEquals(1, job.getCount("string"));
-//		assertEquals("value", job.get("string"));
-//		assertEquals(false, job.getAsBoolean("string", false));
-//		assertEquals(0, job.getAsInteger("string", 0));
-//		assertEquals(0.0, job.getAsDouble("string", 0.0), 0.0);
-//	}
-//
-//	@Test
-//	public void testBuildJobUnset() {
-//		Job job = Job.createJob("job3", jobStorage, loadResource("scripts/dtbook-to-epub3.xml"));
-//
-//		// set to a value, and then set to a undefined value (null)
-//		job.set("undeclare", "value");
-//		assertEquals(1, job.getCount("undeclare"));
-//		assertEquals("value", job.get("undeclare"));
-//		job.unset("undeclare");
-//		assertEquals(0, job.getCount("undeclare"));
-//		assertNull(job.get("undeclare"));
-//		assertEquals(false, job.getAsBoolean("undeclare", false));
-//		assertEquals(0, job.getAsInteger("undeclare", 0));
-//		assertEquals(0.0, job.getAsDouble("undeclare", 0.0), 0.0);
-//		assertArrayEquals(new String[]{}, job.getAsList("undeclare").toArray(new String[0]));
-//	}
-//
-//	@Test
-//	public void testBuildJobLists() {
-//		Job job = Job.createJob("job3", jobStorage, loadResource("scripts/dtbook-to-epub3.xml"));
-//
-//		List<String> stringList = new ArrayList<String>();
-//		stringList.add("foo");
-//		stringList.add("bar");
-//		stringList.add("baz");
-//		job.set("string-list", stringList);
-//		assertEquals(3, job.getCount("string-list"));
-//
-//		List<String> otherStringList = new ArrayList<String>();
-//		otherStringList.add("1");
-//		otherStringList.add("2");
-//		otherStringList.add("3");
-//		job.set("string-list", stringList);
-//		assertEquals(3, job.getCount("string-list"));
-//		for (String value : otherStringList) {
-//			job.add("string-list", value);
-//		}
-//		assertEquals(6, job.getCount("string-list"));
-//		job.set("string-list", stringList);
-//		assertEquals(3, job.getCount("string-list"));
-//
-//		for (int i = 1; i <= 10; i++) {
-//			job.add("append-list", i);
-//		}
-//		assertEquals(10, job.getCount("append-list"));
-//	}
+	@Test
+	public void testBuildJobString() {
+		Job job = null;
+		try {
+			job = new Job(loadXmlResource("scripts/test.xml"));
+		} catch (Pipeline2Exception e) {
+			assert false;
+		}
+		job.setId("job3");
+
+		// set to a string value
+		Argument arg = job.getArgument("string");
+		arg.set("value");
+		assertEquals(1, arg.size());
+		assertEquals("value", arg.get());
+		assertNull(arg.getAsBoolean());
+		assertNull(arg.getAsInteger());
+		assertNull(arg.getAsDouble());
+	}
+
+	@Test
+	public void testBuildJobUnset() {
+		Job job = null;
+		try {
+			job = new Job(loadXmlResource("scripts/test.xml"));
+		} catch (Pipeline2Exception e) {
+			assert false;
+		}
+		job.setId("job3");
+
+		// set to a value, and then set to a undefined value (null)
+		Argument arg = job.getArgument("string");
+		arg.set("value");
+		assertEquals(1, arg.size());
+		assertEquals("value", arg.get());
+		arg.unset();;
+		assertEquals(0, arg.size());
+		assertNull(arg.get());
+		assertNull(arg.getAsBoolean());
+		assertNull(arg.getAsInteger());
+		assertNull(arg.getAsDouble());
+		assertNull(arg.getAsList());
+	}
+
+	@Test
+	public void testBuildJobLists() {
+		Job job = null;
+		try {
+			job = new Job(loadXmlResource("scripts/test.xml"));
+		} catch (Pipeline2Exception e) {
+			assert false;
+		}
+		job.setId("job3");
+		
+		Argument arg = job.getArgument("string-list");
+		List<String> stringList = new ArrayList<String>();
+		stringList.add("foo");
+		stringList.add("bar");
+		stringList.add("baz");
+		arg.setAll(stringList);
+		assertEquals(3, arg.size());
+
+		List<String> otherStringList = new ArrayList<String>();
+		otherStringList.add("1");
+		otherStringList.add("2");
+		otherStringList.add("3");
+		arg.setAll(stringList);
+		assertEquals(3, arg.size());
+		for (String value : otherStringList) {
+			arg.add(value);
+		}
+		assertEquals(6, arg.size());
+		arg.setAll(stringList);
+		assertEquals(3, arg.size());
+		
+		arg.unset();
+		for (int i = 1; i <= 10; i++) {
+			arg.add(i);
+		}
+		assertEquals(10, arg.size());
+	}
 	
 }

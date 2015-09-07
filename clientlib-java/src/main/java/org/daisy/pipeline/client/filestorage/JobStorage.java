@@ -25,18 +25,20 @@ public class JobStorage implements JobStorageInterface {
 	private boolean lazyLoaded = false;
 
 	/**
-	 * Load or create a job with the given id in the given job storage.
+	 * Create a JobStorage associated with the provided Job.
 	 * 
-	 * @param jobId job id
-	 * @param jobStorage job storage
+	 * @param job job
+	 * @param jobStorage job storage directory
 	 */
 	public JobStorage(Job job, File jobStorage) {
 		assert(job.getId() != null);
+		this.job = job;
 		directory = new File(jobStorage, job.getId());
-		directory.mkdirs();
+		job.setContext(this);
 	}
-
-	private void lazyLoad() {
+	
+	@Override
+	public void lazyLoad() {
 		if (lazyLoaded) {
 			return;
 		}
@@ -57,7 +59,12 @@ public class JobStorage implements JobStorageInterface {
 
 				if (jobDocument != null) {
 					try {
-						job = new Job(jobDocument);
+						if (job == null) {
+							job = new Job(jobDocument);
+							
+						} else {
+							job.setJobXml(jobDocument);
+						}
 
 					} catch (Pipeline2Exception e) {
 						Pipeline2Logger.logger().error("Failed to load job: "+jobFile.getAbsolutePath(), e);
@@ -83,7 +90,15 @@ public class JobStorage implements JobStorageInterface {
 	 */
 	public void save(boolean moveFiles) {
 		lazyLoad();
-
+		
+		if (directory == null) {
+			return;
+		}
+		
+		if (!directory.exists()) {
+			directory.mkdirs();
+		}
+		
 		File jobFile = new File(directory, "job.xml");
 		Document jobDocument = job.toXml();
 
@@ -95,33 +110,32 @@ public class JobStorage implements JobStorageInterface {
 			Pipeline2Logger.logger().error("Unable to store XML for job", e);
 		}
 
-		if (directory != null && directory.exists()) {
-			if (!contextFiles.isEmpty()) {
-				File contextDir = new File(directory, "context");
-				for (String contextPath : contextFiles.keySet()) {
-					File file = contextFiles.get(contextPath);
+		if (!contextFiles.isEmpty()) {
+			File contextDir = new File(directory, "context");
+			for (String contextPath : contextFiles.keySet()) {
+				File file = contextFiles.get(contextPath);
 
-					if (!file.exists()) {
-						Pipeline2Logger.logger().error("File or directory does not exist and can not be added to context: '"+file.getAbsolutePath()+"'");
-						continue;
-					}
+				if (!file.exists()) {
+					Pipeline2Logger.logger().error("File or directory does not exist and can not be added to context: '"+file.getAbsolutePath()+"'");
+					continue;
+				}
 
-					File contextFile = new File(contextDir, contextPath);
-					try {
-						assert contextFile.getCanonicalPath().startsWith(contextDir.getCanonicalPath() + File.separator); // contextFile is inside contextDir
+				File contextFile = new File(contextDir, contextPath);
+				try {
+					assert contextFile.getCanonicalPath().startsWith(contextDir.getCanonicalPath() + File.separator); // contextFile is inside contextDir
 
-						if (!file.getCanonicalPath().equals(contextFile.getCanonicalPath())) {
-							if (moveFiles) {
-								Files.move(file.toPath(), contextFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-								
-							} else {
-								Files.copy(file.toPath(), contextFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.COPY_ATTRIBUTES);
-							}
+					if (!file.getCanonicalPath().equals(contextFile.getCanonicalPath())) {
+						contextFile.toPath().getParent().toFile().mkdirs();
+						if (moveFiles) {
+							Files.move(file.toPath(), contextFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+							
+						} else {
+							Files.copy(file.toPath(), contextFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.COPY_ATTRIBUTES);
 						}
-
-					} catch (IOException e) {
-						Pipeline2Logger.logger().error("Unable to copy from '"+file.getAbsolutePath()+"' to '"+contextFile.getAbsolutePath(), e);
 					}
+
+				} catch (IOException e) {
+					Pipeline2Logger.logger().error("Unable to copy from '"+file.getAbsolutePath()+"' to '"+contextFile.getAbsolutePath(), e);
 				}
 			}
 		}
@@ -147,8 +161,22 @@ public class JobStorage implements JobStorageInterface {
 		Collections.sort(jobs);
 		return jobs;
 	}
-
-	/** Deletes the job including all its files from the job storage. */
+	
+	/**
+	 * Load a job from the job storage folder.
+	 * 
+	 * @param jobId
+	 * @param jobStorageDir
+	 * @return
+	 */
+	public static Job loadJob(String jobId, File jobStorageDir) {
+		Job job = new Job();
+		job.setId(jobId);
+		new JobStorage(job, jobStorageDir);
+		return job;
+	}
+	
+	@Override
 	public void delete() {
 		if (directory != null && directory.exists()) {
 			try {

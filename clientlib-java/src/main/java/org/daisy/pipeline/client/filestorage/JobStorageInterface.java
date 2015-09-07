@@ -82,5 +82,15 @@ public interface JobStorageInterface {
 	 * @return true if the path exists as a directory in the context.
 	 */
 	public abstract boolean isDirectoryInContext(String contextPath);
+	
+	/**
+	 * Hook to allow JobStorageInterface implementations to lazy load the jobs if they want to.
+	 * 
+	 * Will be triggered when the caller tries to read from a job.
+	 */
+	public abstract void lazyLoad();
+	
+	/** Deletes the job including all its files from the job storage. */
+	public abstract void delete();
 
 }
