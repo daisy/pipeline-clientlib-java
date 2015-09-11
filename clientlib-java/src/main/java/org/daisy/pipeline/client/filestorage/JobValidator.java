@@ -110,7 +110,7 @@ public class JobValidator {
 	 * @return a message describing the error, or null if there is no error
 	 */
 	public static String validate(Argument arg, JobStorageInterface context) {
-		String beginText = "The "+arg.getKind()+" '"+(arg.getNiceName() == null || "".equals(arg.getNiceName()) ? arg.getName() : arg.getNiceName())+"'";
+		String beginText = "The "+arg.getKind()+" '"+(arg.getNicename() == null || "".equals(arg.getNicename()) ? arg.getName() : arg.getNicename())+"'";
 
 		// is required ?
 		if (!arg.isDefined() && "true".equals(arg.getRequired())) {

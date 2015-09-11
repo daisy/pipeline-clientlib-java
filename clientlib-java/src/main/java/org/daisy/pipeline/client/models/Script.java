@@ -1,6 +1,8 @@
 package org.daisy.pipeline.client.models;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
@@ -23,7 +25,7 @@ public class Script implements Comparable<Script> {
 	private String href; // xs:anyURI
 	private List<String> inputFilesets = new ArrayList<String>();
 	private List<String> outputFilesets = new ArrayList<String>();
-	private String niceName;
+	private String nicename;
 	private String description;
 	private String version;
 	private String homepage; // xs:anyURI
@@ -57,7 +59,7 @@ public class Script implements Comparable<Script> {
 			
 			this.id = XPath.selectText("@id", scriptNode, XPath.dp2ns);
 			this.href = XPath.selectText("@href", scriptNode, XPath.dp2ns);
-			this.niceName = XPath.selectText("d:nicename", scriptNode, XPath.dp2ns);
+			this.nicename = XPath.selectText("d:nicename", scriptNode, XPath.dp2ns);
 			this.description = XPath.selectText("d:description", scriptNode, XPath.dp2ns);
 			this.homepage = XPath.selectText("d:homepage", scriptNode, XPath.dp2ns);
 			
@@ -145,13 +147,15 @@ public class Script implements Comparable<Script> {
 			scripts.add(new Script(scriptNode));
 		}
 		
+		Collections.sort(scripts);
+		
 		return scripts;
 	}
 
 	public int compareTo(Script other) {
-		if (id == null) return 1;
-		if (other.id == null) return -1;
-		return id.compareTo(other.id);
+		if (getId() == null) return 1;
+		if (other.getId() == null) return -1;
+		return getId().compareTo(other.getId());
 	}
 	
 	// getters and setters (to ensure lazy loading)
@@ -159,7 +163,7 @@ public class Script implements Comparable<Script> {
     public String getHref() { lazyLoad(); return href; }
     public List<String> getInputFilesets() { lazyLoad(); return inputFilesets; }
     public List<String> getOutputFilesets() { lazyLoad(); return outputFilesets; }
-    public String getNicename() { lazyLoad(); return niceName; }
+    public String getNicename() { lazyLoad(); return nicename; }
     public String getDescription() { lazyLoad(); return description; }
     public String getVersion() { lazyLoad(); return version; }
     public String getHomepage() { lazyLoad(); return homepage; }
@@ -208,9 +212,9 @@ public class Script implements Comparable<Script> {
 		    }
 		    scriptElement.setAttribute("output-filesets", outputFilesetsJoined);
 		}
-		if (niceName != null) {
+		if (nicename != null) {
 		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:nicename");
-		    e.setTextContent(niceName);
+		    e.setTextContent(nicename);
 		    scriptElement.appendChild(e);
 		}
 		if (description != null) {
@@ -240,6 +244,20 @@ public class Script implements Comparable<Script> {
 		}
 		
 		return scriptDocument;
+	}
+	
+	/**
+	 * Get all arguments, both inputs and outputs.
+	 * 
+	 * See also getInputs and getOutputs.
+	 * 
+	 * @return a list of all arguments.
+	 */
+	public List<Argument> getArguments() {
+		List<Argument> arguments = new ArrayList<Argument>();
+		arguments.addAll(getInputs());
+		arguments.addAll(getOutputs());
+		return arguments;
 	}
 	
 }

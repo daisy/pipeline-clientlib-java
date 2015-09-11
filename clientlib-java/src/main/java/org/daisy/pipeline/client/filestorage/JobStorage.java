@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.models.Argument;
 import org.daisy.pipeline.client.models.Job;
 import org.daisy.pipeline.client.utils.XML;
 import org.w3c.dom.Document;
@@ -108,6 +109,14 @@ public class JobStorage implements JobStorageInterface {
 
 		} catch (IOException e) {
 			Pipeline2Logger.logger().error("Unable to store XML for job", e);
+		}
+		
+		for (Argument arg : job.getInputs()) {
+			if ("anyFileURI".equals(arg.getType()) || "anyURI".equals(arg.getType())) {
+				for (String value : arg.getAsList()) {
+					getContextFile(value); // forces loading of Files into contextFiles map
+				}
+			}
 		}
 
 		if (!contextFiles.isEmpty()) {
@@ -231,6 +240,13 @@ public class JobStorage implements JobStorageInterface {
 
 	@Override
 	public File getContextFile(String contextPath) {
+		if (!contextFiles.containsKey(contextPath)) {
+			File contextFile = new File(directory, contextPath);
+			if (contextFile.isFile()) {
+				contextFiles.put(contextPath, contextFile);
+				return contextFile;
+			}
+		}
 		return contextFiles.get(contextPath);
 	}
 

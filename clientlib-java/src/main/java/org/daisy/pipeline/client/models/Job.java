@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
@@ -35,7 +37,7 @@ public class Job implements Comparable<Job> {
 	private Priority priority;
 	private String scriptHref; // for job request xml documents
 	private Script script;
-	private String niceName;
+	private String nicename;
 	private String batchId;
 	private List<Argument> argumentInputs; // used when there's no script given
 	private List<Argument> argumentOutputs; // used when there's no script given
@@ -44,7 +46,7 @@ public class Job implements Comparable<Job> {
 	private Node messagesNode;
 	private String logHref;
 	private Result result; // "all results"-zip
-	private Map<Result,List<Result>> results; // "individual results"-zips as keys, individual files as values
+	private SortedMap<Result,List<Result>> results; // "individual results"-zips as keys, individual files as values
 	private Node resultsNode;
 
 	private boolean lazyLoaded = false;
@@ -101,6 +103,10 @@ public class Job implements Comparable<Job> {
 			
 			Node resultNode = XPath.selectNode("d:results//descendant-or-self::*[@href='"+fullHref.replaceAll("'", "''").replaceAll(" ", "%20")+"']", jobXml, XPath.dp2ns);
 			if (resultNode != null) {
+				String parentHref = XPath.selectText("../@href", resultNode, XPath.dp2ns); // can be from /job/@href, /job/results/@href or /job/results/result/@href
+				if (parentHref != null) {
+					base = parentHref;
+				}
 				return Result.parseResultXml(resultNode, base);
 			}
 			
@@ -163,7 +169,7 @@ public class Job implements Comparable<Job> {
 					this.script = new Script(scriptNode);
 				}
 			}
-			this.niceName = XPath.selectText("d:nicename", jobNode, XPath.dp2ns);
+			this.nicename = XPath.selectText("d:nicename", jobNode, XPath.dp2ns);
 			this.batchId = XPath.selectText("d:batchId", jobNode, XPath.dp2ns);
 			this.logHref = XPath.selectText("d:log/@href", jobNode, XPath.dp2ns);
 			this.callback = new ArrayList<Callback>();
@@ -246,19 +252,20 @@ public class Job implements Comparable<Job> {
 	}
 	
 	private void lazyLoadResults() {
+		lazyLoad();
 		if (results == null && resultsNode != null) {
 			try {
 				result = Result.parseResultXml(this.resultsNode, href);
-				results = new HashMap<Result,List<Result>>();
+				results = new TreeMap<Result,List<Result>>();
 				
 				List<Node> resultNodes = XPath.selectNodes("d:result", this.resultsNode, XPath.dp2ns);
 				for (Node resultPortOrOptionNode : resultNodes) {
-					Result resultPortOrOption = Result.parseResultXml(resultPortOrOptionNode, href);
+					Result resultPortOrOption = Result.parseResultXml(resultPortOrOptionNode, result.href);
 					List<Result> portOrOptionResults = new ArrayList<Result>();
 					
 					List<Node> fileNodes = XPath.selectNodes("d:result", resultPortOrOptionNode, XPath.dp2ns);
 					for (Node fileNode : fileNodes) {
-						Result file = Result.parseResultXml(fileNode, href);
+						Result file = Result.parseResultXml(fileNode, resultPortOrOption.href);
 						portOrOptionResults.add(file);
 					}
 					Collections.sort(portOrOptionResults);
@@ -278,9 +285,74 @@ public class Job implements Comparable<Job> {
 	 * @return The returned Result represents "all results".
 	 */
 	public Result getResult() {
-		lazyLoad();
 		lazyLoadResults();
 		return result;
+	}
+	
+	/**
+	 * Get the Result representing the argument with the given name.
+	 * 
+	 * @param argumentName
+	 * @return
+	 */
+	public Result getResult(String argumentName) {
+		lazyLoadResults();
+		if (argumentName == null) {
+			return null;
+		}
+		for (Result result : getResults().keySet()) {
+			if (argumentName.equals(result.name)) {
+				return result;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Get the Result representing the file with the given name from the argument with the given name.
+	 * 
+	 * @param argumentName
+	 * @param href
+	 * @return
+	 */
+	public Result getResult(String argumentName, String href) {
+		lazyLoadResults();
+		if (argumentName == null || href == null || results == null) {
+			return null;
+		}
+		
+		href = href.replaceAll(" ", "%20");
+		
+		Result argument = getResult(argumentName);
+		if (!results.containsKey(argument)) {
+			return null;
+		}
+		
+		for (Result r : getResults(argumentName)) {
+			if (href.equals(r.href) || href.equals(r.relativeHref)) {
+				return r;
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Get the list of Results for the argument with the given name.
+	 * 
+	 * @param argumentName
+	 * @return
+	 */
+	public List<Result> getResults(String argumentName) {
+		if (argumentName == null) {
+			return null;
+		}
+		for (Result result : getResults().keySet()) {
+			if (argumentName.equals(result.name)) {
+				return results.get(result);
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -293,7 +365,7 @@ public class Job implements Comparable<Job> {
 	 * 
 	 * @return The returned map contains all named outputs and associated files.
 	 */
-	public Map<Result,List<Result>> getResults() {
+	public SortedMap<Result,List<Result>> getResults() {
 		lazyLoad();
 		lazyLoadResults();
 		return results;
@@ -361,13 +433,13 @@ public class Job implements Comparable<Job> {
 	public String getScriptHref() { lazyLoad(); if (script != null) return script.getHref(); else return scriptHref; }
 	public Status getStatus() { lazyLoad(); return status; }
 	public String getLogHref() { lazyLoad(); return logHref; }
-	public String getNiceName() { lazyLoad(); return niceName; }
+	public String getNicename() { lazyLoad(); return nicename; }
 	public String getBatchId() { lazyLoad(); return batchId; }
 	public Priority getPriority() { lazyLoad(); return priority; }
 	public List<Callback> getCallback() { lazyLoad(); return callback; }
 	public JobStorageInterface getContext() { lazyLoad(); return context; }
 	public void setId(String id) { lazyLoad(); this.id = id; }
-	public void setNiceName(String niceName) { lazyLoad(); this.niceName = niceName; }
+	public void setNicename(String nicename) { lazyLoad(); this.nicename = nicename; }
 	public void setBatchId(String batchId) { lazyLoad(); this.batchId = batchId; }
 	public void setPriority(Priority priority) { lazyLoad(); this.priority = priority; }
 	public void setCallback(List<Callback> callback) { lazyLoad(); this.callback = callback; }
@@ -475,9 +547,9 @@ public class Job implements Comparable<Job> {
 			XML.appendChildAcrossDocuments(jobElement, script.toXml().getDocumentElement());
 		}
 		
-		if (niceName != null) {
+		if (nicename != null) {
 			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:nicename");
-			e.setTextContent(niceName);
+			e.setTextContent(nicename);
 			jobElement.appendChild(e);
 		}
 		
@@ -577,9 +649,9 @@ public class Job implements Comparable<Job> {
 			jobRequestElement.appendChild(e);
 		}
 		
-		if (niceName != null) {
+		if (nicename != null) {
 			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:nicename");
-			e.setTextContent(niceName);
+			e.setTextContent(nicename);
 			jobRequestElement.appendChild(e);
 		}
 		
@@ -654,6 +726,20 @@ public class Job implements Comparable<Job> {
 		}
 		
 		return jobRequestDocument;
+	}
+
+	/**
+	 * Get all arguments, both inputs and outputs.
+	 * 
+	 * See also getInputs and getOutputs.
+	 * 
+	 * @return a list of all arguments.
+	 */
+	public List<Argument> getArguments() {
+		List<Argument> arguments = new ArrayList<Argument>();
+		arguments.addAll(getInputs());
+		arguments.addAll(getOutputs());
+		return arguments;
 	}
 
 }

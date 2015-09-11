@@ -1,10 +1,18 @@
 package org.daisy.pipeline.client.models;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
+import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.utils.Files;
+import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -22,9 +30,11 @@ public class Result implements Comparable<Result> {
 	public String relativeHref;
 
 	private static Pattern filenamePattern = Pattern.compile(".*/");
+	private static Pattern idxPattern = Pattern.compile("^/?idx/[^/]+/");
 
 	public static Result parseResultXml(Node resultNode) throws Pipeline2Exception {
-		return parseResultXml(resultNode, null);
+		String parentHref = XPath.selectText("../@href", resultNode, XPath.dp2ns); // can be from /job/@href, /job/results/@href or /job/results/result/@href
+		return parseResultXml(resultNode, parentHref);
 	}
 
 	public static Result parseResultXml(Node resultNode, String base) throws Pipeline2Exception {
@@ -35,7 +45,7 @@ public class Result implements Comparable<Result> {
 		item.mimeType = XPath.selectText("@mime-type", resultNode, XPath.dp2ns);
 		item.name = XPath.selectText("@name", resultNode, XPath.dp2ns);
 		item.from = XPath.selectText("@from", resultNode, XPath.dp2ns);
-
+		
 		item.filename = item.href == null ? null : filenamePattern.matcher(item.href).replaceAll("");
 
 		if (base != null) {
@@ -43,6 +53,8 @@ public class Result implements Comparable<Result> {
 				item.relativeHref = "";
 			} else {
 				item.relativeHref = item.href == null ? null : item.href.substring(base.length() + 1);
+				Matcher m = idxPattern.matcher(item.relativeHref);
+				item.relativeHref = m.replaceFirst("");
 			}
 		}
 
@@ -83,6 +95,61 @@ public class Result implements Comparable<Result> {
 		}
 		if (size != null) {
 		    resultElement.setAttribute("size", size+"");
+		}
+	}
+
+	/**
+	 * Get the result as a File object if possible; null otherwise.
+	 * @return
+	 */
+	public File asFile() {
+		if (file == null) {
+			return null;
+
+		} else {
+			URI fileUri;
+			try {
+				fileUri = new URI(file);
+				File f = new File(fileUri);
+				if (f.isFile()) {
+					return f;
+
+				} else {
+					System.out.println("file: "+f);
+					return null;
+				}
+			} catch (URISyntaxException e) {
+				Pipeline2Logger.logger().error("Could not parse file: URL", e);
+				return null;
+			}
+		}
+	}
+
+	/**
+	 * Get the result as a String object if possible; null otherwise.
+	 * @return
+	 */
+	public String asText() {
+		File f = asFile();
+		if (f == null) {
+			return null;
+
+		} else {
+			return Files.read(f);
+		}
+	}
+
+	/**
+	 * Get the result as a Document object if possible; null otherwise.
+	 * @return
+	 */
+	public Document asXml() {
+		String text = asText();
+		if (text == null) {
+			return null;
+
+		} else {
+			return XML.getXml(text);
 		}
 	}
 

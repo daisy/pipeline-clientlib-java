@@ -1,6 +1,8 @@
 package org.daisy.pipeline.client.models;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,7 +25,7 @@ public class Argument {
 	private String name;
 
 	/** This is the value from the px:role="name" in the script documentation. */
-	private String niceName;
+	private String nicename;
 
 	/** A description of the option. */
 	private String desc;
@@ -66,9 +68,9 @@ public class Argument {
 			try {
 				this.name = parseTypeString(XPath.selectText("@name", argumentNode, XPath.dp2ns));
 
-				this.niceName = parseTypeString(XPath.selectText("@nicename", argumentNode, XPath.dp2ns));
-				if (this.niceName == null || "".equals(this.niceName))
-					this.niceName = this.name;
+				this.nicename = parseTypeString(XPath.selectText("@nicename", argumentNode, XPath.dp2ns));
+				if (this.nicename == null || "".equals(this.nicename))
+					this.nicename = this.name;
 
 				this.desc = parseTypeString(XPath.selectText("@desc", argumentNode, XPath.dp2ns));
 				if (this.desc == null)
@@ -127,14 +129,14 @@ public class Argument {
 					String value = XPath.selectText("text()", argumentNode, XPath.dp2ns);
 					if (value != null && !"".equals(value)) {
 						this.values = new ArrayList<String>();
-						this.values.add(value);
+						this.values.add(normalizeValue(value));
 					}
 
 				} else {
 					this.values = new ArrayList<String>();
 					for (Node valueNode : valueNodes) {
 						String value = XPath.selectText("@value", valueNode, XPath.dp2ns);
-						this.values.add(value);
+						this.values.add(normalizeValue(value));
 					}
 				}
 
@@ -143,6 +145,33 @@ public class Argument {
 			}
 			lazyLoaded = true;
 		}
+	}
+	
+	private String normalizeValue(String value) {
+		if (type == null || value == null) {
+			return null;
+		}
+		
+		switch (this.type) {
+		case "anyFileURI":
+		case "anyDirURI":
+		case "anyURI":
+			try {
+				URI uri = new URI(value);
+				uri = uri.normalize();
+				value = uri.toString();
+				break;
+				
+			} catch (URISyntaxException e) {
+				Pipeline2Logger.logger().warn("Unable to parse URI", e);
+			}
+			break;
+			
+		case "boolean":
+			value = value.toLowerCase();
+		}
+		
+		return value;
 	}
 
 	/** Helper function for the Script(Document) constructor */
@@ -183,53 +212,6 @@ public class Argument {
 		}
 		return mediaTypesList;
 	}
-
-	//	/**
-	//	 * Returns an XML Element representation of the option, input or output, compatible with a jobRequest document.
-	//	 * 
-	//	 * Examples:
-	//	 * 
-	//	 * <d:option name="language">
-	//	 *     <d:item value="en"/>
-	//	 * </d:option>
-	//	 * 
-	//	 * <d:option name="colors">
-	//	 *     <d:item value="red"/>
-	//	 *     <d:item value="green"/>
-	//	 *     <d:item value="blue"/>
-	//	 * </d:option>
-	//	 * 
-	//	 * <d:option name="include-illustrations">
-	//	 * 	   <d:item value="true"/>
-	//	 * </d:option>
-	//	 * 
-	//	 * <d:option name="stylesheet">
-	//	 * 	   <d:item value="main.css"/>
-	//	 * </d:option>
-	//	 * 
-	//	 * <d:input name="source">
-	//	 *     <d:item value="content.xhtml"/>
-	//	 * </d:input>
-	//	 * 
-	//	 * @param document The document used to create the element.
-	//	 * @return
-	//	 */
-	//	public Element asDocumentElement(Document document) {
-	//		lazyLoad();
-	//		if (values == null)
-	//			return null;
-	//
-	//		Element element = document.createElement(kind == null ? "option" : kind.toString());
-	//		element.setAttribute("name", name);
-	//
-	//		for (String value : values) {
-	//			Element item = document.createElement("item");
-	//			item.setAttribute("value", value);
-	//			element.appendChild(item);
-	//		}
-	//
-	//		return element;
-	//	}
 
 	/**
 	 * Returns the number of values defined for the option or input.
@@ -431,7 +413,7 @@ public class Argument {
 			if (values == null) {
 				values = new ArrayList<String>();
 			}
-			values.add(value);
+			values.add(normalizeValue(value));
 		}
 	}
 
@@ -442,7 +424,9 @@ public class Argument {
 		if (this.values == null) {
 			this.values = new ArrayList<String>();
 		}
-		this.values.addAll(values);
+		for (String value : values) {
+			this.values.add(normalizeValue(value));
+		}
 	}
 
 	/** Add to the list of values the provided Integer value.
@@ -495,7 +479,7 @@ public class Argument {
 			if (this.values == null) {
 				this.values = new ArrayList<String>();
 			}
-			values.add(value);
+			values.add(normalizeValue(value));
 		}
 	}
 
@@ -506,7 +490,9 @@ public class Argument {
 			if (this.values == null) {
 				this.values = new ArrayList<String>();
 			}
-			values.addAll(values);
+			for (String value : values) {
+				values.add(normalizeValue(value));
+			}
 		}
 	}
 
@@ -731,7 +717,7 @@ public class Argument {
 
 	// getters and setters to ensure lazy loading
 	public String getName() { lazyLoad(); return name; }
-	public String getNiceName() { lazyLoad(); return niceName; }
+	public String getNicename() { lazyLoad(); return nicename; }
 	public String getDesc() { lazyLoad(); return desc; }
 	public Boolean getRequired() { lazyLoad(); return required; }
 	public Boolean getSequence() { lazyLoad(); return sequence; }
@@ -741,7 +727,7 @@ public class Argument {
 	public Boolean getOrdered() { lazyLoad(); return ordered; }
 	public String getType() { lazyLoad(); return type; }
 	public void setName(String name) { lazyLoad(); this.name = name; }
-	public void setNiceName(String niceName) { lazyLoad(); this.niceName = niceName; }
+	public void setNicename(String nicename) { lazyLoad(); this.nicename = nicename; }
 	public void setDesc(String desc) { lazyLoad(); this.desc = desc; }
 	public void setRequired(Boolean required) { lazyLoad(); this.required = required; }
 	public void setSequence(Boolean sequence) { lazyLoad(); this.sequence = sequence; }
@@ -760,8 +746,8 @@ public class Argument {
 		if (name != null) {
 			argElem.setAttribute("name", name);
 		}
-		if (niceName != null) {
-			argElem.setAttribute("nicename", niceName);
+		if (nicename != null) {
+			argElem.setAttribute("nicename", nicename);
 		}
 		if (desc != null) {
 			argElem.setAttribute("desc", desc);

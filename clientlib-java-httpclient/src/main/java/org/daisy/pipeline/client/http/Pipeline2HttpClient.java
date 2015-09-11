@@ -55,7 +55,7 @@ public class Pipeline2HttpClient {
 	 * @param secret Robot secret. Can be null.
 	 * @param parameters URL query string parameters
 	 * @return The return body.
-	 * @throws Pipeline2Exception 
+	 * @throws Pipeline2Exception
 	 */
 	public static WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2Exception {
 		return getDelete("GET", endpoint, path, username, secret, parameters);
