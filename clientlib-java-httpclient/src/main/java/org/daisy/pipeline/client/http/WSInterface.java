@@ -64,7 +64,7 @@ public interface WSInterface {
 	public Job getJob(String jobId, long msgSeq);
 
 	/** Create a job with files */
-	public Job postJob(Job job, File contextZipFile);
+	public Job postJob(Job job);
 
 	/** Delete a single job */
 	public boolean deleteJob(String jobId);

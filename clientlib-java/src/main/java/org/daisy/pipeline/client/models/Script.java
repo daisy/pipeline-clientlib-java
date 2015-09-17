@@ -59,21 +59,49 @@ public class Script implements Comparable<Script> {
 			
 			this.id = XPath.selectText("@id", scriptNode, XPath.dp2ns);
 			this.href = XPath.selectText("@href", scriptNode, XPath.dp2ns);
+			
+			String inputFilesetsString = XPath.selectText("@input-filesets", scriptNode, XPath.dp2ns);
+			String outputFilesetsString = XPath.selectText("@output-filesets", scriptNode, XPath.dp2ns);
+			
+			if (inputFilesetsString != null && !"".equals(inputFilesetsString)) {
+				for (String fileset : inputFilesetsString.split("\\s+")) {
+					if (!"".equals(fileset)) {
+						inputFilesets.add(fileset);
+					}
+				}
+			}
+
+			if (outputFilesetsString != null && !"".equals(outputFilesetsString)) {
+				for (String fileset : outputFilesetsString.split("\\s+")) {
+					if (!"".equals(fileset)) {
+						outputFilesets.add(fileset);
+					}
+				}
+			}
+			
+			if ((inputFilesetsString == null || "".equals(inputFilesetsString)) && (outputFilesetsString == null || "".equals(outputFilesetsString))) {
+				// try to infer input/output filesets from script id
+				if (this.id.matches("^[a-zA-Z0-9]+-to-[a-zA-Z0-9]+$")) {
+					String[] split = this.id.split("-");
+					inputFilesets.add(split[0]);
+					outputFilesets.add(split[2]);
+				}
+				else if (this.id.matches("^[a-zA-Z0-9]+-validator$")) {
+					String[] split = this.id.split("-");
+					inputFilesets.add(split[0]);
+				}
+			}
+			
 			this.nicename = XPath.selectText("d:nicename", scriptNode, XPath.dp2ns);
 			this.description = XPath.selectText("d:description", scriptNode, XPath.dp2ns);
+			this.version = XPath.selectText("d:version", scriptNode, XPath.dp2ns);
 			this.homepage = XPath.selectText("d:homepage", scriptNode, XPath.dp2ns);
 			
-			List<Node> inputNodes = XPath.selectNodes("d:input", scriptNode, XPath.dp2ns);
-			List<Node> optionNodes = XPath.selectNodes("d:option", scriptNode, XPath.dp2ns);
+			List<Node> inputNodes = XPath.selectNodes("d:input | d:option", scriptNode, XPath.dp2ns);
 			List<Node> outputNodes = XPath.selectNodes("d:output", scriptNode, XPath.dp2ns);
 			
 			for (Node inputNode : inputNodes) {
 				Argument argument = new Argument(inputNode);
-				this.inputs.add(argument);
-			}
-	
-			for (Node optionNode : optionNodes) {
-				Argument argument = new Argument(optionNode);
 				this.inputs.add(argument);
 			}
 	

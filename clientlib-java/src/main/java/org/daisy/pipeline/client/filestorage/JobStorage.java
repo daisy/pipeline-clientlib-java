@@ -38,6 +38,23 @@ public class JobStorage implements JobStorageInterface {
 		job.setContext(this);
 	}
 	
+	/**
+	 * Create a JobStorage associated with the provided Job, and copy the context from another job.
+	 * 
+	 * @param job job
+	 * @param jobStorage job storage directory
+	 */
+	public JobStorage(Job job, File jobStorage, JobStorageInterface otherJobContext) {
+		this(job, jobStorage);
+		
+		if (otherJobContext != null) {
+			for (File f : otherJobContext.getContextDir().listFiles()) {
+				addContextFile(f, null);
+			}
+		}
+		save(false);
+	}
+	
 	@Override
 	public void lazyLoad() {
 		if (lazyLoaded) {
@@ -221,8 +238,11 @@ public class JobStorage implements JobStorageInterface {
 			contextFiles.put(contextPath, file);
 			
 		} else if (file.isDirectory()) {
+			if (!contextPath.endsWith("/")) {
+				contextPath += "/";
+			}
 			for (File f : file.listFiles()) {
-				addContextFile(f, new File(contextPath, f.getName()).toString());
+				addContextFile(f, contextPath + f.getName());
 			}
 			
 		} 

@@ -236,7 +236,7 @@ public class ParsingTest {
 				else fail("Unknown argument: "+arg.getName());
 			}
 
-			Document jobRequest = job.toJobRequestXml();
+			Document jobRequest = job.toJobRequestXml(false);
 
 			Job reparsedJob = new Job(jobRequest);
 			for (Argument arg : reparsedJob.getArguments()) {
@@ -284,6 +284,10 @@ public class ParsingTest {
 			Script script = new Script(loadResourceXml("responses/scripts/dtbook-validator.xml"));
 
 			assertNotNull(script);
+			
+			assertEquals(1, script.getInputFilesets().size());
+			assertEquals(0, script.getOutputFilesets().size());
+			assertEquals("dtbook", script.getInputFilesets().get(0));
 
 			for (Argument arg : script.getArguments()) {
 				assertNotNull(arg.getName());

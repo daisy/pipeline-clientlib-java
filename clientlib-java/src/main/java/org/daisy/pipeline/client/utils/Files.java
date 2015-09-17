@@ -25,7 +25,7 @@ import java.util.zip.ZipOutputStream;
 import org.daisy.pipeline.client.Pipeline2Logger;
 
 /**
- * Utility class for appending files to ZIP archives.
+ * Utility class for working with files, especially ZIP-files.
  * 
  * Based on:
  * 		http://snippets.dzone.com/posts/show/3468
@@ -73,6 +73,21 @@ public class Files {
 	}
 
 	/**
+	 * Lists all files recursively, starting at `directory`.
+	 * 
+	 * This is the same as listFilesRecursively(File directory, URI base, boolean includeDirectories) except
+	 * with directory and base pointing to the same directory.
+	 * 
+	 * @param directory
+	 * @param base
+	 * @return
+	 * @throws IOException
+	 */
+	public static Map<String, File> listFilesRecursively(File directory, boolean includeDirectories) throws IOException {
+		return listFilesRecursively(directory, directory.toURI(), includeDirectories);
+	}
+	
+	/**
 	 * Lists all files recursively, starting at `directory`, resolving their
 	 * relative paths against `base`. The return value can be used as an argument
 	 * for addFilesToZip(File zipFile, Map<String,File> files);
@@ -96,8 +111,7 @@ public class Files {
 			for (File file : directory.listFiles()) {
 //				if (file.isDirectory()) {
 					Map<String, File> subfiles = listFilesRecursively(file, base, includeDirectories);
-					for (String subfile : subfiles.keySet())
-						files.put(subfile, subfiles.get(subfile));
+					files.putAll(subfiles);
 
 //				} else if (file.isFile()) {
 //					files.put(base.relativize(file.toURI()).getPath(), file);

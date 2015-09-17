@@ -6,8 +6,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +44,8 @@ public class WS implements WSInterface {
 	private String username;
 	private String secret;
 	private String shutDownKey;
+	
+	private boolean isLocal;
 
 	public WS() {
 		endpoint = "http://localhost:8181/ws";
@@ -48,12 +56,14 @@ public class WS implements WSInterface {
 			shutDownKey = shutDownKeyFileLines.get(0);
 
 		} catch (IOException e) {/*ignore*/}
+		checkIfLocal();
 	}
 
 	/** Set which Pipeline 2 Web API endpoint to use. Defaults to: "http://localhost:8181/ws" */
 	@Override
 	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
+		checkIfLocal();
 	}
 
 	@Override
@@ -229,16 +239,21 @@ public class WS implements WSInterface {
 	}
 
 	@Override
-	public Job postJob(Job job, File contextZipFile) {
+	public Job postJob(Job job) {
 		try {
 			WSResponse response = null;
 
-			Document jobRequestDocument = job.toXml();
-
-			if (contextZipFile == null) {
+			Document jobRequestDocument;
+			
+			if (isLocal) {
+				jobRequestDocument = job.toJobRequestXml(true);
+				
 				response = Pipeline2HttpClient.postXml(endpoint, "/jobs", username, secret, jobRequestDocument);
 
 			} else {
+				File contextZipFile = job.getContext().getContextZip();
+				jobRequestDocument = job.toJobRequestXml(false);
+				
 				try {
 					File jobRequestFile = null;
 
@@ -627,6 +642,30 @@ public class WS implements WSInterface {
 			} catch (Pipeline2Exception ex) {
 				return "An error occured while parsing the error recieved from the Pipeline 2 Web API.";
 			}
+		}
+	}
+	
+	// Based on http://stackoverflow.com/a/2406819/281065
+	public void checkIfLocal() {
+	    // Check if the address is defined on any interface
+	    try {
+	    	URI url = new URI(endpoint);
+	    	InetAddress addr = InetAddress.getByName(url.getHost());
+	    	
+			// Check if the address is a valid special local or loopback
+		    if (addr.isAnyLocalAddress() || addr.isLoopbackAddress())
+		    	isLocal = true;
+		    
+		    isLocal = NetworkInterface.getByInetAddress(addr) != null;
+	        
+	    } catch (SocketException e) {
+	        isLocal = false;
+	        
+	    } catch (UnknownHostException e) {
+	    	isLocal = false;
+	    	
+		} catch (URISyntaxException e) {
+			isLocal = false;
 		}
 	}
 
