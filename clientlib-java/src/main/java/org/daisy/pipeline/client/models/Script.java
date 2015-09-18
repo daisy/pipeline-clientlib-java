@@ -211,7 +211,7 @@ public class Script implements Comparable<Script> {
 	public Document toXml() {
 		lazyLoad();
 		
-		Document scriptDocument = XML.getXml("<d:script xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
+		Document scriptDocument = XML.getXml("<script xmlns=\"http://www.daisy.org/ns/pipeline/data\"/>");
 		Element scriptElement = scriptDocument.getDocumentElement();
 
 		if (id != null) {
@@ -241,22 +241,22 @@ public class Script implements Comparable<Script> {
 		    scriptElement.setAttribute("output-filesets", outputFilesetsJoined);
 		}
 		if (nicename != null) {
-		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:nicename");
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "nicename");
 		    e.setTextContent(nicename);
 		    scriptElement.appendChild(e);
 		}
 		if (description != null) {
-		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:description");
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "description");
 		    e.setTextContent(description);
 		    scriptElement.appendChild(e);
 		}
 		if (version != null) {
-		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:version");
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "version");
 		    e.setTextContent(version);
 		    scriptElement.appendChild(e);
 		}
 		if (homepage != null) {
-		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "d:homepage");
+		    Element e = scriptDocument.createElementNS(XPath.dp2ns.get("d"), "homepage");
 		    e.setTextContent(homepage);
 		    scriptElement.appendChild(e);
 		}

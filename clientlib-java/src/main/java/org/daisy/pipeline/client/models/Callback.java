@@ -48,7 +48,7 @@ public class Callback implements Comparable<Callback> {
 	}
 
 	public Document toXml() {
-		Document callbackDocument = XML.getXml("<d:callback xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
+		Document callbackDocument = XML.getXml("<callback xmlns=\"http://www.daisy.org/ns/pipeline/data\"/>");
 		Element callbackElement = callbackDocument.getDocumentElement();
 
 		if (href != null) {

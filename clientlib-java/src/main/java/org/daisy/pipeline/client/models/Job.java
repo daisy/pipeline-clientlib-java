@@ -13,7 +13,7 @@ import java.util.TreeMap;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
-import org.daisy.pipeline.client.filestorage.JobStorageInterface;
+import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.filestorage.JobValidator;
 import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
@@ -54,7 +54,7 @@ public class Job implements Comparable<Job> {
 	private boolean lazyLoaded = false;
 	private Node jobNode = null;
 
-	private JobStorageInterface context;
+	private JobStorage storage;
 
 	private static final Map<String,String> ns;
 	static {
@@ -119,8 +119,8 @@ public class Job implements Comparable<Job> {
 	}
 
 	private void lazyLoad() {
-		if (context != null) {
-			context.lazyLoad();
+		if (storage != null) {
+			storage.lazyLoad();
 		}
 
 		if (lazyLoaded || jobNode == null) {
@@ -405,7 +405,7 @@ public class Job implements Comparable<Job> {
 	 */
 	public String validate() {
 		for (Argument argument : getInputs()) {
-			String error = JobValidator.validate(argument, context);
+			String error = JobValidator.validate(argument, storage);
 			if (error != null) {
 				return error;
 			}
@@ -423,7 +423,7 @@ public class Job implements Comparable<Job> {
 	public String validate(String name) {
 		for (Argument argument : getInputs()) {
 			if (argument.getName().equals(name)) {
-				return JobValidator.validate(argument, context);
+				return JobValidator.validate(argument, storage);
 			}
 		}
 		return null;
@@ -439,13 +439,13 @@ public class Job implements Comparable<Job> {
 	public String getBatchId() { lazyLoad(); return batchId; }
 	public Priority getPriority() { lazyLoad(); return priority; }
 	public List<Callback> getCallback() { lazyLoad(); return callback; }
-	public JobStorageInterface getContext() { lazyLoad(); return context; }
+	public JobStorage getJobStorage() { lazyLoad(); return storage; }
 	public void setId(String id) { lazyLoad(); this.id = id; }
 	public void setNicename(String nicename) { lazyLoad(); this.nicename = nicename; }
 	public void setBatchId(String batchId) { lazyLoad(); this.batchId = batchId; }
 	public void setPriority(Priority priority) { lazyLoad(); this.priority = priority; }
 	public void setCallback(List<Callback> callback) { lazyLoad(); this.callback = callback; }
-	public void setContext(JobStorageInterface context) { lazyLoad(); this.context = context; }
+	public void setJobStorage(JobStorage storage) { lazyLoad(); this.storage = storage; }
 
 	/** Set job XML and re-enable lazy loading for the new XML. */
 	public void setJobXml(Node jobXml) {
@@ -465,7 +465,15 @@ public class Job implements Comparable<Job> {
 
 	public List<Argument> getInputs() {
 		lazyLoad();
-		return script == null ? argumentInputs : script.getInputs();
+		if (script == null && argumentInputs == null) {
+			return new ArrayList<Argument>();
+			
+		} else if (script == null) {
+			return argumentInputs;
+			
+		} else {
+			return script.getInputs();
+		}
 	}
 
 	public List<Argument> getOutputs() {
@@ -526,7 +534,7 @@ public class Job implements Comparable<Job> {
 	public Document toXml() {
 		lazyLoad();
 
-		Document jobDocument = XML.getXml("<d:job xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
+		Document jobDocument = XML.getXml("<job xmlns=\"http://www.daisy.org/ns/pipeline/data\"/>");
 		Element jobElement = jobDocument.getDocumentElement();
 
 		if (id != null) {
@@ -550,19 +558,19 @@ public class Job implements Comparable<Job> {
 		}
 
 		if (nicename != null) {
-			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:nicename");
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "nicename");
 			e.setTextContent(nicename);
 			jobElement.appendChild(e);
 		}
 
 		if (batchId != null) {
-			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:batchId");
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "batchId");
 			e.setTextContent(batchId);
 			jobElement.appendChild(e);
 		}
 
 		if (logHref != null) {
-			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:log");
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "log");
 			e.setAttribute("href", logHref);
 			jobElement.appendChild(e);
 		}
@@ -574,9 +582,9 @@ public class Job implements Comparable<Job> {
 		}
 
 		if (messages != null) {
-			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:messages");
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "messages");
 			for (Message m : messages) {
-				Element mElement = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:message");
+				Element mElement = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "message");
 				if (m.level != null) {
 					mElement.setAttribute("level", m.level.toString());
 				}
@@ -603,13 +611,13 @@ public class Job implements Comparable<Job> {
 		}
 
 		if (results != null) {
-			Element resultsElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "d:results");
+			Element resultsElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "results");
 			result.toXml(resultsElement);
 			for (Result r : results.keySet()) {
-				Element resultElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "d:result");
+				Element resultElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "result");
 				r.toXml(resultElement);
 				for (Result fileResult : results.get(r)) {
-					Element fileElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "d:result");
+					Element fileElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "result");
 					fileResult.toXml(fileElement);
 				}
 				resultsElement.appendChild(resultElement);
@@ -645,34 +653,34 @@ public class Job implements Comparable<Job> {
 	public Document toJobRequestXml(boolean absoluteUris) {
 		lazyLoad();
 
-		Document jobRequestDocument = XML.getXml("<d:jobRequest xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
+		Document jobRequestDocument = XML.getXml("<jobRequest xmlns=\"http://www.daisy.org/ns/pipeline/data\"/>");
 		Element jobRequestElement = jobRequestDocument.getDocumentElement();
 
 		if (script != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:script");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "script");
 			e.setAttribute("href", script.getHref());
 			jobRequestElement.appendChild(e);
 
 		} else if (scriptHref != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:script");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "script");
 			e.setAttribute("href", scriptHref);
 			jobRequestElement.appendChild(e);
 		}
 
 		if (nicename != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:nicename");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "nicename");
 			e.setTextContent(nicename);
 			jobRequestElement.appendChild(e);
 		}
 
 		if (priority != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:priority");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "priority");
 			e.setTextContent(priority.toString());
 			jobRequestElement.appendChild(e);
 		}
 
 		if (batchId != null) {
-			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:batchId");
+			Element e = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "batchId");
 			e.setTextContent(batchId);
 			jobRequestElement.appendChild(e);
 		}
@@ -687,19 +695,22 @@ public class Job implements Comparable<Job> {
 				options.add(inputOrOption);
 			}
 		}
-		JobStorageInterface context = getContext();
-		File contextDir = context == null ? null : context.getContextDir();
+		File contextDir = storage == null ? null : storage.getContextDir();
 		URI contextDirUri = contextDir == null ? null : contextDir.toURI();
 		for (Argument input : inputs) {
 			if (input.isDefined()) {
-				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:input");
+				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "input");
 				arg.setAttribute("name", input.getName());
 
 				if (contextDirUri != null) {
-					for (File file : input.getAsFileList(context)) {
-						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
+					for (File file : input.getAsFileList(storage)) {
+						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
 						String value;
-						if (absoluteUris) {
+						if (file == null) {
+							Pipeline2Logger.logger().warn("File referenced from '"+input.getName()+"' not found in context: '"+input.get()+"'");
+							value = input.get();
+							
+						} else if (absoluteUris) {
 							value = file.toURI().toString();
 
 						} else {
@@ -711,7 +722,7 @@ public class Job implements Comparable<Job> {
 
 				} else {
 					for (String value : input.getAsList()) {
-						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
+						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
 						item.setAttribute("value", value);
 						arg.appendChild(item);
 					}
@@ -721,15 +732,19 @@ public class Job implements Comparable<Job> {
 		}
 		for (Argument option : options) {
 			if (option.isDefined()) {
-				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:option");
+				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "option");
 				arg.setAttribute("name", option.getName());
 
 				if (option.getSequence()) {
 					if (contextDirUri != null && ("anyFileURI".equals(option.getType()) || "anyDirURI".equals(option.getType()) || "anyURI".equals(option.getType()))) {
-						for (File file : option.getAsFileList(context)) {
-							Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
+						for (File file : option.getAsFileList(storage)) {
+							Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
 							String value;
-							if (absoluteUris) {
+							if (file == null) {
+								Pipeline2Logger.logger().warn("File referenced from '"+option.getName()+"' not found in context: '"+option.get()+"'");
+								value = option.get();
+								
+							} else if (absoluteUris) {
 								value = file.toURI().toString();
 
 							} else {
@@ -741,30 +756,39 @@ public class Job implements Comparable<Job> {
 
 					} else {
 						for (String value : option.getAsList()) {
-							Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
+							Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
 							item.setAttribute("value", value);
 							arg.appendChild(item);
 						}
 					}
 
 				} else {
+					String value;
 					if (contextDirUri != null && ("anyFileURI".equals(option.getType()) || "anyDirURI".equals(option.getType()) || "anyURI".equals(option.getType()))) {
-						File file = option.getAsFile(context);
-						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
-						String value;
-						if (absoluteUris) {
+						File file = option.getAsFile(storage);
+						if (file == null) {
+							Pipeline2Logger.logger().warn("File referenced from '"+option.getName()+"' not found in context: '"+option.get()+"'");
+							value = option.get();
+							
+						} else if (absoluteUris) {
 							value = file.toURI().toString();
 
 						} else {
 							value = file.toURI().relativize(contextDirUri).toString();
 						}
-						item.setAttribute("value", value);
-						arg.setTextContent(value);
-
+						
 					} else {
-						String value = option.get();
-						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
+						value = option.get();
+					}
+					
+					if ("".equals(value)) {
+						// create d:item to avoid creating a self-closing d:option in the serialized jobRequest XML
+						// (using a text node instead of a d:item is just for the aesthetics anyway...)
+						Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
 						item.setAttribute("value", value);
+						arg.appendChild(item);
+						
+					} else {
 						arg.setTextContent(value);
 					}
 				}
@@ -774,10 +798,10 @@ public class Job implements Comparable<Job> {
 		}
 		for (Argument output : outputs) {
 			if (output.isDefined()) {
-				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:output");
+				Element arg = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "output");
 				arg.setAttribute("name", output.getName());
 				for (String value : output.getAsList()) {
-					Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "d:item");
+					Element item = jobRequestElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "item");
 					item.setAttribute("value", value);
 					arg.appendChild(item);
 				}

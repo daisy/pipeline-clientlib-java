@@ -18,8 +18,9 @@ import org.daisy.pipeline.client.models.Job;
 import org.daisy.pipeline.client.utils.XML;
 import org.w3c.dom.Document;
 
-public class JobStorage implements JobStorageInterface {
+public class JobStorage {
 
+	private String id;
 	private Job job;
 	private File directory;
 	private Map<String,File> contextFiles = new HashMap<String,File>();
@@ -31,11 +32,16 @@ public class JobStorage implements JobStorageInterface {
 	 * @param job job
 	 * @param jobStorage job storage directory
 	 */
-	public JobStorage(Job job, File jobStorage) {
-		assert(job.getId() != null);
+	public JobStorage(Job job, File jobStorage, String id) {
+		job.setJobStorage(this);
 		this.job = job;
-		directory = new File(jobStorage, job.getId());
-		job.setContext(this);
+		if (id == null) {
+			this.id = job.getId();
+			
+		} else {
+			this.id = id;
+		}
+		directory = new File(jobStorage, this.id);
 	}
 	
 	/**
@@ -44,8 +50,8 @@ public class JobStorage implements JobStorageInterface {
 	 * @param job job
 	 * @param jobStorage job storage directory
 	 */
-	public JobStorage(Job job, File jobStorage, JobStorageInterface otherJobContext) {
-		this(job, jobStorage);
+	public JobStorage(Job job, File jobStorage, JobStorage otherJobContext, String id) {
+		this(job, jobStorage, id);
 		
 		if (otherJobContext != null) {
 			for (File f : otherJobContext.getContextDir().listFiles()) {
@@ -55,7 +61,11 @@ public class JobStorage implements JobStorageInterface {
 		save(false);
 	}
 	
-	@Override
+	/**
+	 * Load the job.
+	 * 
+	 * Will be triggered when the caller tries to read from a job.
+	 */
 	public void lazyLoad() {
 		if (lazyLoaded) {
 			return;
@@ -94,15 +104,19 @@ public class JobStorage implements JobStorageInterface {
 		lazyLoaded = true;
 	}
 
-	@Override
+	/**
+	 * Save the job to the job storage.
+	 *
+	 * (i.e. stores the job XML)
+	 * 
+	 * By default, will move the files instead of copying them.
+	 */
 	public void save() {
 		save(true);
 	}
 	
 	/**
 	 * Save the job to the job storage.
-	 * 
-	 * By default, will move the files instead of copying them.
 	 * 
 	 * @param moveFiles if set to false, will make copies of the context files instead of moving them.
 	 */
@@ -195,14 +209,164 @@ public class JobStorage implements JobStorageInterface {
 	 * @param jobStorageDir
 	 * @return
 	 */
-	public static Job loadJob(String jobId, File jobStorageDir) {
+	public static Job loadJob(String storageId, File jobStorageDir) {
 		Job job = new Job();
-		job.setId(jobId);
-		new JobStorage(job, jobStorageDir);
+		new JobStorage(job, jobStorageDir, storageId);
 		return job;
 	}
 	
-	@Override
+	/**
+	 * Add the file to the context.
+	 * 
+	 * @param file
+	 * @param argument
+	 */
+	public void addContextFile(File file, String contextPath) {
+		if (contextPath == null) {
+			contextPath = file.getName();
+		}
+		
+		if (file.isFile()) {
+			Pipeline2Logger.logger().info("is file: "+file.getName()+" ("+contextPath+")");
+			contextFiles.put(contextPath, file);
+			
+		} else if (file.isDirectory()) {
+			Pipeline2Logger.logger().info("is directory: "+file.getName()+" ("+contextPath+")");
+			if (!contextPath.endsWith("/")) {
+				contextPath += "/";
+			}
+			Pipeline2Logger.logger().info("    directory contains files: "+file.listFiles().length);
+			for (File f : file.listFiles()) {
+				Pipeline2Logger.logger().info("    directory contains file: "+f.getName()+" ("+contextPath+f.getName()+")");
+				addContextFile(f, contextPath + f.getName());
+			}
+			
+		} 
+	}
+
+	/**
+	 * Remove the file from the context.
+	 * 
+	 * The file will also be removed from all attached arguments. 
+	 * 
+	 * @param file
+	 * @param argument
+	 */
+	public void removeContextFile(String contextPath) {
+		contextFiles.remove(contextPath);
+	}
+
+	/**
+	 * Get the file associated with the given context path.
+	 * 
+	 * @param contextPath the context path for the file
+	 * @return the context file with the given path
+	 */
+	public String getContextFilePath(File file) {
+		for (String contextPath : contextFiles.keySet()) {
+			if (contextFiles.get(contextPath).equals(file)) {
+				return contextPath;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Get the path in context associated with the File.
+	 * 
+	 * @param file the File object
+	 * @return the associated path as a string
+	 */
+	public File getContextFile(String contextPath) {
+		Pipeline2Logger.logger().info("Looking for file in context: '"+contextPath+"'");
+		if (!contextFiles.containsKey(contextPath)) {
+			Pipeline2Logger.logger().info("    - not found in context map");
+			String contextFilesString = "";
+			for (String cfs : contextFiles.keySet()) {
+				contextFilesString += cfs+",";
+			}
+			Pipeline2Logger.logger().info("    - map consists of: '"+contextFilesString+"'");
+			File contextFile = new File(getContextDir(), contextPath);
+			Pipeline2Logger.logger().info("    - contextFile: : '"+contextFile.getAbsolutePath()+"'");
+			if (contextFile.isFile()) {
+				Pipeline2Logger.logger().info("    - is file; adding to map");
+				contextFiles.put(contextPath, contextFile);
+				Pipeline2Logger.logger().info("    - returning file: '"+contextFile+"'");
+				return contextFile;
+			} else Pipeline2Logger.logger().info("    - is not file");
+		} else Pipeline2Logger.logger().info("    - not found in context map");
+		Pipeline2Logger.logger().info("    - returning file from map: '"+contextFiles.get(contextPath)+"'");
+		return contextFiles.get(contextPath);
+	}
+	
+	/**
+	 * Returns the root directory for the context files.
+	 * @return the zip file
+	 */
+	public File getContextDir() {
+		return new File(directory, "context");
+	}
+	
+	/**
+	 * Bundles all context files up as a ZIP archive and returns it.
+	 * @return the zip file
+	 */
+	public File getContextZip() {
+		File zip;
+		try {
+			zip = Files.createTempFile("dp2client", ".zip").toFile();
+			org.daisy.pipeline.client.utils.Files.zip(getContextDir(), zip);
+			return zip;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * Test whether the given path exists in the context.
+	 * 
+	 * The path must be relative and can refer to either a file or a directory. 
+	 * 
+	 * @param contextPath
+	 * @return true if the path exists as either a file or directory in the context.
+	 */
+	
+	public boolean existsInContext(String contextPath) {
+		return contextFiles.containsKey(contextPath);
+	}
+
+	/**
+	 * Test whether the given path exists as a file in the context.
+	 * 
+	 * @param contextPath
+	 * @return true if the path exists as a file in the context.
+	 */
+	public boolean isFileInContext(String contextPath) {
+		File file = getContextFile(contextPath);
+		return file != null && file.isFile();
+	}
+
+	/**
+	 * Test whether the given path exists as a directory in the context.
+	 * 
+	 * @param contextPath
+	 * @return true if the path exists as a directory in the context.
+	 */
+	public boolean isDirectoryInContext(String contextPath) {
+		if (contextPath == null) {
+			return false;
+		}
+		String dirPath = contextPath + (contextPath.endsWith("/") ? "" : "/");
+		for (String path : contextFiles.keySet()) {
+			if (path.startsWith(dirPath)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/** Deletes the job including all its files from the job storage. */
 	public void delete() {
 		if (directory != null && directory.exists()) {
 			try {
@@ -222,95 +386,9 @@ public class JobStorage implements JobStorageInterface {
 		}
 		Files.delete(directory.toPath());
 	}
-
-	@Override
-	public void removeContextFile(String contextPath) {
-		contextFiles.remove(contextPath);
-	}
-
-	@Override
-	public void addContextFile(File file, String contextPath) {
-		if (contextPath == null) {
-			contextPath = file.getName();
-		}
-		
-		if (file.isFile()) {
-			contextFiles.put(contextPath, file);
-			
-		} else if (file.isDirectory()) {
-			if (!contextPath.endsWith("/")) {
-				contextPath += "/";
-			}
-			for (File f : file.listFiles()) {
-				addContextFile(f, contextPath + f.getName());
-			}
-			
-		} 
-	}
-
-	@Override
-	public String getContextFilePath(File file) {
-		for (String contextPath : contextFiles.keySet()) {
-			if (contextFiles.get(contextPath).equals(file)) {
-				return contextPath;
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public File getContextFile(String contextPath) {
-		if (!contextFiles.containsKey(contextPath)) {
-			File contextFile = new File(directory, contextPath);
-			if (contextFile.isFile()) {
-				contextFiles.put(contextPath, contextFile);
-				return contextFile;
-			}
-		}
-		return contextFiles.get(contextPath);
-	}
-
-	@Override
-	public boolean existsInContext(String contextPath) {
-		return contextFiles.containsKey(contextPath);
-	}
-
-	@Override
-	public boolean isFileInContext(String contextPath) {
-		File file = getContextFile(contextPath);
-		return file != null && file.isFile();
-	}
-
-	@Override
-	public boolean isDirectoryInContext(String contextPath) {
-		if (contextPath == null) {
-			return false;
-		}
-		String dirPath = contextPath + (contextPath.endsWith("/") ? "" : "/");
-		for (String path : contextFiles.keySet()) {
-			if (path.startsWith(dirPath)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public File getContextDir() {
-		return new File(directory, "context");
-	}
-
-	@Override
-	public File getContextZip() {
-		File zip;
-		try {
-			zip = Files.createTempFile("dp2client", ".zip").toFile();
-			org.daisy.pipeline.client.utils.Files.zip(getContextDir(), zip);
-			return zip;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+	
+	public String getStorageId() {
+		return id;
 	}
 
 }

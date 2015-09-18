@@ -77,7 +77,7 @@ public class JobCreationTest {
 			assert false;
 		}
 		job.setId("job3");
-		JobStorage jobStorage = new JobStorage(job, jobStorageDir);
+		JobStorage jobStorage = new JobStorage(job, jobStorageDir, null);
 		assertNotNull(job);
 		assertNotNull(jobStorage);
 	}

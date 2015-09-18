@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<jobRequest xmlns="http://www.daisy.org/ns/pipeline/data">
+<job xmlns="http://www.daisy.org/ns/pipeline/data" id="job2">
     <script href="http://localhost:8181/ws/scripts/dtbook-to-epub3" id="dtbook-to-epub3" xmlns="http://www.daisy.org/ns/pipeline/data">
 	    <nicename>DTBook to EPUB3</nicename>
 	    <description>Converts multiple dtbooks to epub3 format</description>
@@ -11,4 +11,4 @@
 	    <option desc="Whether to use a speech synthesizer to produce audio files." name="audio" nicename="Enable Text-To-Speech" ordered="true" required="false" sequence="false" type="boolean">false</option>
 	</script>
     <nicename>Other nicename</nicename>
-</jobRequest>
+</job>

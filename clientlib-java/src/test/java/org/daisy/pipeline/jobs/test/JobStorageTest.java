@@ -142,7 +142,7 @@ public class JobStorageTest {
 		List<String> jobsBefore = JobStorage.listJobs(jobStorageDir);
 
 		Job job2 = JobStorage.loadJob("job2", jobStorageDir);
-		job2.getContext().delete();
+		job2.getJobStorage().delete();
 
 		List<String> jobsAfter = JobStorage.listJobs(jobStorageDir);
 
@@ -183,7 +183,7 @@ public class JobStorageTest {
 		assertEquals(Argument.Kind.input, newJob.getScript().getArgument("source").getKind());
 		assertEquals(Argument.Kind.option, newJob.getScript().getArgument("assert-valid").getKind());
 		newJob.setId("job3");
-		JobStorage jobStorage = new JobStorage(newJob, jobStorageDir);
+		JobStorage jobStorage = new JobStorage(newJob, jobStorageDir, null);
 		newJob.getArgument("source").add(textFilePath.toFile(), jobStorage);
 		newJob.getArgument("assert-valid").set(false);
 		jobStorage.save();
@@ -215,7 +215,8 @@ public class JobStorageTest {
 		}
 
 		for (Node element : elements) {
-			assertEquals("All elements must use the d: prefix (element name: "+element.getLocalName()+")", "d", element.getPrefix());
+			assertNull("Elements should be in the default namespace (element name: "+element.getLocalName()+" has the namespace prefix '"+element.getPrefix()+"')", element.getPrefix());
+			assertEquals("The default namespace for all elements should be 'http://www.daisy.org/ns/pipeline/data' (element name: "+element.getLocalName()+")", "http://www.daisy.org/ns/pipeline/data", element.getNamespaceURI());
 			assertFalse("No element should have the local name 'null' (parent:"+element.getParentNode().getLocalName()+")", "null".equals(element.getLocalName()));
 		}
 	}
@@ -233,7 +234,7 @@ public class JobStorageTest {
 			assertTrue(false);
 		}
 		job.setId("filesJob");
-		JobStorage jobStorage = new JobStorage(job, jobStorageDir);
+		JobStorage jobStorage = new JobStorage(job, jobStorageDir, null);
 
 		File xmlFile = new File(jobStorageDir, "job1/context/hauy_valid.xml");
 		File cssFile = new File(jobStorageDir, "job1/context/dtbook.2005.basic.css");

@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
-import org.daisy.pipeline.client.filestorage.JobStorageInterface;
+import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.models.Argument;
 import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
@@ -327,7 +327,7 @@ public class Argument {
 	/** Replace the value at the given position with the provided File value.
 	 *  @param position
 	 *  @param file the value to use */
-	public void set(int position, File file, JobStorageInterface context) {
+	public void set(int position, File file, JobStorage context) {
 		if (file == null) {
 			clear();
 		} else {
@@ -392,7 +392,7 @@ public class Argument {
 
 	/** Replace the value with the provided File value.
 	 *  @param file the value to use */
-	public void set(File file, JobStorageInterface context) {
+	public void set(File file, JobStorage context) {
 		if (file == null) {
 			clear();
 			
@@ -463,7 +463,7 @@ public class Argument {
 
 	/** Add to the list of values the provided File value.
 	 *  @param file the value to use */
-	public void add(File file, JobStorageInterface context) {
+	public void add(File file, JobStorage context) {
 		if (file != null) {
 			lazyLoad();
 			context.addContextFile(file, file.getName());
@@ -530,7 +530,7 @@ public class Argument {
 
 	/** Remove all occurences of the provided File value from the list of values.
 	 *  @param file the value to use */
-	public void remove(File file, JobStorageInterface context) {
+	public void remove(File file, JobStorage context) {
 		if (file != null) {
 			remove(context.getContextFilePath(file));
 		}
@@ -635,7 +635,7 @@ public class Argument {
 	 *  
 	 *  @return the value as a File
 	 */
-	public File getAsFile(JobStorageInterface context) {
+	public File getAsFile(JobStorage context) {
 		lazyLoad();
 		if (values == null || values.size() == 0) {
 			return null;
@@ -672,7 +672,7 @@ public class Argument {
 	/** Get all the values as a List of Files.
 	 * 
 	 *  @return null if any of the values cannot be parsed as a File, or if the value is not set. */
-	public List<File> getAsFileList(JobStorageInterface context) {
+	public List<File> getAsFileList(JobStorage context) {
 		lazyLoad();
 		if (values != null) {
 			List<File> contextFiles = new ArrayList<File>();
@@ -740,7 +740,7 @@ public class Argument {
 	public Document toXml() {
 		lazyLoad();
 
-		Document argDoc = XML.getXml("<d:"+kind+" xmlns:d=\"http://www.daisy.org/ns/pipeline/data\"/>");
+		Document argDoc = XML.getXml("<"+kind+" xmlns=\"http://www.daisy.org/ns/pipeline/data\"/>");
 		Element argElem = argDoc.getDocumentElement();
 
 		if (name != null) {
@@ -781,12 +781,12 @@ public class Argument {
 		if (values == null) {
 			// do nothing
 
-		} else if (values.size() == 1 && !sequence) {
+		} else if (values.size() == 1 && values.get(0).length() > 0 && !sequence) {
 			argElem.setTextContent(values.get(0));
 
 		} else {
 			for (String value : values) {
-				Element item = argDoc.createElementNS(XPath.dp2ns.get("d"), "d:item");
+				Element item = argDoc.createElementNS(XPath.dp2ns.get("d"), "item");
 				item.setAttribute("value", value);
 				argElem.appendChild(item);
 			}

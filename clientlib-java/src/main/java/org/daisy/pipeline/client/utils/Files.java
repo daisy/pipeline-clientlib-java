@@ -1,5 +1,6 @@
 package org.daisy.pipeline.client.utils;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +12,8 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -295,81 +298,32 @@ public class Files {
 			dir.mkdirs();
 		}
 		
-		ZipFile zipFile;
-		try {
-			zipFile = new ZipFile(zip);
-		} catch (ZipException e) {
-			Pipeline2Logger.logger().error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-			throw e;
-		} catch (IOException e) {
-			Pipeline2Logger.logger().error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-			throw e;
-		}
-		Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-		
-    	// 4MiB buffer
-		byte[] buf = new byte[4096 * 1024];
-		
-		while (zipEntries.hasMoreElements()) {
-			ZipEntry entry = (ZipEntry) zipEntries.nextElement();
-			
-			if (entry.isDirectory()) {
-				// Extracting directory
-				new File(dir, entry.getName()).mkdirs();
-				
-            } else {
-            	// Extracting file
-            	
-            	InputStream is;
-				try { is = zipFile.getInputStream(entry); }
-				catch (IOException e) {
-					Pipeline2Logger.logger().error("Error while opening ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-					throw e;
-				}
-            	FileOutputStream fos;
-            	File entryFile = new File(dir, entry.getName());
-            	entryFile.getParentFile().mkdirs();
-				try { fos = new FileOutputStream(entryFile); }
-				catch (FileNotFoundException e) {
-					Pipeline2Logger.logger().error("Error while opening output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]")+"' for ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-					throw e;
-				}
-            	
-            	int len;
-				try {
-					while ((len = is.read(buf)) > 0) {
-						try { fos.write(buf, 0, len); }
-						catch (IOException e) {
-							Pipeline2Logger.logger().error("Error while writing output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]")+"' for ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-							throw e;
-						}
-						finally {
-							fos.close();
-						}
-					}
-				} catch (IOException e) {
-					Pipeline2Logger.logger().error("Error while reading ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-					throw e;
-				}
-				
-				try {
-					is.close();
-				} catch (IOException e) {
-					Pipeline2Logger.logger().error("Error while closing input stream from ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-					fos.close();
-					throw e;
-				}
-				try {
-					fos.close();
-				} catch (IOException e) {
-					Pipeline2Logger.logger().error("Error while closing output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]"), e);
-					throw e;
-				}
-            }
-			
-		}
-		
-		zipFile.close();
+		try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zip), StandardCharsets.UTF_8)) {
+	        ZipEntry entry = zipIn.getNextEntry();
+	        while (entry != null) {
+	            File file = new File(dir, entry.getName());
+	            if (entry.isDirectory()) {
+	                file.mkdirs();
+	            } else {
+	                File parent = file.getParentFile();
+	                if (!parent.exists()) {
+	                    parent.mkdirs();
+	                }
+	                
+	                try (BufferedOutputStream outputStream = new BufferedOutputStream
+	                        (new FileOutputStream(file))) {
+	                    byte[] buffer = new byte[4096];
+	                    int location;
+	                    while ((location = zipIn.read(buffer)) != -1) {
+	                        outputStream.write(buffer, 0, location);
+	                    }
+	                }
+	                
+	            }
+	            zipIn.closeEntry();
+	            entry = zipIn.getNextEntry();
+	        }
+	    }
 	}
     
 	/**
