@@ -100,99 +100,112 @@ public class ParsingTest {
 	}
 
 	@Test
-	public void testParseJobResponse() {
+	public void testParseAndSerializeJobXml() {
 		try {
 			Job job = new Job(loadResourceXml("responses/jobs/job1.xml"));
-
-			assertNotNull(job);
-			assertEquals("job1", job.getId());
-			assertEquals("http://localhost:8181/ws/jobs/job1", job.getHref());
-			assertEquals(Status.DONE, job.getStatus());
-			assertNotNull(job.getScript());
-			assertEquals("http://localhost:8181/ws/scripts/dtbook-to-zedai", job.getScript().getHref());
-			assertEquals("dtbook-to-zedai", job.getScript().getId());
-			assertEquals("DTBook to ZedAI", job.getScript().getNicename());
-			assertEquals("Transforms DTBook XML into ZedAI XML.", job.getScript().getDescription());
-			//			assertNotNull(job.messagesNode);
-			//			assertNotNull(job.resultsNode);
-			assertEquals("http://localhost:8181/ws/jobs/job1/log", job.getLogHref());
-
-			List<Message> messages = job.getMessages();
-			Result result = job.getResult();
-
-			assertEquals(62, messages.size());
-
-			assertNull(result.from);
-			assertNull(result.file);
-			assertEquals("application/zip", result.mimeType);
-			assertEquals(new Long(178080), result.size);
-			assertNull(result.name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result", result.href);
-			assertEquals("result", result.relativeHref);
-			assertEquals("result", result.filename);
-
-			SortedMap<Result, List<Result>> allResults = job.getResults();
-			assertEquals(1, allResults.size());
-
-			result = job.getResult("output-dir");
-			List<Result> results = job.getResults("output-dir");
-			assertEquals("option", result.from);
-			assertEquals(null, result.file);
-			assertEquals("application/zip", result.mimeType);
-			assertEquals(new Long(178080), result.size);
-			assertEquals("output-dir", result.name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir", result.href);
-			assertEquals("option/output-dir", result.relativeHref);
-			assertEquals("output-dir", result.filename);
-			assertEquals(4, results.size());
-
-			assertEquals(null, results.get(1).from);
-			assertEquals("/responses/jobs/job1/result/option/output-dir/idx/output-dir/valentin.jpg", results.get(1).file);
-			assertEquals(null, results.get(1).mimeType);
-			assertEquals(new Long(25740), results.get(1).size);
-			assertEquals(null, results.get(1).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output-dir/valentin.jpg", results.get(1).href);
-			assertEquals("valentin.jpg", results.get(1).relativeHref);
-			assertEquals("valentin.jpg", results.get(1).filename);
-
-			assertEquals(null, results.get(2).from);
-			assertEquals("/responses/jobs/job1/result/option/output-dir/idx/output-dir/zedai-mods.xml", results.get(2).file);
-			assertEquals(null, results.get(2).mimeType);
-			assertEquals(new Long(442), results.get(2).size);
-			assertEquals(null, results.get(2).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output-dir/zedai-mods.xml", results.get(2).href);
-			assertEquals("zedai-mods.xml", results.get(2).relativeHref);
-			assertEquals("zedai-mods.xml", results.get(2).filename);
-
-			assertEquals(null, results.get(3).from);
-			assertEquals("/responses/jobs/job1/result/option/output-dir/idx/output-dir/zedai.xml", results.get(3).file);
-			assertEquals(null, results.get(3).mimeType);
-			assertEquals(new Long(151891), results.get(3).size);
-			assertEquals(null, results.get(3).name);
-			assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output-dir/zedai.xml", results.get(3).href);
-			assertEquals("zedai.xml", results.get(3).relativeHref);
-			assertEquals("zedai.xml", results.get(3).filename);
+			responsesJobsJob1ParseTestHelper(job); // correctly loaded from disk
+			
+			job = new Job(job.toXml());
+			responsesJobsJob1ParseTestHelper(job); // correctly serialized as XML
 
 			job = new Job(loadResourceXml("responses/jobs/job2.xml"));
 
-			messages = job.getMessages();
-			result = job.getResult();
+			List<Message> messages = job.getMessages();
+			Result result = job.getResult();
 			Result outputDirResult = job.getResult("output-dir");
-			results = job.getResults().get(outputDirResult);
+			List<Result> results = job.getResults().get(outputDirResult);
 
+			assertEquals(36, messages.size());
 			assertNotNull(result);
-			assertEquals("result", result.filename);
-			assertEquals("result", result.relativeHref);
-			assertEquals("output-dir", outputDirResult.filename);
-			assertEquals("ValentinHaüythefatheroftheeducationfortheblind.epub", results.get(0).relativeHref);
+			assertEquals("results.zip", result.filename);
+			assertEquals("result", result.prettyRelativeHref);
+			assertEquals("", result.relativeHref);
+			assertEquals("output-dir.zip", outputDirResult.filename);
+			assertEquals("ValentinHaüythefatheroftheeducationfortheblind.epub", results.get(0).prettyRelativeHref);
+			assertEquals("option/output-dir/idx/output-dir/ValentinHaüythefatheroftheeducationfortheblind.epub", results.get(0).relativeHref);
 			assertEquals("mimetype", results.get(25).filename);
-			assertEquals("epub/mimetype", results.get(25).relativeHref);
+			assertEquals("epub/mimetype", results.get(25).prettyRelativeHref);
+			assertEquals("option/output-dir/idx/output-dir/epub/mimetype", results.get(25).relativeHref);
+			assertEquals("http://localhost:8181/ws/jobs/313ded3e-37b7-4de6-831c-05f8639326f5/result/option/output-dir/idx/output-dir/epub/mimetype", results.get(25).href);
 			assertEquals("OpenDyslexic-Regular.otf", results.get(19).filename);
-			assertEquals("epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", results.get(19).relativeHref);
+			assertEquals("epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", results.get(19).prettyRelativeHref);
+			assertEquals("option/output-dir/idx/output-dir/epub/EPUB/Content/css/fonts/opendyslexic/OpenDyslexic-Regular.otf", results.get(19).relativeHref);
 
 		} catch (Pipeline2Exception e) {
 			fail(e.getMessage());
 		}
+	}
+	
+	private void responsesJobsJob1ParseTestHelper(Job job) throws Pipeline2Exception {
+		assertNotNull(job);
+		assertEquals("job1", job.getId());
+		assertEquals("http://localhost:8181/ws/jobs/job1", job.getHref());
+		assertEquals(Status.DONE, job.getStatus());
+		assertNotNull(job.getScript());
+		assertEquals("http://localhost:8181/ws/scripts/dtbook-to-zedai", job.getScript().getHref());
+		assertEquals("dtbook-to-zedai", job.getScript().getId());
+		assertEquals("DTBook to ZedAI", job.getScript().getNicename());
+		assertEquals("Transforms DTBook XML into ZedAI XML.", job.getScript().getDescription());
+		//			assertNotNull(job.messagesNode);
+		//			assertNotNull(job.resultsNode);
+		assertEquals("http://localhost:8181/ws/jobs/job1/log", job.getLogHref());
+
+		List<Message> messages = job.getMessages();
+		Result result = job.getResult();
+
+		assertEquals(62, messages.size());
+
+		assertNull(result.from);
+		assertNull(result.file);
+		assertEquals("application/zip", result.mimeType);
+		assertEquals(new Long(178080), result.size);
+		assertNull(result.name);
+		assertEquals("http://localhost:8181/ws/jobs/job1/result", result.href);
+		assertEquals("result", result.prettyRelativeHref);
+		assertEquals("", result.relativeHref);
+		assertEquals("results.zip", result.filename);
+
+		SortedMap<Result, List<Result>> allResults = job.getResults();
+		assertEquals(1, allResults.size());
+
+		result = job.getResult("output-dir");
+		List<Result> results = job.getResults("output-dir");
+		assertEquals("option", result.from);
+		assertEquals(null, result.file);
+		assertEquals("application/zip", result.mimeType);
+		assertEquals(new Long(178080), result.size);
+		assertEquals("output-dir", result.name);
+		assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir", result.href);
+		assertEquals("option/output-dir", result.prettyRelativeHref);
+		assertEquals("output-dir.zip", result.filename);
+		assertEquals(4, results.size());
+
+		assertEquals(null, results.get(1).from);
+		assertEquals("/responses/jobs/job1/result/option/output-dir/idx/output-dir/valentin.jpg", results.get(1).file);
+		assertEquals(null, results.get(1).mimeType);
+		assertEquals(new Long(25740), results.get(1).size);
+		assertEquals(null, results.get(1).name);
+		assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output-dir/valentin.jpg", results.get(1).href);
+		assertEquals("valentin.jpg", results.get(1).prettyRelativeHref);
+		assertEquals("valentin.jpg", results.get(1).filename);
+
+		assertEquals(null, results.get(2).from);
+		assertEquals("/responses/jobs/job1/result/option/output-dir/idx/output-dir/zedai-mods.xml", results.get(2).file);
+		assertEquals(null, results.get(2).mimeType);
+		assertEquals(new Long(442), results.get(2).size);
+		assertEquals(null, results.get(2).name);
+		assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output-dir/zedai-mods.xml", results.get(2).href);
+		assertEquals("zedai-mods.xml", results.get(2).prettyRelativeHref);
+		assertEquals("zedai-mods.xml", results.get(2).filename);
+
+		assertEquals(null, results.get(3).from);
+		assertEquals("/responses/jobs/job1/result/option/output-dir/idx/output-dir/zedai.xml", results.get(3).file);
+		assertEquals(null, results.get(3).mimeType);
+		assertEquals(new Long(151891), results.get(3).size);
+		assertEquals(null, results.get(3).name);
+		assertEquals("http://localhost:8181/ws/jobs/job1/result/option/output-dir/idx/output-dir/zedai.xml", results.get(3).href);
+		assertEquals("zedai.xml", results.get(3).prettyRelativeHref);
+		assertEquals("zedai.xml", results.get(3).filename);
 	}
 
 	@Test

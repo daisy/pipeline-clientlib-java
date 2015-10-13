@@ -8,12 +8,15 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.models.Argument;
+import org.daisy.pipeline.client.models.Callback;
+import org.daisy.pipeline.client.models.Callback.Type;
 import org.daisy.pipeline.client.models.Job;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.utils.XML;
@@ -53,7 +56,7 @@ public class JobStorageTest {
 
 	@After
 	public void tearDown() {
-		testFolder.delete();
+//		testFolder.delete();
 	}
 
 	public static void copyFolder(File sourceFolder, File destinationFolder) throws IOException {
@@ -186,6 +189,10 @@ public class JobStorageTest {
 		JobStorage jobStorage = new JobStorage(newJob, jobStorageDir, null);
 		newJob.getArgument("source").add(textFilePath.toFile(), jobStorage);
 		newJob.getArgument("assert-valid").set(false);
+		List<Callback> callbacks = new ArrayList<Callback>();
+		callbacks.add(new Callback("http://example.com/1", Type.status, "1"));
+		callbacks.add(new Callback("http://example.com/2", Type.messages, "2"));
+		newJob.setCallback(callbacks);
 		jobStorage.save();
 
 		List<String> jobsAfter = JobStorage.listJobs(jobStorageDir);

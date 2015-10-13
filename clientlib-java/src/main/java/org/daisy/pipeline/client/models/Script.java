@@ -197,16 +197,16 @@ public class Script implements Comparable<Script> {
     public String getHomepage() { lazyLoad(); return homepage; }
     public List<Argument> getInputs() { lazyLoad(); return inputs; }
     public List<Argument> getOutputs() { lazyLoad(); return outputs; }
-//  public void setId(String id) { lazyLoad(); this.id = id; }
-//  public void setHref(String href) { lazyLoad(); this.href = href; }
-//  public void setInputFilesets(List<String> inputFilesets) { lazyLoad(); this.inputFilesets = inputFilesets; }
-//  public void setOutputFilesets(List<String> outputFilesets) { lazyLoad(); this.outputFilesets = outputFilesets; }
-//  public void setNicename(String nicename) { lazyLoad(); this.nicename = nicename; }
-//  public void setDescription(String description) { lazyLoad(); this.description = description; }
-//  public void setVersion(String version) { lazyLoad(); this.version = version; }
-//  public void setHomepage(String homepage) { lazyLoad(); this.homepage = homepage; }
-//  public void setInputs(List<Argument> inputs) { lazyLoad(); this.inputs = inputs; }
-//  public void setOutputs(List<Argument> outputs) { lazyLoad(); this.outputs = outputs; }
+    public void setId(String id) { lazyLoad(); this.id = id; }
+    public void setHref(String href) { lazyLoad(); this.href = href; }
+    public void setInputFilesets(List<String> inputFilesets) { lazyLoad(); this.inputFilesets = inputFilesets; }
+    public void setOutputFilesets(List<String> outputFilesets) { lazyLoad(); this.outputFilesets = outputFilesets; }
+    public void setNicename(String nicename) { lazyLoad(); this.nicename = nicename; }
+    public void setDescription(String description) { lazyLoad(); this.description = description; }
+    public void setVersion(String version) { lazyLoad(); this.version = version; }
+    public void setHomepage(String homepage) { lazyLoad(); this.homepage = homepage; }
+    public void setInputs(List<Argument> inputs) { lazyLoad(); this.inputs = inputs; }
+    public void setOutputs(List<Argument> outputs) { lazyLoad(); this.outputs = outputs; }
 
 	public Document toXml() {
 		lazyLoad();

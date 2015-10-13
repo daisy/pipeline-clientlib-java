@@ -109,6 +109,9 @@ public class XML {
      * @param child
      */
     public static void appendChildAcrossDocuments(Element parent, Node child) {
+    	if (child instanceof Document) {
+    		child = ((Document) child).getDocumentElement();
+		}
     	parent.appendChild(parent.getOwnerDocument().importNode(child, true));
     }
     

@@ -120,7 +120,7 @@ public class JobStorage {
 	 * 
 	 * @param moveFiles if set to false, will make copies of the context files instead of moving them.
 	 */
-	public void save(boolean moveFiles) {
+	public synchronized void save(boolean moveFiles) {
 		lazyLoad();
 		
 		if (directory == null) {
@@ -144,8 +144,11 @@ public class JobStorage {
 		
 		for (Argument arg : job.getInputs()) {
 			if ("anyFileURI".equals(arg.getType()) || "anyURI".equals(arg.getType())) {
-				for (String value : arg.getAsList()) {
-					getContextFile(value); // forces loading of Files into contextFiles map
+				List<String> values = arg.getAsList();
+				if (values != null) {
+					for (String value : values) {
+						getContextFile(value); // forces loading of Files into contextFiles map
+					}
 				}
 			}
 		}
@@ -227,17 +230,13 @@ public class JobStorage {
 		}
 		
 		if (file.isFile()) {
-			Pipeline2Logger.logger().info("is file: "+file.getName()+" ("+contextPath+")");
 			contextFiles.put(contextPath, file);
 			
 		} else if (file.isDirectory()) {
-			Pipeline2Logger.logger().info("is directory: "+file.getName()+" ("+contextPath+")");
 			if (!contextPath.endsWith("/")) {
 				contextPath += "/";
 			}
-			Pipeline2Logger.logger().info("    directory contains files: "+file.listFiles().length);
 			for (File f : file.listFiles()) {
-				Pipeline2Logger.logger().info("    directory contains file: "+f.getName()+" ("+contextPath+f.getName()+")");
 				addContextFile(f, contextPath + f.getName());
 			}
 			
@@ -278,30 +277,19 @@ public class JobStorage {
 	 * @return the associated path as a string
 	 */
 	public File getContextFile(String contextPath) {
-		Pipeline2Logger.logger().info("Looking for file in context: '"+contextPath+"'");
 		if (!contextFiles.containsKey(contextPath)) {
-			Pipeline2Logger.logger().info("    - not found in context map");
-			String contextFilesString = "";
-			for (String cfs : contextFiles.keySet()) {
-				contextFilesString += cfs+",";
-			}
-			Pipeline2Logger.logger().info("    - map consists of: '"+contextFilesString+"'");
 			File contextFile = new File(getContextDir(), contextPath);
-			Pipeline2Logger.logger().info("    - contextFile: : '"+contextFile.getAbsolutePath()+"'");
 			if (contextFile.isFile()) {
-				Pipeline2Logger.logger().info("    - is file; adding to map");
 				contextFiles.put(contextPath, contextFile);
-				Pipeline2Logger.logger().info("    - returning file: '"+contextFile+"'");
 				return contextFile;
-			} else Pipeline2Logger.logger().info("    - is not file");
-		} else Pipeline2Logger.logger().info("    - not found in context map");
-		Pipeline2Logger.logger().info("    - returning file from map: '"+contextFiles.get(contextPath)+"'");
+			}
+		}
 		return contextFiles.get(contextPath);
 	}
 	
 	/**
 	 * Returns the root directory for the context files.
-	 * @return the zip file
+	 * @return the root directory for the context files
 	 */
 	public File getContextDir() {
 		return new File(directory, "context");
@@ -367,7 +355,7 @@ public class JobStorage {
 	}
 	
 	/** Deletes the job including all its files from the job storage. */
-	public void delete() {
+	public synchronized void delete() {
 		if (directory != null && directory.exists()) {
 			try {
 				deleteRecursively(directory);

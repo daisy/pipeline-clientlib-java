@@ -23,14 +23,17 @@ public class Result implements Comparable<Result> {
 	public String mimeType;
 	public String name;
 	public String from;
+	public String nicename;
 	public Long size;
 
 	// convenience variables
 	public String filename;
+	public String prettyRelativeHref;
 	public String relativeHref;
 
 	private static Pattern filenamePattern = Pattern.compile(".*/");
 	private static Pattern idxPattern = Pattern.compile("^/?idx/[^/]+/");
+	private static Pattern relativeHrefPattern = Pattern.compile("^.*?/jobs/[^/]+/result(.*)$");
 
 	public static Result parseResultXml(Node resultNode) throws Pipeline2Exception {
 		String parentHref = XPath.selectText("../@href", resultNode, XPath.dp2ns); // can be from /job/@href, /job/results/@href or /job/results/result/@href
@@ -45,16 +48,35 @@ public class Result implements Comparable<Result> {
 		item.mimeType = XPath.selectText("@mime-type", resultNode, XPath.dp2ns);
 		item.name = XPath.selectText("@name", resultNode, XPath.dp2ns);
 		item.from = XPath.selectText("@from", resultNode, XPath.dp2ns);
+		item.nicename = XPath.selectText("@nicename", resultNode, XPath.dp2ns);
 		
-		item.filename = item.href == null ? null : filenamePattern.matcher(item.href).replaceAll("");
+		if ("results".equals(resultNode.getNodeName())) {
+			// all results
+			item.filename = "results.zip";
+			
+		} else if (item.from != null && !"".equals(item.from)) {
+			// option or port
+			item.filename = (item.name != null && !"".equals(item.name) ? item.name : item.from) + ".zip";
+			
+		} else {
+			// single file
+			item.filename = item.href == null ? null : filenamePattern.matcher(item.href).replaceAll("");
+		}
 
 		if (base != null) {
 			if (base.length() >= item.href.length()) {
-				item.relativeHref = "";
+				item.prettyRelativeHref = "";
 			} else {
-				item.relativeHref = item.href == null ? null : item.href.substring(base.length() + 1);
-				Matcher m = idxPattern.matcher(item.relativeHref);
-				item.relativeHref = m.replaceFirst("");
+				item.prettyRelativeHref = item.href == null ? null : item.href.substring(base.length() + 1);
+				Matcher m = idxPattern.matcher(item.prettyRelativeHref);
+				item.prettyRelativeHref = m.replaceFirst("");
+			}
+		}
+		Matcher prettyRelativeHrefMatcher = relativeHrefPattern.matcher(item.href);
+		if (prettyRelativeHrefMatcher.matches()) {
+			item.relativeHref = prettyRelativeHrefMatcher.group(1);
+			if (item.relativeHref.length() > 0) {
+				item.relativeHref = item.relativeHref.substring(1); // remove "/" at start of string
 			}
 		}
 

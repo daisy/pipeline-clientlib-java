@@ -78,43 +78,41 @@ public class Job implements Comparable<Job> {
 	}
 
 	/**
-	 * Get the job result matching the given href without parsing the entire jobXml.
+	 * Given the absolute href for the result, get the result without parsing the entire jobXml.
 	 * 
-	 * @param jobXml
+	 * @param resultsXml
 	 * @param href
 	 * @param base
 	 * @return
 	 * @throws Pipeline2Exception
 	 * @throws URISyntaxException
 	 */
-	public static Result getResultFromHref(Node jobXml, String href) {
+	public static Result getResultFromHref(Node resultsXml, String href) {
 		if (href == null) {
 			href = "";
 		}
 
 		try {
-			if (jobXml instanceof Document) {
-				jobXml = XPath.selectNode("/d:job", jobXml, XPath.dp2ns);
+			if (resultsXml instanceof Document) {
+				resultsXml = XPath.selectNode("/*", resultsXml, XPath.dp2ns);
 			}
-
-			String base = XPath.selectText("@href", jobXml, XPath.dp2ns) + "/result";
-			if (!"".equals(href)) {
-				base += "/"; 
+			
+			Node resultNode;
+			if ("".equals(href)) {
+				resultNode = XPath.selectNode("./descendant-or-self::d:results", resultsXml, XPath.dp2ns);
+				
+			} else {
+				resultNode = XPath.selectNode("./descendant-or-self::*[@href='"+href.replaceAll("'", "''").replaceAll(" ", "%20")+"']", resultsXml, XPath.dp2ns);
 			}
-			String fullHref = base + href;
-
-			Node resultNode = XPath.selectNode("d:results//descendant-or-self::*[@href='"+fullHref.replaceAll("'", "''").replaceAll(" ", "%20")+"']", jobXml, XPath.dp2ns);
+			
 			if (resultNode != null) {
-				String parentHref = XPath.selectText("../@href", resultNode, XPath.dp2ns); // can be from /job/@href, /job/results/@href or /job/results/result/@href
-				if (parentHref != null) {
-					base = parentHref;
-				}
-				return Result.parseResultXml(resultNode, base);
+				return Result.parseResultXml(resultNode);
 			}
 
 		} catch (Pipeline2Exception e) {
-			Pipeline2Logger.logger().error("Could not parse job XML for finding the job result '"+href+"'", e);
+			Pipeline2Logger.logger().error("Could not parse job XML for finding the job result '"+href.replaceAll("'", "''").replaceAll(" ", "%20")+"'", e);
 		}
+		Pipeline2Logger.logger().debug("No result was found for href="+href);
 		return null;
 	}
 
@@ -209,9 +207,8 @@ public class Job implements Comparable<Job> {
 	/**
 	 * Get a list of all messages for the job.
 	 * @return
-	 * @throws Pipeline2Exception
 	 */
-	public List<Message> getMessages() throws Pipeline2Exception {
+	public List<Message> getMessages() {
 		lazyLoad();
 
 		if (messages == null && messagesNode != null) {
@@ -314,7 +311,7 @@ public class Job implements Comparable<Job> {
 	 * Get the Result representing the file with the given name from the argument with the given name.
 	 * 
 	 * @param argumentName
-	 * @param href
+	 * @param href filename with path relative to the argument.
 	 * @return
 	 */
 	public Result getResult(String argumentName, String href) {
@@ -331,7 +328,7 @@ public class Job implements Comparable<Job> {
 		}
 
 		for (Result r : getResults(argumentName)) {
-			if (href.equals(r.href) || href.equals(r.relativeHref)) {
+			if (href.equals(r.href) || href.equals(r.prettyRelativeHref)) {
 				return r;
 			}
 		}
@@ -433,6 +430,7 @@ public class Job implements Comparable<Job> {
 	public String getId() { lazyLoad(); return id; }
 	public String getHref() { lazyLoad(); return href; }
 	public String getScriptHref() { lazyLoad(); if (script != null) return script.getHref(); else return scriptHref; }
+	public Script getScript() { lazyLoad(); return script; }
 	public Status getStatus() { lazyLoad(); return status; }
 	public String getLogHref() { lazyLoad(); return logHref; }
 	public String getNicename() { lazyLoad(); return nicename; }
@@ -446,21 +444,48 @@ public class Job implements Comparable<Job> {
 	public void setPriority(Priority priority) { lazyLoad(); this.priority = priority; }
 	public void setCallback(List<Callback> callback) { lazyLoad(); this.callback = callback; }
 	public void setJobStorage(JobStorage storage) { lazyLoad(); this.storage = storage; }
+	public void setHref(String href) { lazyLoad(); this.href = href; }
+	public void setStatus(Status status) { lazyLoad(); this.status = status; }
+	public void setScriptHref(String scriptHref) { lazyLoad(); this.scriptHref = scriptHref; }
+	public void setScript(Script script) { lazyLoad(); this.script = script; }
+	public void setLogHref(String logHref) { lazyLoad(); this.logHref = logHref; }
+	
+	public void setMessages(List<Message> messages) {
+		lazyLoad();
+		
+		if (this.messages == messages) {
+			return; // same instance
+		}
+		
+		if (messages == null) {
+			this.messages = null;
+			return;
+		}
+		
+		if (this.messages == null || this.messages.size() == 0) {
+			this.messages = messages;
+			return;
+		}
+		
+		if (messages.size() == 0) {
+			return;
+		}
+		
+		Collections.sort(messages);
+		int startSequence = messages.get(0).sequence;
+		for (int m = this.messages.size()-1; m >= 0; m--) {
+			if (this.messages.get(m).sequence >= startSequence) {
+				this.messages.remove(m);
+			}
+		}
+		this.messages.addAll(messages);
+		Collections.sort(this.messages);
+	}
 
 	/** Set job XML and re-enable lazy loading for the new XML. */
 	public void setJobXml(Node jobXml) {
 		this.jobNode = jobXml;
 		this.lazyLoaded = false;
-	}
-
-	public Script getScript() {
-		lazyLoad();
-		return script;
-	}
-
-	public void setScript(Script script) {
-		lazyLoad();
-		this.script = script;
 	}
 
 	public List<Argument> getInputs() {
@@ -479,6 +504,25 @@ public class Job implements Comparable<Job> {
 	public List<Argument> getOutputs() {
 		lazyLoad();
 		return script == null ? argumentOutputs : script.getOutputs();
+	}
+	
+	public void setInputs(List<Argument> argumentInputs) {
+		lazyLoad();
+		if (script == null) {
+			this.argumentInputs = argumentInputs;
+			
+		} else {
+			script.setInputs(argumentInputs);
+		}
+	}
+	
+	public void setOutputs(List<Argument> argumentOutputs) {
+		lazyLoad();
+		if (script == null) {
+			this.argumentOutputs = argumentOutputs;
+		} else {
+			script.setOutputs(argumentOutputs);
+		}
 	}
 
 	public Argument getArgument(String name) {
@@ -510,21 +554,28 @@ public class Job implements Comparable<Job> {
 		return id.compareTo(o.id);
 	}
 
+	/**
+	 * Get a result object for the result with the given absolute or relative href.
+	 * 
+	 * @param href if relative, must be relative to the top-level `…/results/` URL segment.
+	 * @return
+	 */
 	public Result getResultFromHref(String href) {
-		lazyLoad();
-		if (href == null) {
-			return null;
+		if (results == null && resultsNode != null && (href == null || !href.startsWith("http"))) {
+			return getResultFromHref(resultsNode, href);
 		}
-		if (href.equals(result.relativeHref)) {
+		
+		lazyLoadResults();
+		if (href == null || "".equals(href) || href.equals(result.href) || href.equals(result.relativeHref)) {
 			return result;
 		}
 		for (Result key : results.keySet()) {
-			if (href.equals(key.relativeHref)) {
+			if (href.equals(key.href) || href.equals(key.relativeHref)) {
 				return key;
 			}
 			for (Result value : results.get(key)) {
-				if (href.equals(value.relativeHref)) {
-					return key;
+				if (value != null && (href.equals(value.href) || href.equals(value.relativeHref))) {
+					return value;
 				}
 			}
 		}
@@ -580,7 +631,7 @@ public class Job implements Comparable<Job> {
 				XML.appendChildAcrossDocuments(jobElement, c.toXml().getDocumentElement());
 			}
 		}
-
+		
 		if (messages != null) {
 			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "messages");
 			for (Message m : messages) {
@@ -606,6 +657,7 @@ public class Job implements Comparable<Job> {
 				if (m.text != null) {
 					mElement.setTextContent(m.text);
 				}
+				e.appendChild(mElement);
 			}
 			jobElement.appendChild(e);
 		}
@@ -619,6 +671,7 @@ public class Job implements Comparable<Job> {
 				for (Result fileResult : results.get(r)) {
 					Element fileElement = jobDocument.createElementNS(XPath.dp2ns.get("d"), "result");
 					fileResult.toXml(fileElement);
+					resultElement.appendChild(fileElement);
 				}
 				resultsElement.appendChild(resultElement);
 			}
@@ -811,7 +864,7 @@ public class Job implements Comparable<Job> {
 
 		if (callback != null) {
 			for (Callback c : callback) {
-				jobRequestElement.appendChild(c.toXml());
+				XML.appendChildAcrossDocuments(jobRequestElement, c.toXml());
 			}
 		}
 
