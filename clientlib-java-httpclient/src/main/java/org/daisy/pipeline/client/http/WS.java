@@ -251,7 +251,7 @@ public class WS implements WSInterface {
 				response = Pipeline2HttpClient.postXml(endpoint, "/jobs", username, secret, jobRequestDocument);
 
 			} else {
-				File contextZipFile = job.getJobStorage().getContextZip();
+				File contextZipFile = job.getJobStorage().makeContextZip();
 				jobRequestDocument = job.toJobRequestXml(false);
 				
 				try {

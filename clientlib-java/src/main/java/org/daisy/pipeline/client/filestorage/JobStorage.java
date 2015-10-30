@@ -299,7 +299,7 @@ public class JobStorage {
 	 * Bundles all context files up as a ZIP archive and returns it.
 	 * @return the zip file
 	 */
-	public File getContextZip() {
+	public File makeContextZip() {
 		File zip;
 		try {
 			zip = Files.createTempFile("dp2client", ".zip").toFile();
