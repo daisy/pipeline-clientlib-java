@@ -164,6 +164,7 @@ public class JobStorage {
 				}
 
 				File contextFile = new File(contextDir, contextPath);
+				contextFiles.put(contextPath, contextFile);
 				try {
 					assert contextFile.getCanonicalPath().startsWith(contextDir.getCanonicalPath() + File.separator); // contextFile is inside contextDir
 
