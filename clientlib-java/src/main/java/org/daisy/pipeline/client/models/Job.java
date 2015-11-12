@@ -462,13 +462,8 @@ public class Job implements Comparable<Job> {
 			return;
 		}
 		
-		if (this.messages == null || this.messages.size() == 0) {
-			this.messages = messages;
-			return;
-		}
-		
-		if (messages.size() == 0) {
-			return;
+		if (this.messages == null) {
+			this.messages = new ArrayList<Message>();
 		}
 		
 		Collections.sort(messages);
@@ -480,6 +475,28 @@ public class Job implements Comparable<Job> {
 		}
 		this.messages.addAll(messages);
 		Collections.sort(this.messages);
+	}
+	
+	public void setResults(Result result, SortedMap<Result, List<Result>> results) {
+		lazyLoad();
+		lazyLoadResults();
+		
+		if (this.results != results) {
+			if (results == null) {
+				this.results = null;
+				
+			} else {
+				this.results = new TreeMap<Result,List<Result>>();
+				
+				for (Result outputPortOrOption : results.keySet()) {
+					this.results.put(outputPortOrOption, new ArrayList<Result>());
+					this.results.get(outputPortOrOption).addAll(results.get(outputPortOrOption));
+					Collections.sort(this.results.get(outputPortOrOption));
+				}
+			}
+		}
+		
+		this.result = result;
 	}
 
 	/** Set job XML and re-enable lazy loading for the new XML. */
@@ -527,14 +544,20 @@ public class Job implements Comparable<Job> {
 
 	public Argument getArgument(String name) {
 		lazyLoad();
-		for (Argument arg : getInputs()) {
-			if (arg.getName().equals(name)) {
-				return arg;
+		List<Argument> inputs = getInputs();
+		List<Argument> outputs = getOutputs();
+		if (inputs != null) {
+			for (Argument arg : getInputs()) {
+				if (arg.getName().equals(name)) {
+					return arg;
+				}
 			}
 		}
-		for (Argument arg : getOutputs()) {
-			if (arg.getName().equals(name)) {
-				return arg;
+		if (outputs != null) {
+			for (Argument arg : getOutputs()) {
+				if (arg.getName().equals(name)) {
+					return arg;
+				}
 			}
 		}
 		return null;

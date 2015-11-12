@@ -164,6 +164,7 @@ public class JobStorage {
 				}
 
 				File contextFile = new File(contextDir, contextPath);
+				contextFiles.put(contextPath, contextFile);
 				try {
 					assert contextFile.getCanonicalPath().startsWith(contextDir.getCanonicalPath() + File.separator); // contextFile is inside contextDir
 
@@ -299,7 +300,7 @@ public class JobStorage {
 	 * Bundles all context files up as a ZIP archive and returns it.
 	 * @return the zip file
 	 */
-	public File getContextZip() {
+	public File makeContextZip() {
 		File zip;
 		try {
 			zip = Files.createTempFile("dp2client", ".zip").toFile();

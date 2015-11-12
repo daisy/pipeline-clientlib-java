@@ -12,7 +12,7 @@
 
     <groupId>org.daisy.pipeline</groupId>
     <artifactId>clientlib-java-httpclient</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>DAISY Pipeline 2 :: Java Client Library :: HTTP Client Implementation</name>
@@ -107,7 +107,7 @@
         <dependency>
             <groupId>org.daisy.pipeline</groupId>
             <artifactId>clientlib-java</artifactId>
-            <version>3.0.1-SNAPSHOT</version>
+            <version>4.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
