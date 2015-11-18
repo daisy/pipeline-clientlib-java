@@ -109,7 +109,7 @@ public class JobValidator {
 	 * @param name name of the input or option
 	 * @return a message describing the error, or null if there is no error
 	 */
-	public static String validate(Argument arg, JobStorage context) {
+	public static synchronized String validate(Argument arg, JobStorage context) {
 		String beginText = "The "+arg.getKind()+" '"+(arg.getNicename() == null || "".equals(arg.getNicename()) ? arg.getName() : arg.getNicename())+"'";
 
 		// is required ?
