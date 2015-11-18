@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.models.Argument;
@@ -25,6 +24,8 @@ public class JobStorage {
 	private File directory;
 	private Map<String,File> contextFiles = new HashMap<String,File>();
 	private boolean lazyLoaded = false;
+	
+	private static final Object lock = new Object();
 
 	/**
 	 * Create a JobStorage associated with the provided Job.
@@ -70,35 +71,40 @@ public class JobStorage {
 		if (lazyLoaded) {
 			return;
 		}
-
-		if (directory != null && directory.exists()) {
-			File jobFile = new File(directory, "job.xml");
-			String jobString = null;
-			Document jobDocument = null;
-			if (jobFile.exists()) {
-				try {
-					byte[] encoded = Files.readAllBytes(Paths.get(jobFile.getPath()));
-					jobString = new String(encoded, Charset.defaultCharset());
-					jobDocument = XML.getXml(jobString);
-
-				} catch (IOException e) {
-					Pipeline2Logger.logger().error("Unable to load job.xml: "+jobFile.getAbsolutePath(), e);
-				}
-
-				if (jobDocument != null) {
+		
+		
+		synchronized (lock) {
+			
+			if (directory != null && directory.exists()) {
+				File jobFile = new File(directory, "job.xml");
+				String jobString = null;
+				Document jobDocument = null;
+				if (jobFile.exists()) {
 					try {
-						if (job == null) {
-							job = new Job(jobDocument);
-							
-						} else {
-							job.setJobXml(jobDocument);
+						byte[] encoded = Files.readAllBytes(Paths.get(jobFile.getPath()));
+						jobString = new String(encoded, Charset.defaultCharset());
+						jobDocument = XML.getXml(jobString);
+	
+					} catch (IOException e) {
+						Pipeline2Logger.logger().error("Unable to load job.xml: "+jobFile.getAbsolutePath(), e);
+					}
+	
+					if (jobDocument != null) {
+						try {
+							if (job == null) {
+								job = new Job(jobDocument);
+								
+							} else {
+								job.setJobXml(jobDocument);
+							}
+	
+						} catch (Pipeline2Exception e) {
+							Pipeline2Logger.logger().error("Failed to load job: "+jobFile.getAbsolutePath(), e);
 						}
-
-					} catch (Pipeline2Exception e) {
-						Pipeline2Logger.logger().error("Failed to load job: "+jobFile.getAbsolutePath(), e);
 					}
 				}
 			}
+			
 		}
 
 		lazyLoaded = true;
@@ -111,7 +117,7 @@ public class JobStorage {
 	 * 
 	 * By default, will move the files instead of copying them.
 	 */
-	public void save() {
+	public synchronized void save() {
 		save(true);
 	}
 	
@@ -130,18 +136,22 @@ public class JobStorage {
 		if (!directory.exists()) {
 			directory.mkdirs();
 		}
-		
-		File jobFile = new File(directory, "job.xml");
-		Document jobDocument = job.toXml();
 
-		try {
-			String jobRequestString = XML.toString(jobDocument);
-			Files.write(jobFile.toPath(), jobRequestString.getBytes());
+		synchronized (lock) {
 
-		} catch (IOException e) {
-			Pipeline2Logger.logger().error("Unable to store XML for job", e);
+			File jobFile = new File(directory, "job.xml");
+			Document jobDocument = job.toXml();
+
+			try {
+				String jobRequestString = XML.toString(jobDocument);
+				Files.write(jobFile.toPath(), jobRequestString.getBytes());
+
+			} catch (IOException e) {
+				Pipeline2Logger.logger().error("Unable to store XML for job", e);
+			}
+
 		}
-		
+
 		for (Argument arg : job.getInputs()) {
 			if ("anyFileURI".equals(arg.getType()) || "anyURI".equals(arg.getType())) {
 				List<String> values = arg.getAsList();
@@ -192,7 +202,7 @@ public class JobStorage {
 	 * @param jobStorage the directory where jobs are stored
 	 * @return a list of all the job IDs in the job storage
 	 */
-	public static List<String> listJobs(File jobStorage) {
+	public static synchronized List<String> listJobs(File jobStorage) {
 		List<String> jobs = new ArrayList<String>();
 		if (jobStorage.isDirectory()) {
 			for (File directory : jobStorage.listFiles()) {
@@ -213,7 +223,7 @@ public class JobStorage {
 	 * @param jobStorageDir
 	 * @return
 	 */
-	public static Job loadJob(String storageId, File jobStorageDir) {
+	public static synchronized Job loadJob(String storageId, File jobStorageDir) {
 		Job job = new Job();
 		new JobStorage(job, jobStorageDir, storageId);
 		return job;
@@ -225,7 +235,7 @@ public class JobStorage {
 	 * @param file
 	 * @param argument
 	 */
-	public void addContextFile(File file, String contextPath) {
+	public synchronized void addContextFile(File file, String contextPath) {
 		if (contextPath == null) {
 			contextPath = file.getName();
 		}
@@ -252,7 +262,7 @@ public class JobStorage {
 	 * @param file
 	 * @param argument
 	 */
-	public void removeContextFile(String contextPath) {
+	public synchronized void removeContextFile(String contextPath) {
 		contextFiles.remove(contextPath);
 	}
 
@@ -262,7 +272,7 @@ public class JobStorage {
 	 * @param contextPath the context path for the file
 	 * @return the context file with the given path
 	 */
-	public String getContextFilePath(File file) {
+	public synchronized String getContextFilePath(File file) {
 		for (String contextPath : contextFiles.keySet()) {
 			if (contextFiles.get(contextPath).equals(file)) {
 				return contextPath;
@@ -277,7 +287,7 @@ public class JobStorage {
 	 * @param file the File object
 	 * @return the associated path as a string
 	 */
-	public File getContextFile(String contextPath) {
+	public synchronized File getContextFile(String contextPath) {
 		if (!contextFiles.containsKey(contextPath)) {
 			File contextFile = new File(getContextDir(), contextPath);
 			if (contextFile.isFile()) {
@@ -292,7 +302,7 @@ public class JobStorage {
 	 * Returns the root directory for the context files.
 	 * @return the root directory for the context files
 	 */
-	public File getContextDir() {
+	public synchronized File getContextDir() {
 		return new File(directory, "context");
 	}
 	
@@ -300,7 +310,7 @@ public class JobStorage {
 	 * Bundles all context files up as a ZIP archive and returns it.
 	 * @return the zip file
 	 */
-	public File makeContextZip() {
+	public synchronized File makeContextZip() {
 		File zip;
 		try {
 			zip = Files.createTempFile("dp2client", ".zip").toFile();
@@ -321,7 +331,7 @@ public class JobStorage {
 	 * @return true if the path exists as either a file or directory in the context.
 	 */
 	
-	public boolean existsInContext(String contextPath) {
+	public synchronized boolean existsInContext(String contextPath) {
 		return contextFiles.containsKey(contextPath);
 	}
 
@@ -331,7 +341,7 @@ public class JobStorage {
 	 * @param contextPath
 	 * @return true if the path exists as a file in the context.
 	 */
-	public boolean isFileInContext(String contextPath) {
+	public synchronized boolean isFileInContext(String contextPath) {
 		File file = getContextFile(contextPath);
 		return file != null && file.isFile();
 	}
@@ -342,7 +352,7 @@ public class JobStorage {
 	 * @param contextPath
 	 * @return true if the path exists as a directory in the context.
 	 */
-	public boolean isDirectoryInContext(String contextPath) {
+	public synchronized boolean isDirectoryInContext(String contextPath) {
 		if (contextPath == null) {
 			return false;
 		}
@@ -367,7 +377,7 @@ public class JobStorage {
 		}
 	}
 
-	private void deleteRecursively(File directory) throws IOException {
+	private synchronized void deleteRecursively(File directory) throws IOException {
 		if (directory.isDirectory()) {
 			for (File file : directory.listFiles()) {
 				deleteRecursively(file);
@@ -376,7 +386,7 @@ public class JobStorage {
 		Files.delete(directory.toPath());
 	}
 	
-	public String getStorageId() {
+	public synchronized String getStorageId() {
 		return id;
 	}
 
