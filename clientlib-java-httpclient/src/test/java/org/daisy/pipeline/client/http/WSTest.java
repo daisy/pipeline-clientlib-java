@@ -61,6 +61,14 @@ public class WSTest {
 		assertEquals(1, scripts.size());
 		Script script = scripts.get(0);
 		assertEquals("Example script", script.getNicename());
+		// assertEquals(3, script.getInputs().size());
+		// Argument option1 = script.getArgument("option-1");
+		// assertTrue(option1.getRequired());
+		// assertEquals(..., option1.getDataType());
+		// Argument option2 = script.getArgument("option-2");
+		// assertFalse(option2.getRequired());
+		// assertEquals("one", option2.getDefault());
+		// assertEquals(..., option2.getDataType());
 	}
 	
 	@Configuration
@@ -80,6 +88,7 @@ public class WSTest {
 				mavenBundle("org.daisy.pipeline:modules-registry:?"), // javax.xml.transform.URIResolver
 				mavenBundle("org.daisy.pipeline:framework-volatile:?"), // org.daisy.pipeline.job.JobStorage
 				mavenBundle("org.daisy.pipeline:woodstox-osgi-adapter:?"), // javax.xml.stream.XMLInputFactory
+				mavenBundle("org.daisy.pipeline:framework-core:?"), // org.daisy.pipeline.datatypes.DatatypeRegistry
 				// these belong in the framework as runtime dependencies
 				mavenBundle("commons-io:commons-io:?"),
 				mavenBundle("org.daisy.libs:saxon-he:?"),

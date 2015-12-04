@@ -10,9 +10,9 @@
 	
 	<p:input port="source" px:name="source" px:media-type="application/x-dtbook+xml"/>
 	
-	<p:option name="option-1" required="true" px:type="string"/>
+	<p:option name="option-1" required="true" px:type="string" px:data-type="foo:choice"/>
 	
-	<p:option name="option-2" required="false" px:type="string" select="'one'"/>
+	<p:option name="option-2" required="false" px:type="string" px:data-type="foo:regex" select="'one'"/>
 	
 	<p:sink/>
 	
