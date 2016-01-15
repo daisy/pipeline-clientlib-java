@@ -120,7 +120,7 @@
             <dependency>
                 <groupId>org.daisy.pipeline</groupId>
                 <artifactId>framework-bom</artifactId>
-                <version>1.9</version>
+                <version>1.10.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -183,10 +183,6 @@
         <dependency>
             <groupId>org.daisy.pipeline</groupId>
             <artifactId>framework-volatile</artifactId>
-            <!--
-                depends on https://github.com/daisy/pipeline-framework/pull/94
-            -->
-            <version>2.0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
