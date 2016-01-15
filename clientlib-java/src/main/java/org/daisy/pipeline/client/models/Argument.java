@@ -52,6 +52,9 @@ public class Argument {
 
 	/** XSD type */
 	private String type;
+	
+	/** The default value for this argument */
+	private String defaultValue;
 
 	private Node argumentNode;
 	private boolean lazyLoaded = false;
@@ -110,19 +113,21 @@ public class Argument {
 				if (this.type == null)
 					this.type = "string";
 
-
 				if (this.kind == Kind.input || this.kind == Kind.output) {
 					this.type = "anyFileURI";
+					
+					if (this.sequence && parseTypeBoolean(XPath.selectText("@required", argumentNode, XPath.dp2ns)) == null)
+						this.required = false;
 
 					if (this.mediaTypes.size() == 0)
 						this.mediaTypes.add("application/xml");
 				}
 
-				if ("output".equals(this.kind)) {
-					this.required = false;
-					if (this.output == null)
-						this.output = Output.result;
+				if (this.kind == Kind.output && this.output == null) {
+					this.output = Output.result;
 				}
+
+				this.defaultValue = XPath.selectText("@default", argumentNode, XPath.dp2ns);
 
 				List<Node> valueNodes = XPath.selectNodes("d:item", argumentNode, XPath.dp2ns);
 				if (valueNodes.isEmpty()) {
@@ -713,6 +718,98 @@ public class Argument {
 			shiftDistance = 1;
 		}
 		Collections.rotate(values.subList(from, to+1), shiftDistance);
+	}
+	
+	/** Get the default value as a Integer.
+	 *
+	 *  Returns null if the value cannot be parsed as a Integer, or if the value is not set.
+	 *  
+	 *  @return the default value as a Integer
+	 */
+	public Integer getDefaultValueAsInteger() {
+	    lazyLoad();
+	    try {
+	        return Integer.parseInt(getDefaultValue());
+
+	    } catch (Exception e) {
+	        return null;
+	    }
+	}
+
+	/** Get the default value as a Long.
+	 *
+	 *  Returns null if the value cannot be parsed as a Long, or if the value is not set.
+	 *  
+	 *  @return the default value as a Long
+	 */
+	public Long getDefaultValueAsLong() {
+	    lazyLoad();
+	    try {
+	        return Long.parseLong(getDefaultValue());
+
+	    } catch (Exception e) {
+	        return null;
+	    }
+	}
+
+	/** Get the default value as a Double.
+	 *
+	 *  Returns null if the value cannot be parsed as a Double, or if the value is not set.
+	 *  
+	 *  @return the default value as a Double
+	 */
+	public Double getDefaultValueAsDouble() {
+	    lazyLoad();
+	    try {
+	        return Double.parseDouble(getDefaultValue());
+
+	    } catch (Exception e) {
+	        return null;
+	    }
+	}
+
+	/** Get the default value as a Boolean.
+	 *
+	 *  Returns null if the value cannot be parsed as a Boolean, or if the value is not set.
+	 *  
+	 *  @return the default value as a Boolean
+	 */
+	public Boolean getDefaultValueAsBoolean() {
+	    lazyLoad();
+	    String value = getDefaultValue();
+	    if (value != null && ("true".equals(value.toLowerCase()) || "false".equals(value.toLowerCase()))) {
+	        return Boolean.parseBoolean(getDefaultValue());
+
+	    } else {
+	        return null;
+	    }
+	}
+
+	/** Get the default value as a File.
+	 * 
+	 *  Returns null if the value cannot be parsed as a File, or if the value is not set.
+	 *  
+	 *  @return the default value as a File
+	 */
+	public File getDefaultValueAsFile(JobStorage context) {
+	    lazyLoad();
+	    String value = getDefaultValue();
+	    if (value == null) {
+	        return null;
+	    } else {
+	        return context.getContextFile(value);
+	    }
+	}
+
+	/** Get the default value as a String.
+	 * 
+	 *  Returns null if the value is not set.
+	 *  
+	 * @return the default value as a String
+	 */
+	public String getDefaultValue() {
+	    lazyLoad();
+	    return defaultValue;
 	}
 
 	// getters and setters to ensure lazy loading

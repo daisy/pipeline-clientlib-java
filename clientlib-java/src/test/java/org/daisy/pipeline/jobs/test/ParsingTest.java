@@ -207,7 +207,22 @@ public class ParsingTest {
 		assertEquals("zedai.xml", results.get(3).prettyRelativeHref);
 		assertEquals("zedai.xml", results.get(3).filename);
 	}
-
+	
+	@Test
+	public void testParseScriptArguments() {
+		try {
+			Script script = new Script(loadResourceXml("scripts/dtbook-to-zedai.xml"));
+			assertNotNull(script);
+			assertEquals("http://localhost:8181/ws/scripts/dtbook-to-zedai", script.getHref());
+			assertNotNull(script.getArgument("assert-valid"));
+			assertEquals("false", script.getArgument("assert-valid").getDefaultValue());
+			assertEquals(Boolean.FALSE, script.getArgument("assert-valid").getDefaultValueAsBoolean());
+			
+		} catch (Pipeline2Exception e) {
+			fail(e.getMessage());
+		}
+	}
+	
 	@Test
 	public void testParseJobRequest() {
 		try {
@@ -331,7 +346,7 @@ public class ParsingTest {
 				else if ("relaxng-report".equals(arg.getName())) {
 					assertEquals(Kind.output, arg.getKind());
 					assertEquals(true, arg.getOrdered());
-					assertEquals(true, arg.getRequired());
+					assertEquals(false, arg.getRequired());
 					assertEquals(true, arg.getSequence());
 				}
 				else if ("html-report".equals(arg.getName())) {
