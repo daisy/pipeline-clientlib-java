@@ -5,7 +5,7 @@
     <homepage>http://code.google.com/p/daisy-pipeline/wiki/DTBookToZedAI</homepage>
     <input desc="One or more DTBook files to be transformed. In the case of multiple files, a merge will be performed." mediaType="application/x-dtbook+xml" name="source" sequence="true"/>
     <option desc="Filename for the generated ZedAI file" name="zedai-filename" ordered="true" required="false" sequence="false" type="string"/>
-    <option desc="Whether to stop processing and raise an error on validation issues." name="assert-valid" ordered="true" required="false" sequence="false" type="boolean"/>
+    <option desc="Whether to stop processing and raise an error on validation issues." name="assert-valid" ordered="true" required="false" sequence="false" type="boolean" default="false"/>
     <option desc="The directory to store the generated files in." name="output-dir" ordered="true" outputType="result" required="true" sequence="false" type="anyDirURI"/>
     <option desc="Filename for the generated MODS file" name="mods-filename" ordered="true" required="false" sequence="false" type="string"/>
     <option desc="Language code of the input document." name="lang" ordered="true" required="false" sequence="false" type="string"/>
