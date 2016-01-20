@@ -75,7 +75,7 @@ public class Argument {
 				if (this.nicename == null || "".equals(this.nicename))
 					this.nicename = this.name;
 
-				this.desc = parseTypeString(XPath.selectText("@desc", argumentNode, XPath.dp2ns));
+				this.desc = XPath.selectText("@desc", argumentNode, XPath.dp2ns);
 				if (this.desc == null)
 					this.desc = "";
 
