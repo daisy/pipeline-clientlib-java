@@ -87,6 +87,7 @@ public class JobStorageTest {
 
 		assertEquals("job1", job.getId());
 		assertEquals("Nicename", job.getNicename());
+		assertEquals("\nshort description\n\nlong description\n", job.getDescription());
 		assertEquals("http://localhost:8181/ws/scripts/dtbook-to-epub3", job.getScriptHref());
 
 		Script script = job.getScript();
@@ -122,6 +123,7 @@ public class JobStorageTest {
 
 		assertEquals("job2", job.getId());
 		assertEquals("Other nicename", job.getNicename());
+		assertEquals(null, job.getDescription());
 		assertEquals("http://localhost:8181/ws/scripts/dtbook-to-epub3", job.getScriptHref());
 		assertEquals("dtbook-to-epub3", job.getScript().getId());
 
