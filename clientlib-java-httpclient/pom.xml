@@ -107,7 +107,7 @@
         <dependency>
             <groupId>org.daisy.pipeline</groupId>
             <artifactId>clientlib-java</artifactId>
-            <version>4.0.1-SNAPSHOT</version>
+            <version>[4.0.0,5.0.0)</version>
         </dependency>
 
         <dependency>
