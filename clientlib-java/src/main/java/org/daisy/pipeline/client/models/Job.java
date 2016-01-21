@@ -40,6 +40,7 @@ public class Job implements Comparable<Job> {
 	private String scriptHref; // for job request xml documents
 	private Script script;
 	private String nicename;
+	private String description;
 	private String batchId;
 	private List<Argument> argumentInputs; // used when there's no script given
 	private List<Argument> argumentOutputs; // used when there's no script given
@@ -170,6 +171,7 @@ public class Job implements Comparable<Job> {
 				}
 			}
 			this.nicename = XPath.selectText("d:nicename", jobNode, XPath.dp2ns);
+			this.description = XPath.selectText("d:description", jobNode, XPath.dp2ns);
 			this.batchId = XPath.selectText("d:batchId", jobNode, XPath.dp2ns);
 			this.logHref = XPath.selectText("d:log/@href", jobNode, XPath.dp2ns);
 			this.callback = new ArrayList<Callback>();
@@ -434,12 +436,14 @@ public class Job implements Comparable<Job> {
 	public Status getStatus() { lazyLoad(); return status; }
 	public String getLogHref() { lazyLoad(); return logHref; }
 	public String getNicename() { lazyLoad(); return nicename; }
+	public String getDescription() { lazyLoad(); return description; }
 	public String getBatchId() { lazyLoad(); return batchId; }
 	public Priority getPriority() { lazyLoad(); return priority; }
 	public List<Callback> getCallback() { lazyLoad(); return callback; }
 	public JobStorage getJobStorage() { lazyLoad(); return storage; }
 	public void setId(String id) { lazyLoad(); this.id = id; }
 	public void setNicename(String nicename) { lazyLoad(); this.nicename = nicename; }
+	public void setDescription(String description) { lazyLoad(); this.description = description; }
 	public void setBatchId(String batchId) { lazyLoad(); this.batchId = batchId; }
 	public void setPriority(Priority priority) { lazyLoad(); this.priority = priority; }
 	public void setCallback(List<Callback> callback) { lazyLoad(); this.callback = callback; }
@@ -634,6 +638,13 @@ public class Job implements Comparable<Job> {
 		if (nicename != null) {
 			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "nicename");
 			e.setTextContent(nicename);
+			jobElement.appendChild(e);
+		}
+
+		if (description != null) {
+			Element e = jobElement.getOwnerDocument().createElementNS(XPath.dp2ns.get("d"), "description");
+			e.setAttribute("xml:space", "preserve");
+			e.setTextContent(description);
 			jobElement.appendChild(e);
 		}
 
