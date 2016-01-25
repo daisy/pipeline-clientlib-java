@@ -26,6 +26,7 @@ public class XPath {
 	public static final Map<String, String> dp2ns; 
 	static {
     	Map<String, String> nsMap = new HashMap<String, String>();
+    	nsMap.put("xml", "http://www.w3.org/XML/1998/namespace");
     	nsMap.put("d", "http://www.daisy.org/ns/pipeline/data");
     	dp2ns = Collections.unmodifiableMap(nsMap);
 	}

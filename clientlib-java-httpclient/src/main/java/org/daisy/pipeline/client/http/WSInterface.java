@@ -3,6 +3,7 @@ package org.daisy.pipeline.client.http;
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 import org.daisy.pipeline.client.models.*;
 
@@ -53,6 +54,15 @@ public interface WSInterface {
 
 	/** Get all scripts */
 	public List<Script> getScripts();
+
+
+	// ---------- Data Types ----------
+
+	/** Get a single data type */
+	public DataType getDataType(String dataTypeId);
+
+	/** Get all data types */
+	public Map<String,String> getDataTypes();
 
 
 	// ---------- Jobs ----------
