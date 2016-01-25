@@ -25,10 +25,13 @@ import org.daisy.pipeline.client.models.Alive;
 import org.daisy.pipeline.client.models.Argument;
 import org.daisy.pipeline.client.models.Job;
 import org.daisy.pipeline.client.models.Argument.Kind;
+import org.daisy.pipeline.client.models.DataType;
 import org.daisy.pipeline.client.models.Job.Status;
 import org.daisy.pipeline.client.models.Message;
 import org.daisy.pipeline.client.models.Result;
 import org.daisy.pipeline.client.models.Script;
+import org.daisy.pipeline.client.models.datatypes.EnumType;
+import org.daisy.pipeline.client.models.datatypes.RegexType;
 import org.daisy.pipeline.client.utils.NamespaceContextMap;
 import org.daisy.pipeline.client.utils.XML;
 import org.junit.Assert;
@@ -391,6 +394,61 @@ public class ParsingTest {
 		} catch (Pipeline2Exception e) {
 			fail(e.getMessage());
 		}
+	}
+	
+	@Test
+	public void testParseDataTypes() {
+			Map<String, String> dataTypes = DataType.getDataTypes(loadResourceXml("responses/datatypes.xml"));
+			assertNotNull(dataTypes);
+			
+			assertEquals(2, dataTypes.size());
+			assertEquals("http://localhost:8181/ws/datatypes/braille-translator", dataTypes.get("braille-translator"));
+			assertEquals("http://localhost:8181/ws/datatypes/test-regex", dataTypes.get("test-regex"));
+			
+			DataType testRegexDataType = DataType.getDataType(loadResourceXml("responses/datatypes/test-regex.xml"));
+			assertEquals("test-regex", testRegexDataType.id);
+			assertTrue("test-regex is regex", testRegexDataType instanceof RegexType);
+			RegexType testRegex = (RegexType)testRegexDataType;
+			assertEquals("\\d", testRegex.regex);
+			assertFalse(testRegex.pattern.matcher("").matches());
+			assertTrue(testRegex.pattern.matcher("1").matches());
+			assertFalse(testRegex.pattern.matcher("a").matches());
+			assertFalse(testRegex.pattern.matcher("123").matches());
+			
+			DataType brailleTranslatorDataType = DataType.getDataType(loadResourceXml("responses/datatypes/braille-translator.xml"));
+			assertEquals("braille-translator", brailleTranslatorDataType.id);
+			assertTrue("braille-translator is enum", brailleTranslatorDataType instanceof EnumType);
+			EnumType brailleTranslator = (EnumType)brailleTranslatorDataType;
+			assertNotNull(brailleTranslator.values);
+			assertEquals(6, brailleTranslator.values.size());
+			assertEquals("celia", brailleTranslator.values.get(0).name);
+			assertEquals("dedicon", brailleTranslator.values.get(1).name);
+			assertEquals("mtm", brailleTranslator.values.get(2).name);
+			assertEquals("nlb", brailleTranslator.values.get(3).name);
+			assertEquals("nota", brailleTranslator.values.get(4).name);
+			assertEquals("sbs", brailleTranslator.values.get(5).name);
+			assertEquals("Celia", brailleTranslator.values.get(0).getNicename());
+			assertEquals("Dedicon", brailleTranslator.values.get(1).getNicename());
+			assertEquals("MTM", brailleTranslator.values.get(2).getNicename());
+			assertEquals("NLB", brailleTranslator.values.get(3).getNicename());
+			assertEquals("Nota", brailleTranslator.values.get(4).getNicename());
+			assertEquals("SBS", brailleTranslator.values.get(5).getNicename());
+			assertEquals("Celia", brailleTranslator.values.get(0).nicenames.get("en"));
+			assertEquals("Dedicon", brailleTranslator.values.get(1).nicenames.get("en"));
+			assertEquals("MTM", brailleTranslator.values.get(2).nicenames.get("en"));
+			assertEquals("NLB", brailleTranslator.values.get(3).nicenames.get("en"));
+			assertEquals("Nota", brailleTranslator.values.get(4).nicenames.get("en"));
+			assertEquals("SBS", brailleTranslator.values.get(5).nicenames.get("en"));
+			assertEquals("西莉亞", brailleTranslator.values.get(0).nicenames.get("ch"));
+			assertEquals("我奉獻", brailleTranslator.values.get(1).nicenames.get("ch"));
+			assertEquals("中號的", brailleTranslator.values.get(2).nicenames.get("ch"));
+			assertEquals("立升", brailleTranslator.values.get(3).nicenames.get("ch"));
+			assertEquals("諾塔", brailleTranslator.values.get(4).nicenames.get("ch"));
+			assertEquals("小號", brailleTranslator.values.get(5).nicenames.get("ch"));
+			
+			DataType genericDataType = DataType.getDataType(loadResourceXml("responses/scripts/dtbook-to-epub3.xml"));
+			assertEquals("dtbook-to-epub3", genericDataType.id);
+			assertTrue("should be generic datatype (i.e. unrecognized XML grammar)", genericDataType.getClass().equals(DataType.class));
 	}
 
 	@Test

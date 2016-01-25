@@ -7,12 +7,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -187,6 +185,44 @@ public class WS implements WSInterface {
 
 		} catch (Pipeline2Exception e) {
 			Pipeline2Logger.logger().error("failed to parse /scripts/"+scriptId+" response", e);
+			return null;
+		}
+	}
+
+	@Override
+	public Map<String,String> getDataTypes() {
+		try {
+			WSResponse response = Pipeline2HttpClient.get(endpoint, "/datatypes", username, secret, null);
+
+			if (response.status >= 200 && response.status < 300) {
+				return DataType.getDataTypes(response.asXml());
+
+			} else {
+				error(response);
+				return null;
+			}
+
+		} catch (Pipeline2Exception e) {
+			Pipeline2Logger.logger().error("failed to parse /datatypes response", e);
+			return null;
+		}
+	}
+
+	@Override
+	public DataType getDataType(String dataTypeId) {
+		try {
+			WSResponse response = Pipeline2HttpClient.get(endpoint, "/datatypes/"+dataTypeId, username, secret, null);
+
+			if (response.status >= 200 && response.status < 300) {
+				return DataType.getDataType(response.asXml());
+
+			} else {
+				error(response);
+				return null;
+			}
+
+		} catch (Pipeline2Exception e) {
+			Pipeline2Logger.logger().error("failed to parse /datatypes/"+dataTypeId+" response", e);
 			return null;
 		}
 	}

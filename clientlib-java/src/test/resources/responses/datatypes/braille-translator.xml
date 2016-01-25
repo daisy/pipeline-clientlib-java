@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<choice id="braille-translator">
+	<documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="en">
+        <value>Celia</value>
+        <value>Dedicon</value>
+        <value>MTM</value>
+        <value>NLB</value>
+        <value>Nota</value>
+        <value>SBS</value>
+    </documentation>
+    <documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="ch">
+        <value>西莉亞</value>
+        <value>我奉獻</value>
+        <value>中號的</value>
+        <value>立升</value>
+        <value>諾塔</value>
+        <value>小號</value>
+    </documentation>
+    <value>celia</value>
+	<value>dedicon</value>
+	<value>mtm</value>
+	<value>nlb</value>
+	<value>nota</value>
+	<value>sbs</value>
+</choice>
