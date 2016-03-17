@@ -440,11 +440,17 @@ public class ParsingTest {
 			assertEquals("Nota", brailleTranslator.values.get(4).nicenames.get("en"));
 			assertEquals("SBS", brailleTranslator.values.get(5).nicenames.get("en"));
 			assertEquals("西莉亞", brailleTranslator.values.get(0).nicenames.get("ch"));
-			assertEquals("我奉獻", brailleTranslator.values.get(1).nicenames.get("ch"));
+			assertEquals("我奉獻 (defined at top)", brailleTranslator.values.get(1).nicenames.get("ch"));
 			assertEquals("中號的", brailleTranslator.values.get(2).nicenames.get("ch"));
 			assertEquals("立升", brailleTranslator.values.get(3).nicenames.get("ch"));
 			assertEquals("諾塔", brailleTranslator.values.get(4).nicenames.get("ch"));
 			assertEquals("小號", brailleTranslator.values.get(5).nicenames.get("ch"));
+			assertEquals("", brailleTranslator.values.get(0).getDescription());
+			assertEquals("", brailleTranslator.values.get(1).getDescription());
+			assertEquals("", brailleTranslator.values.get(2).getDescription());
+			assertEquals("", brailleTranslator.values.get(3).getDescription());
+			assertEquals("", brailleTranslator.values.get(4).getDescription());
+			assertEquals("The Swiss library for the blind.\n\n**Markdown allowed!**", brailleTranslator.values.get(5).getDescription());
 			
 			DataType genericDataType = DataType.getDataType(loadResourceXml("responses/scripts/dtbook-to-epub3.xml"));
 			assertEquals("dtbook-to-epub3", genericDataType.id);

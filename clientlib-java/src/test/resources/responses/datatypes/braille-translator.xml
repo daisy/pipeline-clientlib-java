@@ -2,24 +2,48 @@
 <choice id="braille-translator">
 	<documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="en">
         <value>Celia</value>
-        <value>Dedicon</value>
-        <value>MTM</value>
-        <value>NLB</value>
-        <value>Nota</value>
-        <value>SBS</value>
+        <value>Dedicon (defined at top)</value>
     </documentation>
     <documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="ch">
         <value>西莉亞</value>
-        <value>我奉獻</value>
+        <value>我奉獻 (defined at top)</value>
         <value>中號的</value>
         <value>立升</value>
         <value>諾塔</value>
         <value>小號</value>
     </documentation>
+    
     <value>celia</value>
+	
 	<value>dedicon</value>
+	<documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="en">
+        <value>Dedicon</value>
+    </documentation>
+	
 	<value>mtm</value>
+	<documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="en">
+        <value>MTM</value>
+    </documentation>
+    <documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="ch">
+        <value>中號的</value>
+    </documentation>
+	
 	<value>nlb</value>
+	<documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="en">
+        <value>NLB</value>
+    </documentation>
+	
 	<value>nota</value>
+	<documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="en">
+        <value>Nota</value>
+    </documentation>
+	
 	<value>sbs</value>
+	<documentation xmlns="http://relaxng.org/ns/compatibility/annotations/1.0" xml:lang="en">
+        <value xml:space="preserve">SBS
+
+The Swiss library for the blind.
+
+**Markdown allowed!**</value>
+    </documentation>
 </choice>
