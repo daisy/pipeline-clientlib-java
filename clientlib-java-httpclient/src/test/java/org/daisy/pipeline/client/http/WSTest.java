@@ -100,13 +100,13 @@ public class WSTest {
 			// is no other way to keep the webservice running while the test
 			// is executed
 			wrappedBundle(
-				bundle(new File(PathUtils.getBaseDir() + "/target/clientlib-java-httpclient-1.0.2-SNAPSHOT.jar").toURL().toString()))
+				bundle(new File(PathUtils.getBaseDir() + "/target/clientlib-java-httpclient-2.0.1-SNAPSHOT.jar").toURL().toString()))
 				.bundleSymbolicName("org.daisy.pipeline.clientlib-java-httpclient")
-				.bundleVersion("1.0.2.SNAPSHOT"),
+				.bundleVersion("2.0.1.SNAPSHOT"),
 			wrappedBundle(
-				mavenBundle("org.daisy.pipeline:clientlib-java:4.0.2-SNAPSHOT"))
+				mavenBundle("org.daisy.pipeline:clientlib-java:4.4.2"))
 				.bundleSymbolicName("org.daisy.pipeline.clientlib-java")
-				.bundleVersion("4.0.2.SNAPSHOT"),
+				.bundleVersion("4.4.2"),
 			mavenBundle("org.apache.httpcomponents:httpcore-osgi:?"),
 			mavenBundle("org.apache.httpcomponents:httpclient-osgi:?")
 		);
