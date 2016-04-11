@@ -77,7 +77,7 @@ public class EnumType extends DataType {
 			return name;
 		}
 
-		public Object getDescription() {
+		public String getDescription() {
 			if (descriptions.containsKey("")) {
 				return descriptions.get("");
 				

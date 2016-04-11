@@ -77,6 +77,7 @@ public class Pipeline2HttpClient {
 	
 	private static WSResponse getDelete(String method, String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2Exception {
 		String url = url(endpoint, path, username, secret, parameters);
+		Pipeline2Logger.logger().debug(method.toUpperCase()+": ["+url+"]");
 		if (endpoint == null) {
 			return new WSResponse(url, 503, "Endpoint is not set", "Please provide a Pipeline 2 endpoint.", null, null, null);
 		}
@@ -132,7 +133,7 @@ public class Pipeline2HttpClient {
 		String url = url(endpoint, path, username, secret, null);
 		
 		if (Pipeline2Logger.logger().logsLevel(Pipeline2Logger.LEVEL.DEBUG)) {
-			Pipeline2Logger.logger().debug("URL: ["+url+"]");
+			Pipeline2Logger.logger().debug("POST: ["+url+"]");
 			Pipeline2Logger.logger().debug(XML.toString(xml));
 		}
 		

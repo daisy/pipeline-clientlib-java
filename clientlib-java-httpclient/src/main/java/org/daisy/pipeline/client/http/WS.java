@@ -474,61 +474,32 @@ public class WS implements WSInterface {
 			}
 		}
 
-		else if (result.from != null && result.from.length() > 0) {
-			// option or port
-			try {
-				File tempDirForZip = File.createTempFile("webui-result-zip", null);
-				Pipeline2Logger.logger().debug("creating temp dir for zip: "+tempDirForZip.getAbsolutePath());
-				tempDirForZip.delete();
-				tempDirForZip.mkdir();
-
-				resultFile = new File(new URI(tempDirForZip.toURI().toString()+"/"+jobId+"-"+result.name+".zip"));
-				Pipeline2Logger.logger().debug("touching zip: "+resultFile.getAbsolutePath());
-				resultFile.createNewFile();
-
-				boolean foundFile = false;
-				for (Result optionOrPort : job.getResults().keySet()) {
-					for (Result optionOrPortFile : job.getResults().get(optionOrPort)) {
-						String contextPath = optionOrPortFile.file.substring(0, optionOrPortFile.file.indexOf(jobId) + jobId.length() + "/output/".length());
-						String optionOrPortPath = contextPath + result.name + "/";
-						org.daisy.pipeline.client.utils.Files.addDirectoryToZip(resultFile, new File(new URI(optionOrPortPath)));
-						foundFile = true;
-						break;
-					}
-					if (foundFile) break;
-				}
-
-			} catch (IOException e) {
-				Pipeline2Logger.logger().error("Unable to create result ZIP archive for "+result.from+" "+result.name, e);
-				return null;
-
-			} catch (URISyntaxException e) {
-				Pipeline2Logger.logger().error("Unable to create result ZIP archive for "+result.from+" "+result.name, e);
-				return null;
-			}
-		}
-
 		else {
-			// entire result
+			// ZIP the results
 			try {
 				File tempDirForZip = File.createTempFile("webui-result-zip", null);
 				Pipeline2Logger.logger().debug("creating temp dir for zip: "+tempDirForZip.getAbsolutePath());
 				tempDirForZip.delete();
 				tempDirForZip.mkdir();
 
-				resultFile = new File(new URI(tempDirForZip.toURI().toString()+"/"+jobId+".zip"));
+				resultFile = new File(new URI(tempDirForZip.toURI().toString()+"/"+jobId+(result.name == null ? "" : "-"+result.name)+".zip"));
 				Pipeline2Logger.logger().debug("touching zip: "+resultFile.getAbsolutePath());
 				resultFile.createNewFile();
 
-				boolean foundFile = false;
 				for (Result optionOrPort : job.getResults().keySet()) {
+					if (result.from != null && result.from.length() > 0 && result.name != null && !result.name.equals(optionOrPort.name)) {
+						continue;
+					}
 					for (Result optionOrPortFile : job.getResults().get(optionOrPort)) {
 						String contextPath = optionOrPortFile.file.substring(0, optionOrPortFile.file.indexOf(jobId) + jobId.length() + "/output/".length());
-						org.daisy.pipeline.client.utils.Files.addDirectoryToZip(resultFile, new File(new URI(contextPath)));
-						foundFile = true;
-						break;
+						String optionOrPortPath = contextPath + optionOrPort.name + "/";
+						File optionOrPortDir = new File(new URI(optionOrPortPath));
+						for (File file : optionOrPortDir.listFiles()) {
+							// NOTE: When downloading multiple output directories, all output directories will be merged into one.
+							//       If there are file naming collisions, only the last one will appear in the resulting ZIP.
+							org.daisy.pipeline.client.utils.Files.addDirectoryToZip(resultFile, file);
+						}
 					}
-					if (foundFile) break;
 				}
 
 			} catch (IOException e) {
