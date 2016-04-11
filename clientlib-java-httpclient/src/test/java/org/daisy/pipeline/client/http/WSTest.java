@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import org.daisy.pipeline.client.models.Alive;
 import org.daisy.pipeline.client.models.Argument;
 import org.daisy.pipeline.client.models.Script;
+import org.daisy.pipeline.client.utils.XML;
 
 import static org.daisy.pipeline.pax.exam.Options.domTraversalPackage;
 import static org.daisy.pipeline.pax.exam.Options.felixDeclarativeServices;
@@ -60,10 +61,11 @@ public class WSTest {
 		List<Script> scripts = ws.getScripts();
 		assertEquals(1, scripts.size());
 		Script script = scripts.get(0);
+		//System.out.println(XML.toString(script.toXml()));
 		assertEquals("Example script", script.getNicename());
-		// assertEquals(3, script.getInputs().size());
-		// Argument option1 = script.getArgument("option-1");
-		// assertTrue(option1.getRequired());
+		//assertEquals(3, script.getInputs().size());
+		//Argument option1 = script.getArgument("option-1");
+		//assertTrue(option1.getRequired());
 		// assertEquals(..., option1.getDataType());
 		// Argument option2 = script.getArgument("option-2");
 		// assertFalse(option2.getRequired());
