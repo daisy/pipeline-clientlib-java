@@ -5,11 +5,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
@@ -212,7 +215,7 @@ public class Job implements Comparable<Job> {
 	 */
 	public List<Message> getMessages() {
 		lazyLoad();
-
+		
 		if (messages == null && messagesNode != null) {
 			try {
 
@@ -235,7 +238,7 @@ public class Job implements Comparable<Job> {
 						m.column = Integer.valueOf(XPath.selectText("@column", messageNode, XPath.dp2ns));
 					}
 					if (XPath.selectText("@timeStamp", messageNode, XPath.dp2ns) != null) {
-						m.timeStamp = XPath.selectText("@timeStamp", messageNode, XPath.dp2ns);
+						m.setTimeStamp(XPath.selectText("@timeStamp", messageNode, XPath.dp2ns));
 					}
 					if (XPath.selectText("@file", messageNode, XPath.dp2ns) != null) {
 						m.file = XPath.selectText("@file", messageNode, XPath.dp2ns);
@@ -683,7 +686,7 @@ public class Job implements Comparable<Job> {
 					mElement.setAttribute("column", ""+m.sequence);
 				}
 				if (m.timeStamp != null) {
-					mElement.setAttribute("timeStamp", m.timeStamp);
+					mElement.setAttribute("timeStamp", m.formatTimeStamp());
 				}
 				if (m.file != null) {
 					mElement.setAttribute("file", m.file);
@@ -917,6 +920,237 @@ public class Job implements Comparable<Job> {
 		arguments.addAll(getInputs());
 		arguments.addAll(getOutputs());
 		return arguments;
+	}
+	
+	
+	
+	
+	private double progressLastPercentage = 0.0;
+	private double progressNextPercentage = 100.0;
+	private Long progressFirstTime = null;
+	private Long progressLastTime = null;
+	private double progressTimeConstant = 20000.0;
+	
+	/**
+	 * Get the start of the current progress interval as a percentage.
+	 * 
+	 * The progress interval might be for instance `[20,30]` which
+	 * would mean that the last progress update we got indicated
+	 * we were 20% done with the job, and that the next progress update
+	 * are expected to come at 30%.
+	 * 
+	 * For the interval `[20,30]` this method would return `20`.
+	 * 
+	 * @return the start of the current progress interval.
+	 */
+	public double getProgressFrom() {
+		updateProgress();
+		return progressLastPercentage;
+	}
+	
+	/**
+	 * Get the time of the start of the current progress interval.
+	 * 
+	 * @return the time as UNIX time.
+	 */
+	public Long getProgressFromTime() {
+		updateProgress();
+		return progressLastTime;
+	}
+
+	/**
+	 * Get the end of the current progress interval as a percentage.
+	 * 
+	 * For the interval `[20,30]` this method would return `30`.
+	 * 
+	 * @return the end of the current progress interval.
+	 */
+	public double getProgressTo() {
+		updateProgress();
+		return progressNextPercentage;
+	}
+	
+
+	/**
+	 * Get an estimate of the job progress as a percentage. 
+	 * 
+	 * This returns a percentage within the current progress
+	 * interval, interpolated based on the current progress
+	 * interval as well as the job duration. It follows this formula:
+	 * 
+	 * P(t) = P_{N+1} - P_{N} e^{-\frac{t-t_{N}}{T})}
+	 * 
+	 * where:
+	 * - `P` is the percentage
+	 * - `t` is the current time, in seconds
+	 * - `t_{0}` is the time when the job started (i.e. the first progress message arrived)
+	 * - `t_{N}` is the time when information about the current progress interval arrived, in seconds 
+	 * - `P_{N+1}` is the percentage at the end of the current progress interval
+	 * - `P_{N}` is the percentage at the beginning of the current progress interval
+	 * - `T` is the time constant which determines how slowly the estimated progress approaches P_{N+1}.
+	 *   20 is chosen as the initial value so that after 60 seconds the progress will be 95 % through the current
+	 *   progress interval. When `P_{N} > 0` and `t_{N} - t_{0} > 0` then T is dynamically calculated so that it
+	 *   adapts to the speed of the conversion. T is set using this formula:
+	 *   
+	 *   T = \frac{-t_{N} (\frac{P_{N+1}}{P_{N}} - 1)}{\ln 0.05}
+	 *   
+	 * 
+	 * @return the estimated progress as a percentage.
+	 */
+	public double getProgressEstimate() {
+		return getProgressEstimate(new Date().getTime());
+	}
+	
+	/**
+	 * Get an estimate of the job progress for the given time as a percentage.
+	 * 
+	 * Same as getProgressEstimate() but instead of calculating the progress for
+	 * "now", use the UNIX time `now` to calculate instead.
+	 * 
+	 * This is mostly only useful for testing. It does not give a history of what
+	 * the estimates were previously, since only the current progress interval is used
+	 * as input to the calculations. 
+	 * 
+	 * @param now the UNIX time to use as "now".
+	 * @return the estimated progress as a percentage.
+	 */
+	public double getProgressEstimate(Long now) {
+		if (status == null || status == Status.IDLE) {
+			return 0.0;
+		}
+		if (status != Status.RUNNING) {
+			return 100.0;
+		}
+		
+		updateProgress();
+		Long previousTime = getProgressFromTime() == null ? now : getProgressFromTime();
+		Double previousPercentage = getProgressFrom();
+		Double nextPercentage = getProgressTo();
+		return nextPercentage - (nextPercentage - previousPercentage) * Math.exp(-(double)(now - previousTime) / progressTimeConstant);
+	}
+	
+	// Progress format: [progress name FROM-TO sub-name]
+	// in the main script, name must be omitted, otherwise,
+	// name must be the same as either the preceding steps name or sub-name.
+	// FROM is required and must be an integer in the range [0,100].
+	// TO is optional if sub-name is omitted and will default to 100.
+	// If not omitted, TO must also be an integer in the range [0,100],
+	// and must be larger than or equal to FROM.
+	// sub-name is the name of a sub-step and can be used to get a more
+	// fine-grained progress info.
+	private static final Pattern PROGRESS_PATTERN;
+	static {
+		PROGRESS_PATTERN = Pattern.compile("^\\[progress(| [^\\s\\]]+) (\\d+)(|-\\d+|-\\d+ [^\\s\\]]+)\\] *(.*?)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+	}
+	// $1: " my-name"
+	// $2: "from"
+	// $2: "-to sub-name"
+	
+	public class Progress {
+		public String name;
+		public double from = 0.0;
+		public double to = 100.0;
+		public long timeStamp = new Date().getTime();
+		public Progress(String name) {
+			this.name = name;
+		}
+	}
+	
+	private List<Progress> currentProgress = new ArrayList<Progress>();
+	private int lastMessageCount = 0;
+	private void updateProgress() {
+		if (messages == null || lastMessageCount == messages.size()) {
+			return; // no new messages => no need to update
+		}
+
+		if (currentProgress.isEmpty()) {
+			currentProgress.add(new Progress(""));
+		}
+		
+		boolean progressUpdated = false;
+		for (int i = lastMessageCount; i < messages.size(); i++) {
+			Message m = messages.get(i);
+			
+			// set progressFirstTime to time of first message (i.e. job start time)
+			if (progressFirstTime == null) {
+				progressFirstTime = m.timeStamp;
+				progressLastTime = progressFirstTime;
+			}
+			
+			if (m.text != null && m.text.contains("[")) {
+
+				// if there's progress info in the message
+				Matcher matcher = PROGRESS_PATTERN.matcher(m.text);
+				if (matcher.find()) {
+					String myName = matcher.group(1).trim();
+					String from = matcher.group(2).trim();
+					String to = matcher.group(3).trim();
+					String sub = "";
+					if (to.contains(" ")) {
+						String[] split = to.split(" ");
+						to = split[0];
+						sub = split[1];
+					}
+
+					// check first if myName is part of the current progress path
+					boolean containsString = false;
+					for (Progress p : currentProgress) {
+						if (p.name != null && p.name.equals(myName)) {
+							containsString = true;
+							break;
+						}
+					}
+					if (!containsString) {
+						continue; // myName is not part of the current progress path => ignore it
+					}
+
+					// remove progress elements nested under myName
+					for (int j = currentProgress.size()-1; j >= 0; j--) {
+						if (currentProgress.get(j).name.equals(myName)) {
+							break;
+						} else {
+							currentProgress.remove(j);
+						}
+					}
+
+					// update progress element with new info
+					if (!"".equals(sub)) {
+						currentProgress.add(new Progress(sub));
+					}
+					Progress progress = currentProgress.get(currentProgress.size()-1);
+					assert(myName.equals(progress.name));
+					if (!"".equals(from)) {
+						try { progress.from = Integer.parseInt(from); }
+						catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'from' integer: '"+from+"'."); }
+					}
+					if (!"".equals(to)) {
+						try { progress.to = Math.abs(Integer.parseInt(to)); }
+						catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'to' integer: '"+to+"'."); }
+					}
+					progress.timeStamp = m.timeStamp;
+					progressUpdated = true;
+				}
+			}
+		}
+		
+		if (progressUpdated) {
+			// calculate current progress
+			progressLastTime = currentProgress.get(currentProgress.size()-1).timeStamp;
+			progressLastPercentage = 0.0;
+			progressNextPercentage = 100.0;
+			for (Progress p : currentProgress) {
+				double lastPercentage = progressLastPercentage + (progressNextPercentage - progressLastPercentage) / 100.0 * p.from;
+				double nextPercentage = progressLastPercentage + (progressNextPercentage - progressLastPercentage) / 100.0 * p.to;
+				progressLastPercentage = lastPercentage;
+				progressNextPercentage = nextPercentage;
+			}
+			if (progressLastPercentage > 0 && progressFirstTime != null && progressLastTime != null && progressLastTime - progressFirstTime > 0) {
+				progressTimeConstant = - (progressLastTime-progressFirstTime) * (progressNextPercentage/progressLastPercentage - 1.0) / Math.log(0.05);
+			}
+		}
+
+		lastMessageCount = messages.size();
+
 	}
 
 }
