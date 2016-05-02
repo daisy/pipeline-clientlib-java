@@ -1123,16 +1123,32 @@ public class Job implements Comparable<Job> {
 						currentProgress.add(subProgress);
 					}
 					if (myName.equals(progress.name)) {
+						int parsedFrom = -1;
+						int parsedTo = -1;
 						if (!"".equals(from)) {
-							try { progress.from = Integer.parseInt(from); }
+							try { parsedFrom = Integer.parseInt(from); }
 							catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'from' integer: '"+from+"'."); }
 						}
 						if (!"".equals(to)) {
-							try { progress.to = Math.abs(Integer.parseInt(to)); }
+							try { parsedTo = Math.abs(Integer.parseInt(to)); }
 							catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'to' integer: '"+to+"'."); }
 						}
-						progress.timeStamp = m.timeStamp;
-						progressUpdated = true;
+						if (parsedFrom >= 0) {
+							if (parsedTo < 0) {
+								// cumulative progress
+								if (!(progress.from == 0.0 && progress.to == 100.0)) {
+									progress.from = progress.to;
+								}
+								progress.to = Math.min(100, progress.from + parsedFrom);
+								
+							} else {
+								// ranged progress
+								progress.from = parsedFrom;
+								progress.to = parsedTo;
+							}
+							progress.timeStamp = m.timeStamp;
+							progressUpdated = true;
+						}
 						
 					} else {
 						// progress info with wrong name => ignore it
