@@ -60,7 +60,10 @@ public class EnumType extends DataType {
 		public Map<String,String> nicenames = new HashMap<String,String>();
 		public Map<String,String> descriptions = new HashMap<String,String>();
 		
-		/** Use to get the default nicename (if multiple are available) */
+		/** Use to get the default nicename (if multiple are available)
+		 *  
+		 *  @return The nicename
+		 */
 		public String getNicename() {
 			if (nicenames.containsKey("")) {
 				return nicenames.get("");

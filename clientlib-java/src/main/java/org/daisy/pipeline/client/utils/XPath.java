@@ -17,8 +17,6 @@ import org.w3c.dom.NodeList;
 
 /**
  * Utility class for querying XML documents using XPath.
- * 
- * @author jostein
  */
 public class XPath {
 	
@@ -71,9 +69,9 @@ public class XPath {
 	 * 
 	 * @param expr XPath expression
 	 * @param doc XML node
-	 * @param ns Namespace map (Map<String prefix, String namespace>)
-	 * @return
-	 * @throws Pipeline2Exception
+	 * @param ns Namespace map ({@code Map<String prefix, String namespace> })
+	 * @return A list containing all the matching nodes
+	 * @throws Pipeline2Exception thrown when an error occurs
 	 */
 	public static List<Node> selectNodes(String expr, Node doc, Map<String, String> ns) throws Pipeline2Exception {
 		if (doc == null || expr == null)
@@ -97,9 +95,9 @@ public class XPath {
 	 * 
 	 * @param expr XPath expression
 	 * @param doc XML node
-	 * @param ns Namespace map (Map<String prefix, String namespace>)
-	 * @return
-	 * @throws Pipeline2Exception
+	 * @param ns Namespace map ({@code Map<String prefix, String namespace> })
+	 * @return The text content
+	 * @throws Pipeline2Exception thrown when an error occurs
 	 */
 	public static String selectText(String expr, Node doc, Map<String, String> ns) throws Pipeline2Exception {
 		if (doc == null || expr == null)
@@ -125,9 +123,9 @@ public class XPath {
 	 * 
 	 * @param expr XPath expression
 	 * @param doc XML node
-	 * @param ns Namespace map (Map<String prefix, String namespace>)
-	 * @return
-	 * @throws Pipeline2Exception
+	 * @param ns Namespace map ({@code Map<String prefix, String namespace> })
+	 * @return The matching node
+	 * @throws Pipeline2Exception thrown when an error occurs
 	 */
 	public static Node selectNode(String expr, Node doc, Map<String, String> ns) throws Pipeline2Exception {
 		if (doc == null || expr == null)

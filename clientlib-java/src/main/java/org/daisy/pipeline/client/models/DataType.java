@@ -13,9 +13,7 @@ import org.w3c.dom.Node;
 
 
 /**
- * A representation of a Pipeline 2 script.
- * 
- * @author jostein
+ * A representation of a Pipeline 2 data type.
  */
 public class DataType implements Comparable<DataType> {
 
@@ -36,7 +34,11 @@ public class DataType implements Comparable<DataType> {
 		}
 	}
 
-	/** Get a key/value map of all datatypes available. Datatype ID as key, datatype URL as value. */
+	/** Get a key/value map of all datatypes available. Datatype ID as key, datatype URL as value.
+	 * 
+	 *  @param dataTypesXml The XML
+	 *  @return The key/value map of all the datatypes
+	 */
 	public static Map<String,String> getDataTypes(Node dataTypesXml) {
 		Map<String,String> dataTypes = new HashMap<String,String>();
 
@@ -58,7 +60,11 @@ public class DataType implements Comparable<DataType> {
 		return dataTypes;
 	}
 
-	/** Parse the datatype and return as an EnumType or RegexType instance if possible. */
+	/** Parse the datatype and return as an EnumType or RegexType instance if possible.
+	 * 
+	 *  @param dataTypeXml The XML
+	 *  @return The DataType
+	 */
 	public static DataType getDataType(Node dataTypeXml) {
 		try {
 			// select root element if the node is a document node

@@ -12,6 +12,7 @@ import org.w3c.dom.Node;
  * A representation of the "/admin/properties" response from the Pipeline 2 Web Service.
  * 
  * Example XML:
+ * {@code
  * <?xml version="1.0" encoding="UTF-8" standalone="no"?>
  * <properties href="http://localhost:8181/ws/admin/properties" xmlns="http://www.daisy.org/ns/pipeline/data">
  *     <property bundleId="36" bundleName="org.daisy.pipeline.persistence-derby" name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver"/>
@@ -19,6 +20,7 @@ import org.w3c.dom.Node;
  *     <property bundleId="14" bundleName="org.daisy.pipeline.webservice" name="org.daisy.pipeline.ws.path" value="/ws"/>
  *     <property bundleId="14" bundleName="org.daisy.pipeline.webservice" name="org.daisy.pipeline.ws.port" value="8181"/>
  * </properties>
+ * }
  */
 public class Property {
 

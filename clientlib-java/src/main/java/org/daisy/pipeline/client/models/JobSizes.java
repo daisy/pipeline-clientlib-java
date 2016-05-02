@@ -13,6 +13,7 @@ import org.w3c.dom.Node;
  * A representation of the "/admin/sizes" response from the Pipeline 2 Web Service.
  * 
  * Example:
+ * {@code
  * <?xml version="1.0" encoding="UTF-8" standalone="no"?>
  * <jobSizes href="http://localhost:8181/ws/admin/sizes" total="10057458" xmlns="http://www.daisy.org/ns/pipeline/data">
  *     <jobSize context="0" id="0eb84973-4e5e-43c8-837c-7ea773317050" log="53404" output="178154"/>
@@ -36,6 +37,7 @@ import org.w3c.dom.Node;
  *     <jobSize context="0" id="51487a3f-76a8-400c-b5ea-35d348694a16" log="143129" output="703443"/>
  *     <jobSize context="0" id="0655e182-5094-4be3-8ac3-28843b729062" log="142219" output="703443"/>
  * </jobSizes>
+ * }
  */
 public class JobSizes {
 	

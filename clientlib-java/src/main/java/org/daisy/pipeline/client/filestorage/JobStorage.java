@@ -30,8 +30,9 @@ public class JobStorage {
 	/**
 	 * Create a JobStorage associated with the provided Job.
 	 * 
-	 * @param job job
-	 * @param jobStorage job storage directory
+	 * @param job The job
+	 * @param jobStorage The job storage directory
+	 * @param id The job Id
 	 */
 	public JobStorage(Job job, File jobStorage, String id) {
 		job.setJobStorage(this);
@@ -48,8 +49,10 @@ public class JobStorage {
 	/**
 	 * Create a JobStorage associated with the provided Job, and copy the context from another job.
 	 * 
-	 * @param job job
-	 * @param jobStorage job storage directory
+	 * @param job The job
+	 * @param jobStorage The job storage directory
+	 * @param otherJobContext Copy context from this job storage
+	 * @param id The job Id
 	 */
 	public JobStorage(Job job, File jobStorage, JobStorage otherJobContext, String id) {
 		this(job, jobStorage, id);
@@ -219,9 +222,9 @@ public class JobStorage {
 	/**
 	 * Load a job from the job storage folder.
 	 * 
-	 * @param jobId
-	 * @param jobStorageDir
-	 * @return
+	 * @param storageId The jobs Id in the storage
+	 * @param jobStorageDir The job storage directory
+	 * @return The job
 	 */
 	public static synchronized Job loadJob(String storageId, File jobStorageDir) {
 		Job job = new Job();
@@ -232,8 +235,8 @@ public class JobStorage {
 	/**
 	 * Add the file to the context.
 	 * 
-	 * @param file
-	 * @param argument
+	 * @param file The file
+	 * @param contextPath the path to the file in the context
 	 */
 	public synchronized void addContextFile(File file, String contextPath) {
 		if (contextPath == null) {
@@ -259,8 +262,7 @@ public class JobStorage {
 	 * 
 	 * The file will also be removed from all attached arguments. 
 	 * 
-	 * @param file
-	 * @param argument
+	 * @param contextPath the path to the file in the context
 	 */
 	public synchronized void removeContextFile(String contextPath) {
 		contextFiles.remove(contextPath);
@@ -269,8 +271,8 @@ public class JobStorage {
 	/**
 	 * Get the file associated with the given context path.
 	 * 
-	 * @param contextPath the context path for the file
-	 * @return the context file with the given path
+	 * @param file the file
+	 * @return the context path to the file as a string
 	 */
 	public synchronized String getContextFilePath(File file) {
 		for (String contextPath : contextFiles.keySet()) {
@@ -284,8 +286,8 @@ public class JobStorage {
 	/**
 	 * Get the path in context associated with the File.
 	 * 
-	 * @param file the File object
-	 * @return the associated path as a string
+	 * @param contextPath the path to the file in the context
+	 * @return the file
 	 */
 	public synchronized File getContextFile(String contextPath) {
 		if (!contextFiles.containsKey(contextPath)) {
@@ -300,6 +302,7 @@ public class JobStorage {
 	
 	/**
 	 * Returns the root directory for the context files.
+	 * 
 	 * @return the root directory for the context files
 	 */
 	public synchronized File getContextDir() {
@@ -308,6 +311,7 @@ public class JobStorage {
 	
 	/**
 	 * Bundles all context files up as a ZIP archive and returns it.
+	 * 
 	 * @return the zip file
 	 */
 	public synchronized File makeContextZip() {
@@ -327,7 +331,7 @@ public class JobStorage {
 	 * 
 	 * The path must be relative and can refer to either a file or a directory. 
 	 * 
-	 * @param contextPath
+	 * @param contextPath the path to the file in the context
 	 * @return true if the path exists as either a file or directory in the context.
 	 */
 	
@@ -338,7 +342,7 @@ public class JobStorage {
 	/**
 	 * Test whether the given path exists as a file in the context.
 	 * 
-	 * @param contextPath
+	 * @param contextPath the path to the file in the context
 	 * @return true if the path exists as a file in the context.
 	 */
 	public synchronized boolean isFileInContext(String contextPath) {
@@ -349,7 +353,7 @@ public class JobStorage {
 	/**
 	 * Test whether the given path exists as a directory in the context.
 	 * 
-	 * @param contextPath
+	 * @param contextPath the path to the file in the context
 	 * @return true if the path exists as a directory in the context.
 	 */
 	public synchronized boolean isDirectoryInContext(String contextPath) {

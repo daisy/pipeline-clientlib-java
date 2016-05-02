@@ -2,7 +2,6 @@ package org.daisy.pipeline.client.models;
 
 import java.io.File;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -28,8 +27,6 @@ import org.w3c.dom.Node;
  * A representation of a Pipeline 2 job.
  * 
  * This represents a job both before (job request) and after (job response) it is submitted to the engine.
- * 
- * @author jostein
  */
 public class Job implements Comparable<Job> {
 
@@ -73,8 +70,8 @@ public class Job implements Comparable<Job> {
 	 * Parse the job described by the provided XML document/node.
 	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/job.xml
 	 * 
-	 * @param jobXml
-	 * @throws Pipeline2Exception
+	 * @param jobXml The XML
+	 * @throws Pipeline2Exception thrown when an error occurs
 	 */
 	public Job(Node jobXml) throws Pipeline2Exception {
 		this();
@@ -84,12 +81,9 @@ public class Job implements Comparable<Job> {
 	/**
 	 * Given the absolute href for the result, get the result without parsing the entire jobXml.
 	 * 
-	 * @param resultsXml
-	 * @param href
-	 * @param base
-	 * @return
-	 * @throws Pipeline2Exception
-	 * @throws URISyntaxException
+	 * @param resultsXml The XML
+	 * @param href The href
+	 * @return The Result
 	 */
 	public static Result getResultFromHref(Node resultsXml, String href) {
 		if (href == null) {
@@ -211,7 +205,8 @@ public class Job implements Comparable<Job> {
 
 	/**
 	 * Get a list of all messages for the job.
-	 * @return
+	 * 
+	 * @return The list of messages
 	 */
 	public List<Message> getMessages() {
 		lazyLoad();
@@ -296,8 +291,8 @@ public class Job implements Comparable<Job> {
 	/**
 	 * Get the Result representing the argument with the given name.
 	 * 
-	 * @param argumentName
-	 * @return
+	 * @param argumentName The name of the argument
+	 * @return The result
 	 */
 	public Result getResult(String argumentName) {
 		lazyLoadResults();
@@ -315,9 +310,9 @@ public class Job implements Comparable<Job> {
 	/**
 	 * Get the Result representing the file with the given name from the argument with the given name.
 	 * 
-	 * @param argumentName
+	 * @param argumentName The name of the argument
 	 * @param href filename with path relative to the argument.
-	 * @return
+	 * @return The result
 	 */
 	public Result getResult(String argumentName, String href) {
 		lazyLoadResults();
@@ -344,8 +339,8 @@ public class Job implements Comparable<Job> {
 	/**
 	 * Get the list of Results for the argument with the given name.
 	 * 
-	 * @param argumentName
-	 * @return
+	 * @param argumentName The name of the argument
+	 * @return The list of results
 	 */
 	public List<Result> getResults(String argumentName) {
 		if (argumentName == null) {
@@ -379,9 +374,9 @@ public class Job implements Comparable<Job> {
 	 * Parse the list of jobs described by the provided XML document/node.
 	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/jobs.xml
 	 * 
-	 * @param response
-	 * @return
-	 * @throws Pipeline2Exception
+	 * @param jobsXml The XML
+	 * @return The list of jobs
+	 * @throws Pipeline2Exception thrown when an error occurs
 	 */
 	public static List<Job> parseJobsXml(Node jobsXml) throws Pipeline2Exception {
 		List<Job> jobs = new ArrayList<Job>();
@@ -420,6 +415,7 @@ public class Job implements Comparable<Job> {
 	 * 
 	 * The script associated with this job must be defined.
 	 * 
+	 * @param name The name of the parameter to validate
 	 * @return a message describing the error, or null if there is no error
 	 */
 	public String validate(String name) {
@@ -506,7 +502,10 @@ public class Job implements Comparable<Job> {
 		this.result = result;
 	}
 
-	/** Set job XML and re-enable lazy loading for the new XML. */
+	/** Set job XML and re-enable lazy loading for the new XML.
+	 * 
+	 *  @param jobXml The XML
+	 */
 	public void setJobXml(Node jobXml) {
 		this.jobNode = jobXml;
 		this.lazyLoaded = false;
@@ -588,7 +587,7 @@ public class Job implements Comparable<Job> {
 	 * Get a result object for the result with the given absolute or relative href.
 	 * 
 	 * @param href if relative, must be relative to the top-level `…/results/` URL segment.
-	 * @return
+	 * @return The result
 	 */
 	public Result getResultFromHref(String href) {
 		if (results == null && resultsNode != null && (href == null || !href.startsWith("http"))) {
@@ -989,7 +988,7 @@ public class Job implements Comparable<Job> {
 	 * - `P_{N}` is the percentage at the beginning of the current progress interval
 	 * - `T` is the time constant which determines how slowly the estimated progress approaches P_{N+1}.
 	 *   20 is chosen as the initial value so that after 60 seconds the progress will be 95 % through the current
-	 *   progress interval. When `P_{N} > 0` and `t_{N} - t_{0} > 0` then T is dynamically calculated so that it
+	 *   progress interval. When `P_{N} &gt; 0` and `t_{N} - t_{0} &gt; 0` then T is dynamically calculated so that it
 	 *   adapts to the speed of the conversion. T is set using this formula:
 	 *   
 	 *   T = \frac{-t_{N} (\frac{P_{N+1}}{P_{N}} - 1)}{\ln 0.05}
