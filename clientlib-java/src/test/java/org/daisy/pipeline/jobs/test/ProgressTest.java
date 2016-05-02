@@ -176,6 +176,14 @@ public class ProgressTest {
 		assertEquals(25.0, job.getProgressFrom(), delta);
 		assertEquals(30.0, job.getProgressTo(), delta);
 		assertEquals(25.0, job.getProgressEstimate(15000L), delta);
+		
+		addMessage(job, 20000L, "[progress http://example.com/a-to-b.store.xsl 75-75 http://example.com/a-to-b.foo.xsl] Progress with from=to");
+		assertEquals("Progress with from=to",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(27.5, job.getProgressFrom(), delta);
+		assertEquals(27.5, job.getProgressTo(), delta);
+		assertEquals(27.5, job.getProgressEstimate(10000L), delta);
+		assertEquals(27.5, job.getProgressEstimate(20000L), delta);
+		assertEquals(27.5, job.getProgressEstimate(30000L), delta);
 
 	}
 	
