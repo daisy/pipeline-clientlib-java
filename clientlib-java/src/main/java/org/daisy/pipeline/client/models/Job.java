@@ -1040,7 +1040,7 @@ public class Job implements Comparable<Job> {
 	// fine-grained progress info.
 	private static final Pattern PROGRESS_PATTERN;
 	static {
-		PROGRESS_PATTERN = Pattern.compile("^\\[progress(| [^\\s\\]]+) (\\d+)(|-\\d+|-\\d+ [^\\s\\]]+)\\] *(.*?)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+		PROGRESS_PATTERN = Pattern.compile("^\\[progress(| [^\\s\\]]+) (\\d+)([^\\s\\]]* ?[^\\s\\]]*)\\] *(.*?)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 	}
 	// $1: " my-name"
 	// $2: "from"
@@ -1064,7 +1064,9 @@ public class Job implements Comparable<Job> {
 		}
 
 		if (currentProgress.isEmpty()) {
-			currentProgress.add(new Progress(""));
+			Progress mainProgress = new Progress("");
+			mainProgress.timeStamp = new Long(messages.get(0).timeStamp);
+			currentProgress.add(mainProgress);
 		}
 		
 		boolean progressUpdated = false;
@@ -1084,12 +1086,12 @@ public class Job implements Comparable<Job> {
 				if (matcher.find()) {
 					String myName = matcher.group(1).trim();
 					String from = matcher.group(2).trim();
-					String to = matcher.group(3).trim();
+					String to = matcher.group(3);
 					String sub = "";
 					if (to.contains(" ")) {
 						String[] split = to.split(" ");
-						to = split[0];
-						sub = split[1];
+						to = split[0].trim();
+						sub = split[1].trim();
 					}
 
 					// check first if myName is part of the current progress path
@@ -1114,21 +1116,27 @@ public class Job implements Comparable<Job> {
 					}
 
 					// update progress element with new info
-					if (!"".equals(sub)) {
-						currentProgress.add(new Progress(sub));
-					}
 					Progress progress = currentProgress.get(currentProgress.size()-1);
-					assert(myName.equals(progress.name));
-					if (!"".equals(from)) {
-						try { progress.from = Integer.parseInt(from); }
-						catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'from' integer: '"+from+"'."); }
+					if (!"".equals(sub)) {
+						Progress subProgress = new Progress(sub);
+						subProgress.timeStamp = new Long(m.timeStamp);
+						currentProgress.add(subProgress);
 					}
-					if (!"".equals(to)) {
-						try { progress.to = Math.abs(Integer.parseInt(to)); }
-						catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'to' integer: '"+to+"'."); }
+					if (myName.equals(progress.name)) {
+						if (!"".equals(from)) {
+							try { progress.from = Integer.parseInt(from); }
+							catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'from' integer: '"+from+"'."); }
+						}
+						if (!"".equals(to)) {
+							try { progress.to = Math.abs(Integer.parseInt(to)); }
+							catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'to' integer: '"+to+"'."); }
+						}
+						progress.timeStamp = m.timeStamp;
+						progressUpdated = true;
+						
+					} else {
+						// progress info with wrong name => ignore it
 					}
-					progress.timeStamp = m.timeStamp;
-					progressUpdated = true;
 				}
 			}
 		}

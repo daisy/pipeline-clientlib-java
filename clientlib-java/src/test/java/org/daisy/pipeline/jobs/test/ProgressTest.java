@@ -119,4 +119,64 @@ public class ProgressTest {
 		assertEquals(0.0, job.getProgressEstimate(), delta);
 	}
 	
+	@Test
+	public void testProgressNamesAndSubProgresses() {
+		
+		// Step type as name
+		
+		Job job = new Job();
+		job.setStatus(Status.RUNNING);
+		addMessage(job, 0L, "[progress 0]");
+		
+		addMessage(job, 5000L, "[progress 10-30 px:a-to-b.convert] Step type as name");
+		assertEquals("Step type as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(10.0, job.getProgressFrom(), delta);
+		assertEquals(30.0, job.getProgressTo(), delta);
+		assertEquals(10.0, job.getProgressEstimate(5000L), delta);
+		
+		addMessage(job, 10000L, "[progress px:a-to-b.convert 50 px:a-to-b.store] Step type as name");
+		assertEquals("Step type as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(20.0, job.getProgressFrom(), delta);
+		assertEquals(30.0, job.getProgressTo(), delta);
+		assertEquals(20.0, job.getProgressEstimate(10000L), delta);
+		
+		addMessage(job, 15000L, "[progress px:a-to-b.store 50 px:a-to-b.foo] Step type as name");
+		assertEquals("Step type as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(25.0, job.getProgressFrom(), delta);
+		assertEquals(30.0, job.getProgressTo(), delta);
+		assertEquals(25.0, job.getProgressEstimate(15000L), delta);
+		
+		addMessage(job, 18000L, "[progress wrong-name 50-75] Progress info to be ignored");
+		assertEquals("Progress info to be ignored",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(25.0, job.getProgressFrom(), delta); // would be either 27.5 or 50 if progress info were not ignored
+		assertEquals(30.0, job.getProgressTo(), delta); // would be either 28.75 or 75 if progress info were not ignored
+		assertEquals(29.75, job.getProgressEstimate(18000L), delta); // would be either 27.5 or 50 if progress info were not ignored
+		
+		
+		// URI as name
+		
+		job = new Job();
+		job.setStatus(Status.RUNNING);
+		addMessage(job, 0L, "[progress 0]");
+		
+		addMessage(job, 5000L, "[progress 10-30 http://example.com/a-to-b.convert.xpl] URI as name");
+		assertEquals("URI as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(10.0, job.getProgressFrom(), delta);
+		assertEquals(30.0, job.getProgressTo(), delta);
+		assertEquals(10.0, job.getProgressEstimate(5000L), delta);
+		
+		addMessage(job, 10000L, "[progress http://example.com/a-to-b.convert.xpl 50 http://example.com/a-to-b.store.xsl] URI as name");
+		assertEquals("URI as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(20.0, job.getProgressFrom(), delta);
+		assertEquals(30.0, job.getProgressTo(), delta);
+		assertEquals(20.0, job.getProgressEstimate(10000L), delta);
+		
+		addMessage(job, 15000L, "[progress http://example.com/a-to-b.store.xsl 50 http://example.com/a-to-b.foo.xsl] URI as name");
+		assertEquals("URI as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(25.0, job.getProgressFrom(), delta);
+		assertEquals(30.0, job.getProgressTo(), delta);
+		assertEquals(25.0, job.getProgressEstimate(15000L), delta);
+
+	}
+	
 }
