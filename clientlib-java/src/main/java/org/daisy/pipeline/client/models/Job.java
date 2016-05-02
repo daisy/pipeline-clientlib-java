@@ -1152,7 +1152,7 @@ public class Job implements Comparable<Job> {
 				progressLastPercentage = lastPercentage;
 				progressNextPercentage = nextPercentage;
 			}
-			if (progressLastPercentage > 0 && progressFirstTime != null && progressLastTime != null && progressLastTime - progressFirstTime > 0) {
+			if (progressLastPercentage > 0 && progressFirstTime != null && progressLastTime != null && progressLastTime - progressFirstTime > 0 && progressNextPercentage - progressLastPercentage > 0.0) {
 				progressTimeConstant = - (progressLastTime-progressFirstTime) * (progressNextPercentage/progressLastPercentage - 1.0) / Math.log(0.05);
 			}
 		}
