@@ -22,13 +22,15 @@ import org.xml.sax.InputSource;
 
 /**
  * Utility class for parsing and serializing XML.
- * 
- * @author jostein
  */
 public class XML {
 	
 	/**
 	 * Parse an XML string as DOM.
+	 * 
+	 * @param xml The serialized XML
+	 * @param encoding the encoding to use
+	 * @return The resulting XML document
 	 */
 	public static Document getXml(String xml, String encoding) {
 		try {
@@ -41,6 +43,9 @@ public class XML {
 	/**
      * Parse an XML string as DOM, with "utf-8" as default encoding.
      * (copied from Play 2.0; play/libs/XML/XML.java)
+     * 
+     * @param xml The serialized XML to parse
+     * @return The resulting XML document
      */
     public static Document getXml(String xml) {
         return getXml(xml, "utf-8");
@@ -48,6 +53,9 @@ public class XML {
     
     /**
      * Parse an InputStream as DOM, with "utf-8" as default encoding.
+     * 
+     * @param in The InputStream to parse
+     * @return The resulting XML document
      */
     public static Document getXml(InputStream in) {
     	return getXml(in, "utf-8");
@@ -56,6 +64,10 @@ public class XML {
     /**
      * Parse an InputStream as DOM.
      * (based on Play 2.0; play/libs/XML/XML.java)
+     * 
+     * @param in The InputStream to parse
+     * @param encoding The encoding to use while parsing
+     * @return The resulting XML document
      */
     public static Document getXml(InputStream in, String encoding) {
        DocumentBuilderFactory factory = null;
@@ -84,8 +96,9 @@ public class XML {
     
     /**
      * Serialize an XML node as a string.
-     * @param xml
-     * @return
+     * 
+     * @param xml The XML to serialize
+     * @return The serialized XML node
      */
     public static String toString(Node xml) {
     	try {
@@ -105,8 +118,8 @@ public class XML {
     /**
      * Cross-document appendChild. Appends child into parent.
      * 
-     * @param parent
-     * @param child
+     * @param parent The parent element
+     * @param child The child element
      */
     public static void appendChildAcrossDocuments(Element parent, Node child) {
     	if (child instanceof Document) {

@@ -12,6 +12,7 @@ import org.w3c.dom.Node;
  * A representation of the "/queue" response from the Pipeline 2 Web Service.
  * 
  * Example XML:
+ * {@code
  * <?xml version="1.0" encoding="UTF-8" standalone="no"?>
  * <queue xmlns="http://www.daisy.org/ns/pipeline/data" href="http://localhost:8181/ws/queue">
  *     <job clientPriority="medium" computedPriority="-43.333333333333336" href="http://localhost:8181/ws/jobs/464c72f9-ed59-44ff-8b7b-207abb4add7f" id="464c72f9-ed59-44ff-8b7b-207abb4add7f" jobPriority="medium" moveDown="http://localhost:8181/ws/queue/down/464c72f9-ed59-44ff-8b7b-207abb4add7f" moveUp="http://localhost:8181/ws/queue/up/464c72f9-ed59-44ff-8b7b-207abb4add7f" relativeTime="1.0" timestamp="1398930862759"/>
@@ -21,6 +22,7 @@ import org.w3c.dom.Node;
  *     <job clientPriority="medium" computedPriority="-25.983368635757433" href="http://localhost:8181/ws/jobs/b3a1f963-a29d-40cf-98c2-e523b859f926" id="b3a1f963-a29d-40cf-98c2-e523b859f926" jobPriority="medium" moveDown="http://localhost:8181/ws/queue/down/b3a1f963-a29d-40cf-98c2-e523b859f926" moveUp="http://localhost:8181/ws/queue/up/b3a1f963-a29d-40cf-98c2-e523b859f926" relativeTime="0.13250176512120498" timestamp="1398930866445"/>
  *     <job clientPriority="medium" computedPriority="-23.333333333333332" href="http://localhost:8181/ws/jobs/0bcb5bf1-e039-43f9-8218-b08c877f9204" id="0bcb5bf1-e039-43f9-8218-b08c877f9204" jobPriority="medium" moveDown="http://localhost:8181/ws/queue/down/0bcb5bf1-e039-43f9-8218-b08c877f9204" moveUp="http://localhost:8181/ws/queue/up/0bcb5bf1-e039-43f9-8218-b08c877f9204" relativeTime="0.0" timestamp="1398930867008"/>
  * </queue>
+ * }
  */
 public class JobQueue {
 	

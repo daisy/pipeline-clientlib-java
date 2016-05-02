@@ -6,6 +6,7 @@ import java.io.StringWriter;
 public abstract class Pipeline2Logger {
 	/**
 	 * Logger levels.
+	 * {@code
 	 * ALL > TRACE > DEBUG > INFO > WARN > ERROR > FATAL > OFF.
 	 * ALL -The ALL Level has the lowest possible rank and is intended to turn on all logging. In practice the same as the TRACE level.
 	 * TRACE - The TRACE Level designates finer-grained informational events than the DEBUG level.
@@ -15,6 +16,7 @@ public abstract class Pipeline2Logger {
 	 * ERROR – The ERROR level designates error events that might still allow the application to continue running.
 	 * FATAL – The FATAL level designates very severe error events that will presumably lead the application to abort.
 	 * OFF – The OFF Level has the highest possible rank and is intended to turn off logging.
+	 * }
 	 */
 	public static enum LEVEL {
 		ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF
@@ -40,9 +42,7 @@ public abstract class Pipeline2Logger {
 	/**
 	 * Set the Pipeline2Logger instance to be used for logging.
 	 * 
-	 * The default logger used if nothing else is set is logging to the console. 
-	 * 
-	 * @return the Pipeline2Logger in use
+	 * @param logger the Pipeline2Logger to use
 	 */
 	public static void setLogger(Pipeline2Logger logger) {
 		Pipeline2Logger.logger = logger;
@@ -157,37 +157,64 @@ public abstract class Pipeline2Logger {
 	
 	// ---------- below this is the methods that loggers must implement ----------
 	
-	/** Set the logger level. */
+	/** Set the logger level.
+	 * 
+	 *  @param level the logger level to use
+	 */
 	public abstract void setLevel(LEVEL level);
 	
 	/** Gets the logger level.
-	 *  @return the logger Level */
+	 * 
+	 *  @return the logger Level
+	 */
 	public abstract LEVEL getLevel();
 
-	/** Returns whether or not messages of the given level will be logged. */
+	/** Returns whether or not messages of the given level will be logged.
+	 * 
+	 *  @param level the logger level
+	 *  @return whether or not the logger will log messages at this level
+	 */
 	public abstract boolean logsLevel(LEVEL level);
 
-	/** The TRACE Level designates finer-grained informational events than the DEBUG level. */
+	/** The TRACE Level designates finer-grained informational events than the DEBUG level.
+	 *  
+	 *  @param message the message to log
+	 */
 	public abstract void trace(String message);
 	public abstract void trace(String message, Exception e);
 
-	/** The DEBUG Level designates fine-grained informational events that are most useful to debug an application. */
+	/** The DEBUG Level designates fine-grained informational events that are most useful to debug an application.
+	 *  
+	 *  @param message the message to log
+	 */
 	public abstract void debug(String message);
 	public abstract void debug(String message, Exception e);
 
-	/** The INFO level designates informational messages that highlight the progress of the application at coarse-grained level. */
+	/** The INFO level designates informational messages that highlight the progress of the application at coarse-grained level.
+	 *  
+	 *  @param message the message to log
+	 */
 	public abstract void info(String message);
 	public abstract void info(String message, Exception e);
 
-	/** The WARN level designates potentially harmful situations. */
+	/** The WARN level designates potentially harmful situations.
+	 *  
+	 *  @param message the message to log
+	 */
 	public abstract void warn(String message);
 	public abstract void warn(String message, Exception e);
 
-	/** The ERROR level designates error events that might still allow the application to continue running. */
+	/** The ERROR level designates error events that might still allow the application to continue running.
+	 *  
+	 *  @param message the message to log
+	 */
 	public abstract void error(String message);
 	public abstract void error(String message, Exception e);
 
-	/** The FATAL level designates very severe error events that will presumably lead the application to abort. */
+	/** The FATAL level designates very severe error events that will presumably lead the application to abort.
+	 *  
+	 *  @param message the message to log
+	 */
 	public abstract void fatal(String message);
 	public abstract void fatal(String message, Exception e);
 }

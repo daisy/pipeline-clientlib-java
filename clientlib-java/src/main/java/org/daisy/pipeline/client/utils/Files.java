@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -20,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -40,17 +38,14 @@ import org.daisy.pipeline.client.Pipeline2Logger;
 public class Files {
 
 	/**
-	 * Convenience method for addFilesToZip(File zipFile, Map<String,File>
-	 * files).
+	 * Convenience method for {@code addFilesToZip(File zipFile, Map<String,File> files) }.
 	 * 
 	 * Appends all the files in the `directory` into the `zipFile` with paths
 	 * relative to `directory`s parent directory.
 	 * 
-	 * @param zipFile
-	 *            The ZIP-file.
-	 * @param directory
-	 *            The directory to add to the ZIP.
-	 * @throws IOException
+	 * @param zipFile The ZIP-file.
+	 * @param directory The directory to add to the ZIP.
+	 * @throws IOException thrown when an IOException occurs
 	 */
 	public static void addDirectoryToZip(File zipFile, File directory) throws IOException {
 		Map<String, File> files = listFilesRecursively(directory, directory.getParentFile().toURI(), true);
@@ -58,17 +53,14 @@ public class Files {
 	}
 
 	/**
-	 * Convenience method for addFilesToZip(File zipFile, Map<String,File>
-	 * files).
+	 * Convenience method for {@code addFilesToZip(File zipFile, Map<String,File> files) }.
 	 * 
 	 * Appends all the files in the `directory` into the `zipFile` with paths
 	 * relative to the `directory`.
 	 * 
-	 * @param zipFile
-	 *            The ZIP-file.
-	 * @param directory
-	 *            The directory to add to the ZIP.
-	 * @throws IOException
+	 * @param zipFile The ZIP-file.
+	 * @param directory The directory to add to the ZIP.
+	 * @throws IOException thrown when an IOException occurs
 	 */
 	public static void addDirectoryContentsToZip(File zipFile, File directory) throws IOException {
 		Map<String, File> files = listFilesRecursively(directory, directory.toURI(), true);
@@ -78,13 +70,13 @@ public class Files {
 	/**
 	 * Lists all files recursively, starting at `directory`.
 	 * 
-	 * This is the same as listFilesRecursively(File directory, URI base, boolean includeDirectories) except
+	 * This is the same as {@code listFilesRecursively(File directory, URI base, boolean includeDirectories) } except
 	 * with directory and base pointing to the same directory.
 	 * 
-	 * @param directory
-	 * @param base
-	 * @return
-	 * @throws IOException
+	 * @param directory The directory
+	 * @param includeDirectories whether or not to include the directories themselves in the result
+	 * @return The set of files
+	 * @throws IOException thrown when an IOException occurs
 	 */
 	public static Map<String, File> listFilesRecursively(File directory, boolean includeDirectories) throws IOException {
 		return listFilesRecursively(directory, directory.toURI(), includeDirectories);
@@ -93,12 +85,13 @@ public class Files {
 	/**
 	 * Lists all files recursively, starting at `directory`, resolving their
 	 * relative paths against `base`. The return value can be used as an argument
-	 * for addFilesToZip(File zipFile, Map<String,File> files);
+	 * for {@code addFilesToZip(File zipFile, Map<String,File> files); }
 	 * 
-	 * @param directory
-	 * @param base
-	 * @return
-	 * @throws IOException
+	 * @param directory The directory
+	 * @param base The base URI
+	 * @param includeDirectories whether or not to include the directories themselves in the result
+	 * @return The set of files
+	 * @throws IOException thrown when an IOException occurs
 	 */
 	public static Map<String, File> listFilesRecursively(File directory, URI base, boolean includeDirectories) throws IOException {
 		Map<String, File> files = new HashMap<String, File>();
@@ -133,8 +126,8 @@ public class Files {
 	 * Does not actually load the files, since that could potentially eat up your RAM.
 	 * All File objects are set to null instead.
 	 * 
-	 * @param zipfile
-	 * @return
+	 * @param zipfile The ZIP file
+	 * @return A list of the files in the ZIP
 	 */
 	public static List<String> listZipFiles(File zipfile) {
 		List<String> files = new ArrayList<String>();
@@ -164,19 +157,16 @@ public class Files {
 	}
 
 	/**
-	 * Convenience method for addFilesToZip(File zipFile, Map<String,File>
+	 * Convenience method for {@code addFilesToZip(File zipFile, Map<String,File> }
 	 * files).
 	 * 
 	 * Appends all the `files` into the `zipFile` with paths relative to
 	 * `baseDirectory`.
 	 * 
-	 * @param zipFile
-	 *            The ZIP-file.
-	 * @param files
-	 *            The list of files to append to the ZIP-file.
-	 * @param baseDirectory
-	 *            The directory to resolve the relative file paths against.
-	 * @throws IOException
+	 * @param zipFile The ZIP-file.
+	 * @param files The list of files to append to the ZIP-file.
+	 * @param baseDirectory The directory to resolve the relative file paths against.
+	 * @throws IOException thrown when an IOException occurs
 	 */
 	public static void addFilesToZip(File zipFile, File[] files, File baseDirectory) throws IOException {
 		URI base = baseDirectory.toURI();
@@ -196,12 +186,9 @@ public class Files {
 	 * This is where the action happens. The other functions uses this one, but
 	 * this can be used directly as well.
 	 * 
-	 * @param zipFile
-	 *            The ZIP file.
-	 * @param files
-	 *            A map of all the files to add to the ZIP file, where the key
-	 *            is the ZIP entry name to use (the relative file paths).
-	 * @throws IOException
+	 * @param zipFile The ZIP file.
+	 * @param files A map of all the files to add to the ZIP file, where the key is the ZIP entry name to use (the relative file paths).
+	 * @throws IOException thrown when an IOException occurs
 	 */
 	public static void addFilesToZip(File zipFile, Map<String, File> files) throws IOException {
 
@@ -276,7 +263,7 @@ public class Files {
 	 * 
 	 * @param zip ZIP file
 	 * @param dir output directory
-	 * @throws IOException 
+	 * @throws IOException thrown when an IOException occurs 
 	 */
 	public static void unzip(File zip, File dir) throws IOException {
 		if (!zip.exists()) {
@@ -329,9 +316,9 @@ public class Files {
 	/**
 	 * Zip up the directory `dir` into a new ZIP-file `zip`. If `dir` is a file, then only that single file is zipped.
 	 * 
-	 * @param dir
-	 * @param zip
-	 * @throws IOException 
+	 * @param dir The directory
+	 * @param zip The ZIP file
+	 * @throws IOException thrown when an IOException occurs 
 	 */
 	public static void zip(File dir, File zip) throws IOException {
 		zip.getParentFile().mkdirs();
@@ -357,6 +344,13 @@ public class Files {
         
 	}
 	
+	/**
+	 * Copy a file from one location to another
+	 * 
+	 * @param from Original location
+	 * @param to Target location
+	 * @throws IOException thrown when an IOException occurs
+	 */
 	public static void copy(File from, File to) throws IOException {
 		if (from.isDirectory()) {
 			to.mkdirs();
@@ -374,9 +368,10 @@ public class Files {
 	
 	/**
 	 * Encodes a file path for use as a URI. The "/" directory separator is not escaped.
-	 * Example: encodeURI("dir1/dir 2/file [  ]].xml") returns "dir1/dir%202/file%20%5B%20%20%5D%5D.xml"
-	 * @param path
-	 * @return
+	 * Example: {@code encodeURI("dir1/dir 2/file [  ]].xml") returns "dir1/dir%202/file%20%5B%20%20%5D%5D.xml" }
+	 * 
+	 * @param path The path
+	 * @return The encoded URI
 	 */
 	public static String encodeURI(String path) {
 		try {
@@ -399,7 +394,9 @@ public class Files {
 	
 	/**
 	 * Read text from file
-	 * @param about
+	 * 
+	 * @param file The file to read
+	 * @return The text contained in the file
 	 */
 	public static String read(File file) {
 		BufferedReader br = null;

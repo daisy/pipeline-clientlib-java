@@ -7,8 +7,6 @@ import org.w3c.dom.Node;
 
 /**
  * A representation of the "alive" response from the Pipeline 2 Web Service.
- * 
- * @author jostein
  */
 public class Alive {
 	
@@ -23,8 +21,8 @@ public class Alive {
 	 * Parse the "alive"-XML described by the provided XML document/node.
 	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/alive.xml
 	 * 
-	 * @param aliveXml
-	 * @throws Pipeline2Exception
+	 * @param aliveXml the XML
+	 * @throws Pipeline2Exception thrown when an error occurs
 	 */
 	public Alive(Node aliveXml) throws Pipeline2Exception {
 		parseAliveXml(aliveXml);

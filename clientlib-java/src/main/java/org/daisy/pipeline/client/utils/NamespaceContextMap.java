@@ -28,8 +28,7 @@ public final class NamespaceContextMap implements NamespaceContext {
 	 * map attempts to remap the standard prefixes defined in the NamespaceContext
 	 * contract.
 	 * 
-	 * @param prefixMappings
-	 *          a map of prefix:namespaceURI values
+	 * @param prefixMappings a map of prefix:namespaceURI values
 	 */
 	public NamespaceContextMap(Map<String, String> prefixMappings) {
 		prefixMap = createPrefixMap(prefixMappings);
@@ -39,8 +38,7 @@ public final class NamespaceContextMap implements NamespaceContext {
 	/**
 	 * Convenience constructor.
 	 * 
-	 * @param mappingPairs
-	 *          pairs of prefix-namespaceURI values
+	 * @param mappingPairs pairs of prefix-namespaceURI values
 	 */
 	public NamespaceContextMap(String... mappingPairs) {
 		this(toMap(mappingPairs));

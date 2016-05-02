@@ -15,8 +15,6 @@ import org.w3c.dom.Node;
 
 /**
  * A representation of a Pipeline 2 script.
- * 
- * @author jostein
  */
 public class Script implements Comparable<Script> {
 	
@@ -39,8 +37,8 @@ public class Script implements Comparable<Script> {
 	 * Parse the script described by the provided XML document/node.
 	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/script.xml
 	 * 
-	 * @param scriptXml
-	 * @throws Pipeline2Exception
+	 * @param scriptXml The XML
+	 * @throws Pipeline2Exception thrown when an error occurs
 	 */
 	public Script(Node scriptXml) throws Pipeline2Exception {
 		scriptNode = scriptXml;
@@ -119,8 +117,8 @@ public class Script implements Comparable<Script> {
 //	/**
 //	 * Populate the script arguments with the values contained in the given jobRequest document.
 //	 * 
-//	 * @param jobRequest
-//	 * @throws Pipeline2WSException 
+//	 * @param jobRequest The job request
+//	 * @throws Pipeline2WSException thrown when an error occurs 
 //	 */
 //	public void parseFromJobRequest(Node jobRequest) throws Pipeline2WSException {
 //		if (jobRequest instanceof Document)
@@ -134,9 +132,8 @@ public class Script implements Comparable<Script> {
 	/**
 	 * Get an argument (inputs, options or outputs) by its name.
 	 * 
-	 * @param name
-	 * @param kind
-	 * @return
+	 * @param name The name of the argument
+	 * @return The argument
 	 */
 	public Argument getArgument(String name) {
 		lazyLoad();
@@ -157,9 +154,9 @@ public class Script implements Comparable<Script> {
 	 * Parse the list of scripts described by the provided XML document/node.
 	 * Example: http://daisy-pipeline.googlecode.com/hg/webservice/samples/xml-formats/scripts.xml
 	 * 
-	 * @param response
-	 * @return
-	 * @throws Pipeline2Exception
+	 * @param scriptsXml The XML
+	 * @return A list of the scripts
+	 * @throws Pipeline2Exception thrown when an error occurs
 	 */
 	public static List<Script> parseScriptsXml(Node scriptsXml) throws Pipeline2Exception {
 		

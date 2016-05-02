@@ -122,7 +122,8 @@ public class Result implements Comparable<Result> {
 
 	/**
 	 * Get the result as a File object if possible; null otherwise.
-	 * @return
+	 * 
+	 * @return The file
 	 */
 	public File asFile() {
 		if (file == null) {
@@ -149,7 +150,8 @@ public class Result implements Comparable<Result> {
 
 	/**
 	 * Get the result as a String object if possible; null otherwise.
-	 * @return
+	 * 
+	 * @return The text in the file
 	 */
 	public String asText() {
 		File f = asFile();
@@ -163,7 +165,8 @@ public class Result implements Comparable<Result> {
 
 	/**
 	 * Get the result as a Document object if possible; null otherwise.
-	 * @return
+	 * 
+	 * @return The XML in the file
 	 */
 	public Document asXml() {
 		String text = asText();

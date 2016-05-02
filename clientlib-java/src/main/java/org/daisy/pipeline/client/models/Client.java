@@ -12,12 +12,14 @@ import org.w3c.dom.Node;
 /**
  * A representation of the "/admin/clients" response from the Pipeline 2 Web Service.
  * 
+ * {@code
  * GET /admin/clients
  * <clients href="http://localhost:8181/ws/admin/clients" xmlns="http://www.daisy.org/ns/pipeline/data">
  *     <client id="" href="" secret="" role="" contact=""/>
  * </clients>
  * 
  * GET /admin/clients/{clientId}
+ * }
  * 
  * 
  */

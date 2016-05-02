@@ -106,7 +106,8 @@ public class JobValidator {
 	 * 
 	 * For instance, if the input or option is not a sequence, there must be exactly one value defined.
 	 * 
-	 * @param name name of the input or option
+	 * @param arg The argument to validate
+	 * @param context The job context, needed if you want to validate that files in file arguments exist on disk
 	 * @return a message describing the error, or null if there is no error
 	 */
 	public static synchronized String validate(Argument arg, JobStorage context) {

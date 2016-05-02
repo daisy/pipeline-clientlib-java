@@ -64,7 +64,11 @@ public class Argument {
 
 	private List<String> values = null;
 
-	/** Create option instance from option node. */
+	/** Create option instance from option node.
+	 * 
+	 *  @param argumentNode the XML
+	 *  @throws Pipeline2Exception thrown if an error occurs
+	 */
 	public Argument(Node argumentNode) throws Pipeline2Exception {
 		this.argumentNode = argumentNode;
 	}
@@ -225,7 +229,6 @@ public class Argument {
 	/**
 	 * Returns the number of values defined for the option or input.
 	 * 
-	 * @param name the name of the option or input
 	 * @return number of values
 	 */
 	public int size() {
@@ -290,8 +293,10 @@ public class Argument {
 	}
 
 	/** Replace the value at the given position with the provided Integer value.
-	 *  @param position
-	 *  @param value the value to use */
+	 * 
+	 *  @param position The position
+	 *  @param value the value to use
+	 */
 	public void set(int position, Integer value) {
 		if (value == null) {
 			clear();
@@ -301,8 +306,10 @@ public class Argument {
 	}
 
 	/** Replace the value at the given position with the provided Long value.
-	 *  @param position
-	 *  @param value the value to use */
+	 * 
+	 *  @param position The position
+	 *  @param value the value to use
+	 */
 	public void set(int position, Long value) {
 		if (value == null) {
 			clear();
@@ -312,8 +319,10 @@ public class Argument {
 	}
 
 	/** Replace the value at the given position with the provided Double value.
-	 *  @param position
-	 *  @param value the value to use */
+	 * 
+	 *  @param position The position
+	 *  @param value the value to use
+	 */
 	public void set(int position, Double value) {
 		if (value == null) {
 			clear();
@@ -323,8 +332,10 @@ public class Argument {
 	}
 
 	/** Replace the value at the given position with the provided Boolean value.
-	 *  @param position
-	 *  @param value the value to use */
+	 * 
+	 *  @param position The position
+	 *  @param value the value to use
+	 */
 	public void set(int position, Boolean value) {
 		if (value == null) {
 			clear();
@@ -334,8 +345,11 @@ public class Argument {
 	}
 
 	/** Replace the value at the given position with the provided File value.
-	 *  @param position
-	 *  @param file the value to use */
+	 * 
+	 *  @param position The position
+	 *  @param file the file to use
+	 *  @param context the job context
+	 */
 	public void set(int position, File file, JobStorage context) {
 		if (file == null) {
 			clear();
@@ -346,8 +360,10 @@ public class Argument {
 	}
 
 	/** Replace the value at the given position with the provided String value.
-	 *  @param position
-	 *  @param value the value to use */
+	 * 
+	 *  @param position The position
+	 *  @param value the value to use
+	 */
 	public void set(int position, String value) {
 		if (value == null) {
 			clear();
@@ -360,7 +376,9 @@ public class Argument {
 	}
 
 	/** Replace the value with the provided Integer value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void set(Integer value) {
 		if (value == null) {
 			clear();
@@ -370,7 +388,9 @@ public class Argument {
 	}
 
 	/** Replace the value with the provided Long value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void set(Long value) {
 		if (value == null) {
 			clear();
@@ -380,7 +400,9 @@ public class Argument {
 	}
 
 	/** Replace the value with the provided Double value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void set(Double value) {
 		if (value == null) {
 			clear();
@@ -390,7 +412,9 @@ public class Argument {
 	}
 
 	/** Replace the value with the provided Boolean value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void set(Boolean value) {
 		if (value == null) {
 			clear();
@@ -400,7 +424,10 @@ public class Argument {
 	}
 
 	/** Replace the value with the provided File value.
-	 *  @param file the value to use */
+	 * 
+	 *  @param file the file to use
+	 *  @param context the job context
+	 */
 	public void set(File file, JobStorage context) {
 		if (file == null) {
 			clear();
@@ -415,7 +442,9 @@ public class Argument {
 	}
 
 	/** Replace the value with the provided String value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void set(String value) {
 		clear();
 		if (value != null) {
@@ -427,6 +456,7 @@ public class Argument {
 	}
 
 	/** Replace the values with all the provided String values.
+	 * 
 	 *  @param values the value to use */
 	public void setAll(Collection<String> values) {
 		clear();
@@ -439,7 +469,9 @@ public class Argument {
 	}
 
 	/** Add to the list of values the provided Integer value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void add(Integer value) {
 		if (value != null) {
 			add(value+"");
@@ -447,7 +479,9 @@ public class Argument {
 	}
 
 	/** Add to the list of values the provided Long value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void add(Long value) {
 		if (value != null) {
 			add(value+"");
@@ -455,7 +489,9 @@ public class Argument {
 	}
 
 	/** Add to the list of values the provided Double value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void add(Double value) {
 		if (value != null) {
 			add(value+"");
@@ -463,7 +499,9 @@ public class Argument {
 	}
 
 	/** Add to the list of values the provided Boolean value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void add(Boolean value) {
 		if (value != null) {
 			add(value+"");
@@ -471,7 +509,10 @@ public class Argument {
 	}
 
 	/** Add to the list of values the provided File value.
-	 *  @param file the value to use */
+	 * 
+	 *  @param file the file to use
+	 *  @param context the job context
+	 */
 	public void add(File file, JobStorage context) {
 		if (file != null) {
 			lazyLoad();
@@ -481,7 +522,9 @@ public class Argument {
 	}
 
 	/** Add to the list of values the provided String value.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void add(String value) {
 		if (value != null) {
 			lazyLoad();
@@ -493,7 +536,8 @@ public class Argument {
 	}
 
 	/** Add to the list of values all the provided String values.
-	 *  @param values the value to use */
+	 * 
+	 *  @param values the values to use */
 	public void addAll(Collection<String> values) {
 		if (values != null) {
 			if (this.values == null) {
@@ -506,7 +550,9 @@ public class Argument {
 	}
 
 	/** Remove all occurences of the provided Integer value from the list of values.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void remove(Integer value) {
 		if (value != null) {
 			remove(value+"");
@@ -514,7 +560,9 @@ public class Argument {
 	}
 
 	/** Remove all occurences of the provided Long value from the list of values.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void remove(Long value) {
 		if (value != null) {
 			remove(value+"");
@@ -522,7 +570,9 @@ public class Argument {
 	}
 
 	/** Remove all occurences of the provided Double value from the list of values.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void remove(Double value) {
 		if (value != null) {
 			remove(value+"");
@@ -530,7 +580,9 @@ public class Argument {
 	}
 
 	/** Remove all occurences of the provided Boolean value from the list of values.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void remove(Boolean value) {
 		if (value != null) {
 			remove(value+"");
@@ -538,7 +590,10 @@ public class Argument {
 	}
 
 	/** Remove all occurences of the provided File value from the list of values.
-	 *  @param file the value to use */
+	 * 
+	 *  @param file the file to use
+	 *  @param context the job context
+	 */
 	public void remove(File file, JobStorage context) {
 		if (file != null) {
 			remove(context.getContextFilePath(file));
@@ -546,7 +601,9 @@ public class Argument {
 	}
 
 	/** Remove all occurences of the provided String value from the list of values.
-	 *  @param value the value to use */
+	 * 
+	 *  @param value the value to use
+	 */
 	public void remove(String value) {
 		if (value != null && values != null) {
 			for (int i = values.size() - 1; i >= 0 ; i--) {
@@ -558,7 +615,9 @@ public class Argument {
 	}
 
 	/** Remove the first occurences of all the provided String values from the list of values.
-	 *  @param values the value to use */
+	 * 
+	 *  @param values the value to use
+	 */
 	public void removeAll(Collection<String> values) {
 		if (values != null && this.values != null) {
 			this.values.removeAll(values);
@@ -569,7 +628,6 @@ public class Argument {
 	 *
 	 *  Returns the first value if there are more than one.
 	 *  Returns null if the value cannot be parsed as a Integer, or if the value is not set.
-	 *  If the option or input is a sequence, you should use {@link #getAsIntegerList() getAsIntegerList} to get all values instead.
 	 *  
 	 *  @return the value as a Integer
 	 */
@@ -604,7 +662,6 @@ public class Argument {
 	 *
 	 *  Returns the first value if there are more than one.
 	 *  Returns null if the value cannot be parsed as a Double, or if the value is not set.
-	 *  If the option or input is a sequence, you should use {@link #getAsDoubleList(defaultValue) getAsDoubleList} to get all values instead.
 	 *  
 	 *  @return the value as a Double
 	 */
@@ -622,7 +679,6 @@ public class Argument {
 	 *
 	 *  Returns the first value if there are more than one.
 	 *  Returns null if the value cannot be parsed as a Boolean, or if the value is not set.
-	 *  If the option or input is a sequence, you should use {@link #getAsBooleanList() getAsBooleanList} to get all values instead.
 	 *  
 	 *  @return the value as a Boolean
 	 */
@@ -642,6 +698,7 @@ public class Argument {
 	 *  Returns the first value if there are more than one.
 	 *  Returns null if the value cannot be parsed as a File, or if the value is not set.
 	 *  
+	 *  @param context the job context
 	 *  @return the value as a File
 	 */
 	public File getAsFile(JobStorage context) {
@@ -680,6 +737,7 @@ public class Argument {
 
 	/** Get all the values as a List of Files.
 	 * 
+	 *  @param context the job context
 	 *  @return null if any of the values cannot be parsed as a File, or if the value is not set. */
 	public List<File> getAsFileList(JobStorage context) {
 		lazyLoad();
@@ -793,6 +851,7 @@ public class Argument {
 	 * 
 	 *  Returns null if the value cannot be parsed as a File, or if the value is not set.
 	 *  
+	 *  @param context the job context
 	 *  @return the default value as a File
 	 */
 	public File getDefaultValueAsFile(JobStorage context) {
