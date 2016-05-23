@@ -1124,21 +1124,28 @@ public class Job implements Comparable<Job> {
 					if (myName.equals(progress.name)) {
 						int parsedFrom = -1;
 						int parsedTo = -1;
+						int parsedTotal = -1;
 						if (!"".equals(from)) {
 							try { parsedFrom = Integer.parseInt(from); }
-							catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'from' integer: '"+from+"'."); }
+							catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress integer: '"+from+"'."); }
 						}
 						if (!"".equals(to)) {
-							try { parsedTo = Math.abs(Integer.parseInt(to)); }
-							catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress 'to' integer: '"+to+"'."); }
+							if (to.startsWith("/")) {
+								try { parsedTotal = Integer.parseInt(to.substring(1)); }
+								catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse fractioned progress 'total' integer: '"+to+"'."); }
+							} else {
+								try { parsedTo = Math.abs(Integer.parseInt(to)); }
+								catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse ranged progress 'to' integer: '"+to+"'."); }
+							}
 						}
 						if (parsedFrom >= 0) {
 							if (parsedTo < 0) {
-								// cumulative progress
+								// cumulative progress (optionally fractioned)
 								if (!(progress.from == 0.0 && progress.to == 100.0)) {
 									progress.from = progress.to;
 								}
-								progress.to = Math.min(100, progress.from + parsedFrom);
+								double total = parsedTotal < 0 ? 100.0 : parsedTotal;
+								progress.to = Math.min(100, progress.from + parsedFrom * 100.0 / total);
 								
 							} else {
 								// ranged progress

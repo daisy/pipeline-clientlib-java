@@ -271,51 +271,51 @@ public class ProgressTest {
 		assertEquals(100.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 1000L, "[progress 1/50]");
-		assertEquals(0.0 / 0.5, job.getProgressEstimate(1000L), delta);
-		assertEquals(0.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(1.0 / 0.5, job.getProgressTo(), delta);
+		assertEquals(0.0, job.getProgressEstimate(1000L), delta);
+		assertEquals(0.0, job.getProgressFrom(), delta);
+		assertEquals(2.0, job.getProgressTo(), delta);
 		
-		addMessage(job, 2000L, "[progress 2/50]");
-		assertEquals(1.0 / 0.5, job.getProgressEstimate(2000L), delta);
-		assertEquals(1.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(2.0 / 0.5, job.getProgressTo(), delta);
+		addMessage(job, 2000L, "[progress 1/50]");
+		assertEquals(2.0, job.getProgressEstimate(2000L), delta);
+		assertEquals(2.0, job.getProgressFrom(), delta);
+		assertEquals(4.0, job.getProgressTo(), delta);
 		
 		// cumulative combined with fractioned
 		addMessage(job, 3000L, "[progress 2]");
-		assertEquals(2.0 / 0.5, job.getProgressEstimate(3000L), delta);
-		assertEquals(2.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(4.0 / 0.5, job.getProgressTo(), delta);
+		assertEquals(4.0, job.getProgressEstimate(3000L), delta);
+		assertEquals(4.0, job.getProgressFrom(), delta);
+		assertEquals(6.0, job.getProgressTo(), delta);
 		
-		addMessage(job, 4000L, "[progress 8/50]");
-		assertEquals(4.0 / 0.5, job.getProgressEstimate(4000L), delta);
-		assertEquals(7.8 / 0.5, job.getProgressEstimate(7000L), delta);
-		assertEquals(4.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(8.0 / 0.5, job.getProgressTo(), delta);
+		addMessage(job, 4000L, "[progress 2/50]");
+		assertEquals(6.0, job.getProgressEstimate(4000L), delta);
+		assertEquals(9.8, job.getProgressEstimate(6000L), delta);
+		assertEquals(6.0, job.getProgressFrom(), delta);
+		assertEquals(10.0, job.getProgressTo(), delta);
 		
-		addMessage(job, 5000L, "[progress 10/50]");
-		assertEquals(8.0 / 0.5, job.getProgressEstimate(5000L), delta);
-		assertEquals(8.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(10.0 / 0.5, job.getProgressTo(), delta);
+		addMessage(job, 5000L, "[progress 5/50]");
+		assertEquals(10.0, job.getProgressEstimate(5000L), delta);
+		assertEquals(10.0, job.getProgressFrom(), delta);
+		assertEquals(20.0, job.getProgressTo(), delta);
 		
-		addMessage(job, 6000L, "[progress 25 ranged-substep]");
-		assertEquals(10.0 / 0.5, job.getProgressEstimate(6000L), delta);
-		assertEquals(10.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(70.0 / 0.5, job.getProgressTo(), delta);
+		addMessage(job, 6000L, "[progress 25 substep]");
+		assertEquals(20.0, job.getProgressEstimate(6000L), delta);
+		assertEquals(20.0, job.getProgressFrom(), delta);
+		assertEquals(45.0, job.getProgressTo(), delta);
 		
-		addMessage(job, 7000L, "[progress ranged-substep 0-10]");
-		assertEquals(10.0 / 0.5, job.getProgressEstimate(7000L), delta);
-		assertEquals(10.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(16.0 / 0.5, job.getProgressTo(), delta);
+		addMessage(job, 7000L, "[progress substep 10]");
+		assertEquals(20.0, job.getProgressEstimate(7000L), delta);
+		assertEquals(20.0, job.getProgressFrom(), delta);
+		assertEquals(22.5, job.getProgressTo(), delta);
 		
-		addMessage(job, 8000L, "[progress ranged-substep 10-50]");
-		assertEquals(16.0 / 0.5, job.getProgressEstimate(8000L), delta);
-		assertEquals(16.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(40.0 / 0.5, job.getProgressTo(), delta);
+		addMessage(job, 8000L, "[progress substep 40]");
+		assertEquals(22.5, job.getProgressEstimate(8000L), delta);
+		assertEquals(22.5, job.getProgressFrom(), delta);
+		assertEquals(32.5, job.getProgressTo(), delta);
 		
-		addMessage(job, 9000L, "[progress ranged-substep 50-100]");
-		assertEquals(40.0 / 0.5, job.getProgressEstimate(9000L), delta);
-		assertEquals(40.0 / 0.5, job.getProgressFrom(), delta);
-		assertEquals(70.0 / 0.5, job.getProgressTo(), delta);
+		addMessage(job, 9000L, "[progress substep 50]");
+		assertEquals(32.5, job.getProgressEstimate(9000L), delta);
+		assertEquals(32.5, job.getProgressFrom(), delta);
+		assertEquals(45.0, job.getProgressTo(), delta);
 
 	}
 	
