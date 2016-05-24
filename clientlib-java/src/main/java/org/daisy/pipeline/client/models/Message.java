@@ -10,6 +10,7 @@ public class Message implements Comparable<Message> {
 	public Level level;
 	public Integer sequence;
     public String text;
+    public Integer depth = 0;
     public Integer line;
     public Integer column;
     public Long timeStamp = new Date().getTime(); // NOTE: the timeStamp is currently not exposed through the web api so we just set it here to the time the object is instantiated instead.

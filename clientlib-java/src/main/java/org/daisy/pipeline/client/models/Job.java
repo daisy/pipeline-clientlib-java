@@ -209,6 +209,16 @@ public class Job implements Comparable<Job> {
 	 * @return The list of messages
 	 */
 	public List<Message> getMessages() {
+		return getMessages(-1);
+	}
+	
+	/**
+	 * Get a list of all messages for the job.
+	 * 
+	 * @param maxDepth Don't return messages deeper than this level
+	 * @return The list of messages
+	 */
+	public List<Message> getMessages(int maxDepth) {
 		lazyLoad();
 		
 		if (messages == null && messagesNode != null) {
@@ -246,8 +256,21 @@ public class Job implements Comparable<Job> {
 				Pipeline2Logger.logger().error("Unable to parse messages XML", e);
 			}
 		}
-
-		return messages;
+		
+		updateProgress();
+		
+		if (maxDepth >= 0) {
+			ArrayList<Message> filteredMessages = new ArrayList<Message>();
+			for (Message m : messages) {
+				if (m.depth <= maxDepth) {
+					filteredMessages.add(m);
+				}
+			}
+			return filteredMessages;
+			
+		} else {
+			return messages;
+		}
 	}
 
 	private void lazyLoadResults() {
@@ -1071,6 +1094,9 @@ public class Job implements Comparable<Job> {
 		boolean progressUpdated = false;
 		for (int i = lastMessageCount; i < messages.size(); i++) {
 			Message m = messages.get(i);
+			if (i > 0) {
+				m.depth = messages.get(i-1).depth;
+			}
 			
 			// set progressFirstTime to time of first message (i.e. job start time)
 			if (progressFirstTime == null) {
@@ -1095,15 +1121,19 @@ public class Job implements Comparable<Job> {
 
 					// check first if myName is part of the current progress path
 					boolean containsString = false;
+					int depth = 0;
 					for (Progress p : currentProgress) {
 						if (p.name != null && p.name.equals(myName)) {
 							containsString = true;
 							break;
+						} else {
+							depth++;
 						}
 					}
 					if (!containsString) {
 						continue; // myName is not part of the current progress path => ignore it
 					}
+					m.depth = depth;
 
 					// remove progress elements nested under myName
 					for (int j = currentProgress.size()-1; j >= 0; j--) {
@@ -1121,6 +1151,7 @@ public class Job implements Comparable<Job> {
 						subProgress.timeStamp = new Long(m.timeStamp);
 						currentProgress.add(subProgress);
 					}
+					
 					if (myName.equals(progress.name)) {
 						int parsedFrom = -1;
 						int parsedTo = -1;
