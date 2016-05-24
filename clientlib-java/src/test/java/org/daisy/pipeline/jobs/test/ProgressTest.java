@@ -152,7 +152,6 @@ public class ProgressTest {
 		assertEquals(30.0, job.getProgressTo(), delta); // would be either 28.75 or 75 if progress info were not ignored
 		assertEquals(29.75, job.getProgressEstimate(18000L), delta); // would be either 27.5 or 50 if progress info were not ignored
 		
-		
 		// URI as name
 		
 		job = new Job();
@@ -317,6 +316,89 @@ public class ProgressTest {
 		assertEquals(32.5, job.getProgressFrom(), delta);
 		assertEquals(45.0, job.getProgressTo(), delta);
 
+	}
+	
+	@Test
+	public void testMessageDepth() {
+		
+		Job job = new Job();
+		job.setStatus(Status.RUNNING);
+		
+		addMessage(job, 3500L, "First message without progress");
+		addMessage(job, 1000L, "[progress 1/50]");
+		addMessage(job, 2000L, "[progress 1/50] Progress message with text");
+		addMessage(job, 3000L, "[progress 2]");
+		addMessage(job, 3500L, "Message without progress");
+		addMessage(job, 4000L, "[progress 2/50]    ");
+		addMessage(job, 5000L, "[progress 5/50]");
+		addMessage(job, 6000L, "[progress 25 substep]");
+		addMessage(job, 3500L, "Another message without progress");
+		addMessage(job, 7000L, "[progress substep 10]");
+		addMessage(job, 3500L, "Yet another message without progress");
+		addMessage(job, 8000L, "[progress substep 40 subsubstep]");
+		addMessage(job, 8000L, "[progress subsubstep 100] Subsubstep");
+		addMessage(job, 9000L, "[progress substep 50] Another progress message with text");
+		
+		assertEquals(true, job.getMessages().get(0).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(1).getText().length() > 0);
+		assertEquals(true, job.getMessages().get(2).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(3).getText().length() > 0);
+		assertEquals(true, job.getMessages().get(4).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(5).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(6).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(7).getText().length() > 0);
+		assertEquals(true, job.getMessages().get(8).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(9).getText().length() > 0);
+		assertEquals(true, job.getMessages().get(10).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(11).getText().length() > 0);
+		assertEquals(true, job.getMessages().get(12).getText().length() > 0);
+		assertEquals(true, job.getMessages().get(13).getText().length() > 0);
+		
+		assertEquals(0, job.getMessages().get(0).depth.intValue());
+		assertEquals(0, job.getMessages().get(1).depth.intValue());
+		assertEquals(0, job.getMessages().get(2).depth.intValue());
+		assertEquals(0, job.getMessages().get(3).depth.intValue());
+		assertEquals(0, job.getMessages().get(4).depth.intValue());
+		assertEquals(0, job.getMessages().get(5).depth.intValue());
+		assertEquals(0, job.getMessages().get(6).depth.intValue());
+		assertEquals(0, job.getMessages().get(7).depth.intValue());
+		assertEquals(0, job.getMessages().get(8).depth.intValue());
+		assertEquals(1, job.getMessages().get(9).depth.intValue());
+		assertEquals(1, job.getMessages().get(10).depth.intValue());
+		assertEquals(1, job.getMessages().get(11).depth.intValue());
+		assertEquals(2, job.getMessages().get(12).depth.intValue());
+		assertEquals(1, job.getMessages().get(13).depth.intValue());
+		assertEquals(14, job.getMessages().size());
+		
+		// filter on depth 0, 1, 2 and 3
+		assertEquals(0, job.getMessages(0).get(0).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(1).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(2).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(3).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(4).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(5).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(6).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(7).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(8).depth.intValue());
+		assertEquals(9, job.getMessages(0).size());
+		
+		assertEquals(0, job.getMessages(1).get(0).depth.intValue());
+		assertEquals(0, job.getMessages(1).get(1).depth.intValue());
+		assertEquals(0, job.getMessages(1).get(2).depth.intValue());
+		assertEquals(0, job.getMessages(1).get(3).depth.intValue());
+		assertEquals(0, job.getMessages(1).get(4).depth.intValue());
+		assertEquals(0, job.getMessages(1).get(5).depth.intValue());
+		assertEquals(0, job.getMessages(1).get(6).depth.intValue());
+		assertEquals(0, job.getMessages(1).get(7).depth.intValue());
+		assertEquals(0, job.getMessages(1).get(8).depth.intValue());
+		assertEquals(1, job.getMessages(1).get(9).depth.intValue());
+		assertEquals(1, job.getMessages(1).get(10).depth.intValue());
+		assertEquals(1, job.getMessages(1).get(11).depth.intValue());
+		assertEquals(1, job.getMessages(1).get(12).depth.intValue());
+		assertEquals(13, job.getMessages(1).size());
+		
+		assertEquals(14, job.getMessages(2).size());
+		assertEquals(14, job.getMessages(3).size());
 	}
 	
 }
