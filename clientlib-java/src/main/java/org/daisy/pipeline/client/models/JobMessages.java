@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Stack;
 
 import org.daisy.pipeline.client.Pipeline2Logger;
 
@@ -112,7 +113,7 @@ public class JobMessages extends AbstractList<Message> {
 		}
 	}
 	
-	private List<Progress> currentProgress = new ArrayList<Progress>();
+	private Stack<Progress> currentProgress = new Stack<Progress>();
 	private int currentDepth = 0;
 	private int lastMessageCount = 0;
 	private boolean dirty = true;
@@ -133,7 +134,7 @@ public class JobMessages extends AbstractList<Message> {
 		if (currentProgress.isEmpty()) {
 			Progress mainProgress = new Progress("");
 			mainProgress.timeStamp = new Long(backingList.get(0).timeStamp);
-			currentProgress.add(mainProgress);
+			currentProgress.push(mainProgress);
 		}
 		
 		boolean progressUpdated = false;
@@ -179,20 +180,20 @@ public class JobMessages extends AbstractList<Message> {
 					m.depth = currentDepth = depth;
 
 					// remove progress elements nested under myName
-					for (int j = currentProgress.size()-1; j >= 0; j--) {
-						if (currentProgress.get(j).name.equals(myName)) {
+					while (true) {
+						if (currentProgress.peek().name.equals(myName)) {
 							break;
 						} else {
-							currentProgress.remove(j);
+							currentProgress.pop();
 						}
 					}
 
 					// update progress element with new info
-					Progress progress = currentProgress.get(currentProgress.size()-1);
+					Progress progress = currentProgress.peek();
 					if (!"".equals(sub)) {
 						Progress subProgress = new Progress(sub);
 						subProgress.timeStamp = new Long(m.timeStamp);
-						currentProgress.add(subProgress);
+						currentProgress.push(subProgress);
 					}
 					
 					if (myName.equals(progress.name)) {
@@ -239,7 +240,7 @@ public class JobMessages extends AbstractList<Message> {
 		
 		if (progressUpdated) {
 			// calculate current progress
-			progressLastTime = currentProgress.get(currentProgress.size()-1).timeStamp;
+			progressLastTime = currentProgress.peek().timeStamp;
 			progressLastPercentage = 0.0;
 			progressNextPercentage = 100.0;
 			for (Progress p : currentProgress) {
