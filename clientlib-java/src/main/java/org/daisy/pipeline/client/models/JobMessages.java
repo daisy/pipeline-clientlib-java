@@ -175,17 +175,16 @@ public class JobMessages extends AbstractList<Message> {
 						}
 					}
 					if (!containsString) {
-						continue; // myName is not part of the current progress path => ignore it
+						// myName is not part of the current progress path => create a new sub-progress with that name
+						Progress subProgress = new Progress(myName);
+						subProgress.timeStamp = new Long(m.timeStamp);
+						currentProgress.push(subProgress);
 					}
 					m.depth = currentDepth = depth;
 
 					// remove progress elements nested under myName
-					while (true) {
-						if (currentProgress.peek().name.equals(myName)) {
-							break;
-						} else {
-							currentProgress.pop();
-						}
+					for (int j = currentProgress.size() - 1; j > depth; j--) {
+						currentProgress.pop();
 					}
 
 					// update progress element with new info

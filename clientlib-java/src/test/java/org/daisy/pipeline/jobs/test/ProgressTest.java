@@ -146,11 +146,11 @@ public class ProgressTest {
 		assertEquals(30.0, job.getProgressTo(), delta);
 		assertEquals(25.0, job.getProgressEstimate(15000L), delta);
 		
-		addMessage(job, 18000L, "[progress wrong-name 50-75] Progress info to be ignored");
-		assertEquals("Progress info to be ignored",job.getMessages().get(job.getMessages().size()-1).getText());
-		assertEquals(25.0, job.getProgressFrom(), delta); // would be either 27.5 or 50 if progress info were not ignored
-		assertEquals(30.0, job.getProgressTo(), delta); // would be either 28.75 or 75 if progress info were not ignored
-		assertEquals(29.75, job.getProgressEstimate(18000L), delta); // would be either 27.5 or 50 if progress info were not ignored
+		addMessage(job, 18000L, "[progress unknown-name 50-75] Step with unknown name");
+		assertEquals("Step with unknown name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(27.5, job.getProgressFrom(), delta);
+		assertEquals(28.75, job.getProgressTo(), delta);
+		assertEquals(27.5, job.getProgressEstimate(18000L), delta);
 		
 		// URI as name
 		
@@ -336,12 +336,17 @@ public class ProgressTest {
 		addMessage(job, 7000L, "[progress substep 0]");
 		addMessage(job, 3500L, "Message without progress");
 		addMessage(job, 3500L, "Message without progress");
-		addMessage(job, 7000L, "[progress foo 0] Message with invalid name");
+		addMessage(job, 7000L, "[progress unknown-name 0] Message with unknown name");
 		addMessage(job, 7000L, "[progress substep 10]");
 		addMessage(job, 3500L, "Yet another message without progress");
 		addMessage(job, 8000L, "[progress substep 40 subsubstep]");
 		addMessage(job, 8000L, "[progress subsubstep 100] Subsubstep");
 		addMessage(job, 9000L, "[progress substep 50] Another progress message with text");
+		addMessage(job, 1000L, "[progress unknown-name 50]");
+		addMessage(job, 1000L, "[progress unknown-name 100]");
+		addMessage(job, 1000L, "[progress other-unknown-name 100]");
+		
+		assertEquals(21, job.getMessages().size());
 		
 		assertEquals(true, job.getMessages().get(0).getText().length() > 0);
 		assertEquals(false, job.getMessages().get(1).getText().length() > 0);
@@ -361,8 +366,10 @@ public class ProgressTest {
 		assertEquals(false, job.getMessages().get(15).getText().length() > 0);
 		assertEquals(true, job.getMessages().get(16).getText().length() > 0);
 		assertEquals(true, job.getMessages().get(17).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(18).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(19).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(20).getText().length() > 0);
 		
-		assertEquals(18, job.getMessages().size());
 		assertEquals(1, job.getMessages().get(0).depth.intValue());
 		assertEquals(0, job.getMessages().get(1).depth.intValue());
 		assertEquals(0, job.getMessages().get(2).depth.intValue());
@@ -381,6 +388,9 @@ public class ProgressTest {
 		assertEquals(1, job.getMessages().get(15).depth.intValue());
 		assertEquals(2, job.getMessages().get(16).depth.intValue());
 		assertEquals(1, job.getMessages().get(17).depth.intValue());
+		assertEquals(2, job.getMessages().get(18).depth.intValue());
+		assertEquals(2, job.getMessages().get(19).depth.intValue());
+		assertEquals(3, job.getMessages().get(20).depth.intValue());
 		
 		// filter on depth 0, 1, 2 and 3
 		assertEquals(6, job.getMessages(0).size());
@@ -406,8 +416,8 @@ public class ProgressTest {
 		assertEquals(1, job.getMessages(1).get(11).depth.intValue());
 		assertEquals(1, job.getMessages(1).get(12).depth.intValue());
 		
-		assertEquals(18, job.getMessages(2).size());
-		assertEquals(18, job.getMessages(3).size());
+		assertEquals(20, job.getMessages(2).size());
+		assertEquals(21, job.getMessages(3).size());
 	}
 	
 }
