@@ -266,7 +266,10 @@ public class JobStorageTest {
 		outputDir.set(testFolder.getRoot(), jobStorage);
 		assertEquals(1, outputDir.size());
 		try {
-			assertEquals("file:"+testFolder.getRoot().getCanonicalPath()+"/", outputDir.get());
+			if (System.getProperty("os.name").toLowerCase().startsWith("mac os x"))
+				assertEquals("file:"+testFolder.getRoot().getAbsolutePath()+"/", outputDir.get());
+			else
+				assertEquals("file:"+testFolder.getRoot().getCanonicalPath()+"/", outputDir.get());
 		} catch (IOException e) {
 			assertTrue(false);
 		}

@@ -113,6 +113,7 @@ public class JobMessages extends AbstractList<Message> {
 	}
 	
 	private List<Progress> currentProgress = new ArrayList<Progress>();
+	private int currentDepth = 0;
 	private int lastMessageCount = 0;
 	private boolean dirty = true;
 	private void updateProgress() {
@@ -126,6 +127,7 @@ public class JobMessages extends AbstractList<Message> {
 			progressLastTime = initialProgressLastTime;
 			progressTimeConstant = initialProgressTimeConstant;
 			currentProgress.clear();
+			currentDepth = 0;
 			lastMessageCount = 0;
 		}
 		if (currentProgress.isEmpty()) {
@@ -137,9 +139,7 @@ public class JobMessages extends AbstractList<Message> {
 		boolean progressUpdated = false;
 		for (int i = lastMessageCount; i < size(); i++) {
 			Message m = backingList.get(i);
-			if (i > 0) {
-				m.depth = backingList.get(i-1).depth;
-			}
+			m.depth = currentDepth + 1;
 			
 			// set progressFirstTime to time of first message (i.e. job start time)
 			if (progressFirstTime == null) {
@@ -176,7 +176,7 @@ public class JobMessages extends AbstractList<Message> {
 					if (!containsString) {
 						continue; // myName is not part of the current progress path => ignore it
 					}
-					m.depth = depth;
+					m.depth = currentDepth = depth;
 
 					// remove progress elements nested under myName
 					for (int j = currentProgress.size()-1; j >= 0; j--) {
