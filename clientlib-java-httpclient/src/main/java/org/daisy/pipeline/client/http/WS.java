@@ -28,6 +28,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.models.*;
+import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
 import org.w3c.dom.Document;
 

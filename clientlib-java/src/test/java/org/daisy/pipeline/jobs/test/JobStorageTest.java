@@ -265,11 +265,7 @@ public class JobStorageTest {
 		Argument outputDir = job.getArgument("output-dir");
 		outputDir.set(testFolder.getRoot(), jobStorage);
 		assertEquals(1, outputDir.size());
-		try {
-			assertEquals("file:"+testFolder.getRoot().getCanonicalPath()+"/", outputDir.get());
-		} catch (IOException e) {
-			assertTrue(false);
-		}
+		assertEquals("file:"+testFolder.getRoot().getAbsolutePath()+"/", outputDir.get());
 	}
 
 }
