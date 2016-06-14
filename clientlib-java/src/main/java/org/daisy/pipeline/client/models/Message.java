@@ -52,6 +52,6 @@ public class Message implements Comparable<Message> {
 	}
 	
 	private static final Pattern MESSAGE_PATTERN
-		= Pattern.compile("^(?<progress>\\[[Pp][Rr][Oo][Gg][Rr][Ee][Ss][Ss][^\\]]*\\])? *(?<msg>.+)?$");
+		= Pattern.compile("^(?<progress>\\[[Pp][Rr][Oo][Gg][Rr][Ee][Ss][Ss][^\\]]*\\])? *(?<msg>.+)?$", Pattern.DOTALL);
 	
 }
