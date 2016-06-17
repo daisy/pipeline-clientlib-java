@@ -130,27 +130,31 @@ public class ProgressTest {
 		
 		addMessage(job, 5000L, "[progress 10-30 px:a-to-b.convert] Step type as name");
 		assertEquals("Step type as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(10.0, job.getProgressFrom(), delta);
 		assertEquals(30.0, job.getProgressTo(), delta);
 		assertEquals(10.0, job.getProgressEstimate(5000L), delta);
 		
 		addMessage(job, 10000L, "[progress px:a-to-b.convert 50-100 px:a-to-b.store] Step type as name");
 		assertEquals("Step type as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(20.0, job.getProgressFrom(), delta);
 		assertEquals(30.0, job.getProgressTo(), delta);
 		assertEquals(20.0, job.getProgressEstimate(10000L), delta);
 		
 		addMessage(job, 15000L, "[progress px:a-to-b.store 50-100 px:a-to-b.foo] Step type as name");
 		assertEquals("Step type as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(25.0, job.getProgressFrom(), delta);
 		assertEquals(30.0, job.getProgressTo(), delta);
 		assertEquals(25.0, job.getProgressEstimate(15000L), delta);
 		
 		addMessage(job, 18000L, "[progress unknown-name 50-75] Step with unknown name");
 		assertEquals("Step with unknown name",job.getMessages().get(job.getMessages().size()-1).getText());
-		assertEquals(27.5, job.getProgressFrom(), delta);
-		assertEquals(28.75, job.getProgressTo(), delta);
-		assertEquals(27.5, job.getProgressEstimate(18000L), delta);
+		assertEquals(3, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+		assertEquals(25.0, job.getProgressFrom(), delta);
+		assertEquals(30.0, job.getProgressTo(), delta);
+		assertEquals(29.75, job.getProgressEstimate(18000L), delta);
 		
 		// URI as name
 		
@@ -160,24 +164,28 @@ public class ProgressTest {
 		
 		addMessage(job, 5000L, "[progress 10-30 http://example.com/a-to-b.convert.xpl] URI as name");
 		assertEquals("URI as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(10.0, job.getProgressFrom(), delta);
 		assertEquals(30.0, job.getProgressTo(), delta);
 		assertEquals(10.0, job.getProgressEstimate(5000L), delta);
 		
 		addMessage(job, 10000L, "[progress http://example.com/a-to-b.convert.xpl 50-100 http://example.com/a-to-b.store.xsl] URI as name");
 		assertEquals("URI as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(20.0, job.getProgressFrom(), delta);
 		assertEquals(30.0, job.getProgressTo(), delta);
 		assertEquals(20.0, job.getProgressEstimate(10000L), delta);
 		
 		addMessage(job, 15000L, "[progress http://example.com/a-to-b.store.xsl 50-100 http://example.com/a-to-b.foo.xsl] URI as name");
 		assertEquals("URI as name",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(25.0, job.getProgressFrom(), delta);
 		assertEquals(30.0, job.getProgressTo(), delta);
 		assertEquals(25.0, job.getProgressEstimate(15000L), delta);
 		
 		addMessage(job, 20000L, "[progress http://example.com/a-to-b.store.xsl 75-75 http://example.com/a-to-b.foo.xsl] Progress with from=to");
 		assertEquals("Progress with from=to",job.getMessages().get(job.getMessages().size()-1).getText());
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(27.5, job.getProgressFrom(), delta);
 		assertEquals(27.5, job.getProgressTo(), delta);
 		assertEquals(27.5, job.getProgressEstimate(10000L), delta);
@@ -223,36 +231,43 @@ public class ProgressTest {
 		assertEquals(10.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 6000L, "[progress 60 ranged-substep]");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(10.0, job.getProgressEstimate(6000L), delta);
 		assertEquals(10.0, job.getProgressFrom(), delta);
 		assertEquals(70.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 7000L, "[progress ranged-substep 0-10]");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(10.0, job.getProgressEstimate(7000L), delta);
 		assertEquals(10.0, job.getProgressFrom(), delta);
 		assertEquals(16.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 8000L, "[progress ranged-substep 10-50]");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(16.0, job.getProgressEstimate(8000L), delta);
 		assertEquals(16.0, job.getProgressFrom(), delta);
 		assertEquals(40.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 9000L, "[progress ranged-substep 50-100 cumulative-substep]");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(40.0, job.getProgressEstimate(9000L), delta);
 		assertEquals(40.0, job.getProgressFrom(), delta);
 		assertEquals(70.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 10000L, "[progress cumulative-substep 10]");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(40.0, job.getProgressEstimate(10000L), delta);
 		assertEquals(40.0, job.getProgressFrom(), delta);
 		assertEquals(43.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 11000L, "[progress cumulative-substep 30]");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(43.0, job.getProgressEstimate(11000L), delta);
 		assertEquals(43.0, job.getProgressFrom(), delta);
 		assertEquals(52.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 12000L, "[progress cumulative-substep 60]");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(52.0, job.getProgressEstimate(12000L), delta);
 		assertEquals(52.0, job.getProgressFrom(), delta);
 		assertEquals(70.0, job.getProgressTo(), delta);
@@ -292,26 +307,31 @@ public class ProgressTest {
 		assertEquals(10.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 5000L, "[progress 5/50]");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(10.0, job.getProgressEstimate(5000L), delta);
 		assertEquals(10.0, job.getProgressFrom(), delta);
 		assertEquals(20.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 6000L, "[progress 25 substep]");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(20.0, job.getProgressEstimate(6000L), delta);
 		assertEquals(20.0, job.getProgressFrom(), delta);
 		assertEquals(45.0, job.getProgressTo(), delta);
 		
 		addMessage(job, 7000L, "[progress substep 10]");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(20.0, job.getProgressEstimate(7000L), delta);
 		assertEquals(20.0, job.getProgressFrom(), delta);
 		assertEquals(22.5, job.getProgressTo(), delta);
 		
 		addMessage(job, 8000L, "[progress substep 40]");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(22.5, job.getProgressEstimate(8000L), delta);
 		assertEquals(22.5, job.getProgressFrom(), delta);
 		assertEquals(32.5, job.getProgressTo(), delta);
 		
 		addMessage(job, 9000L, "[progress substep 50]");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
 		assertEquals(32.5, job.getProgressEstimate(9000L), delta);
 		assertEquals(32.5, job.getProgressFrom(), delta);
 		assertEquals(45.0, job.getProgressTo(), delta);
@@ -345,8 +365,12 @@ public class ProgressTest {
 		addMessage(job, 1000L, "[progress unknown-name 50]");
 		addMessage(job, 1000L, "[progress unknown-name 100]");
 		addMessage(job, 1000L, "[progress other-unknown-name 100]");
+		addMessage(job, 1000L, "[progress substep 100 deep]");
+		addMessage(job, 1000L, "[progress deep 100 very-deep]");
+		addMessage(job, 1000L, "[progress very-deep 100 very-very-deep]");
+		addMessage(job, 1000L, "[progress very-very-deep 100 very-very-very-deep]");
 		
-		assertEquals(21, job.getMessages().size());
+		assertEquals(25, job.getMessages().size());
 		
 		assertEquals(true, job.getMessages().get(0).getText().length() > 0);
 		assertEquals(false, job.getMessages().get(1).getText().length() > 0);
@@ -369,8 +393,12 @@ public class ProgressTest {
 		assertEquals(false, job.getMessages().get(18).getText().length() > 0);
 		assertEquals(false, job.getMessages().get(19).getText().length() > 0);
 		assertEquals(false, job.getMessages().get(20).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(21).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(22).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(23).getText().length() > 0);
+		assertEquals(false, job.getMessages().get(24).getText().length() > 0);
 		
-		assertEquals(1, job.getMessages().get(0).depth.intValue());
+		assertEquals(0, job.getMessages().get(0).depth.intValue());
 		assertEquals(0, job.getMessages().get(1).depth.intValue());
 		assertEquals(0, job.getMessages().get(2).depth.intValue());
 		assertEquals(0, job.getMessages().get(3).depth.intValue());
@@ -390,19 +418,26 @@ public class ProgressTest {
 		assertEquals(1, job.getMessages().get(17).depth.intValue());
 		assertEquals(2, job.getMessages().get(18).depth.intValue());
 		assertEquals(2, job.getMessages().get(19).depth.intValue());
-		assertEquals(3, job.getMessages().get(20).depth.intValue());
+		assertEquals(2, job.getMessages().get(20).depth.intValue());
+		assertEquals(1, job.getMessages().get(21).depth.intValue());
+		assertEquals(2, job.getMessages().get(22).depth.intValue());
+		assertEquals(3, job.getMessages().get(23).depth.intValue());
+		assertEquals(4, job.getMessages().get(24).depth.intValue());
 		
-		// filter on depth 0, 1, 2 and 3
-		assertEquals(6, job.getMessages(0).size());
+		
+		// filter on depth
+		
+		assertEquals(7, job.getMessages(0).size());
 		assertEquals(0, job.getMessages(0).get(0).depth.intValue());
 		assertEquals(0, job.getMessages(0).get(1).depth.intValue());
 		assertEquals(0, job.getMessages(0).get(2).depth.intValue());
 		assertEquals(0, job.getMessages(0).get(3).depth.intValue());
 		assertEquals(0, job.getMessages(0).get(4).depth.intValue());
 		assertEquals(0, job.getMessages(0).get(5).depth.intValue());
+		assertEquals(0, job.getMessages(0).get(6).depth.intValue());
 		
-		assertEquals(13, job.getMessages(1).size());
-		assertEquals(1, job.getMessages(1).get(0).depth.intValue());
+		assertEquals(14, job.getMessages(1).size());
+		assertEquals(0, job.getMessages(1).get(0).depth.intValue());
 		assertEquals(0, job.getMessages(1).get(1).depth.intValue());
 		assertEquals(0, job.getMessages(1).get(2).depth.intValue());
 		assertEquals(0, job.getMessages(1).get(3).depth.intValue());
@@ -416,8 +451,123 @@ public class ProgressTest {
 		assertEquals(1, job.getMessages(1).get(11).depth.intValue());
 		assertEquals(1, job.getMessages(1).get(12).depth.intValue());
 		
-		assertEquals(20, job.getMessages(2).size());
-		assertEquals(21, job.getMessages(3).size());
+		assertEquals(23, job.getMessages(2).size());
+		assertEquals(24, job.getMessages(3).size());
+		assertEquals(25, job.getMessages(4).size());
+		assertEquals(25, job.getMessages(5).size());
+	}
+	
+	@Test
+	public void testGlobbing() {
+		
+		Job job = new Job();
+		job.setStatus(Status.RUNNING);
+		
+		
+		// no globbing
+		
+		addMessage(job, 0L, "[progress 1 org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run] main");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress other 1 org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run] ignore");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run 1] sub");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		
+		// globbing everything
+
+		addMessage(job, 0L, "[progress 1 *] main");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress other 1 org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run] sub");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress something 1] ignore");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run 1] subsub");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+		
+		addMessage(job, 0L, "[progress something 1] ignore");
+		assertEquals(3, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		
+		// globing at the start
+		
+		addMessage(job, 0L, "[progress 1 *.PxTransformStep.run] main");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress other 1 org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run] ignore");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run 1] sub");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+		
+		addMessage(job, 0L, "[progress something 1] ignore");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		
+		// globing at the end
+		
+		addMessage(job, 0L, "[progress 1 org.daisy.*] main");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress other 1 org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run] ignore");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run 1] sub");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+		
+		addMessage(job, 0L, "[progress something 1] ignore");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		
+		// globbing at the start and end
+
+		addMessage(job, 0L, "[progress 1 *.PxTransformStep*] main");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress other 1 org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run] ignore");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run 1] sub");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+		
+		addMessage(job, 0L, "[progress something 1] ignore");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		
+		// multiple globs
+		
+		addMessage(job, 0L, "[progress 1 *braille*calabash*Step.run] main");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress other 1 org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run] ignore");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress org.daisy.pipeline.braille.common.calabash.impl.PxTransformStep.run 1] sub");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+		
+		addMessage(job, 0L, "[progress something 1] ignore");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+		
+		
+		// glob with '?'
+		
+		addMessage(job, 0L, "[progress 1 a?c] main");
+		assertEquals(0, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress abbc 1] ignore");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
+		addMessage(job, 0L, "[progress abc 1] sub");
+		assertEquals(1, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+		
+		addMessage(job, 0L, "[progress something 1] ignore");
+		assertEquals(2, job.getMessages().get(job.getMessages().size()-1).depth.intValue());
+
 	}
 	
 }

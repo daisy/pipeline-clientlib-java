@@ -104,17 +104,50 @@ public class JobMessages extends AbstractList<Message> {
 	// $2: "-to sub-name"
 	
 	private class Progress {
-		public String name;
+		private Pattern namePattern;
+		private String nameString;
+		private boolean nameIsGlob = false;
+		
 		public double from = 0.0;
 		public double to = 100.0;
 		public long timeStamp = new Date().getTime();
+		
+		public boolean active = false; // will be set to true when a message on this level arrives
+		
 		public Progress(String name) {
-			this.name = name;
+			if (name.contains("*") || name.contains("?")) {
+				String regexName = "";
+				for (char c : name.toCharArray()) {
+					regexName += c == '?' ? "." : c == '*' ? ".*" : c == '.' ? "\\." : c;
+				}
+				this.namePattern = Pattern.compile(regexName, Pattern.DOTALL);
+				this.nameIsGlob = true;
+				
+			} else {
+				this.nameString = name;
+			}
+		}
+		public String getName() {
+			if (nameIsGlob) {
+				return namePattern == null ? null : namePattern.pattern();
+				
+			} else {
+				return nameString;
+			}
+		}
+		public boolean matchesName(String name) {
+			if (nameIsGlob) {
+				if (active) { return false; } // only the first match should be used; otherwise a '*' would match all following messages
+				return namePattern == null ? false : namePattern.matcher(name).matches();
+				
+			} else {
+				return nameString == null ? false : nameString.equals(name);
+			}
 		}
 	}
 	
 	private Stack<Progress> currentProgress = new Stack<Progress>();
-	private int currentDepth = 0;
+	private int currentDepth = -1;
 	private int lastMessageCount = 0;
 	private boolean dirty = true;
 	private void updateProgress() {
@@ -128,7 +161,7 @@ public class JobMessages extends AbstractList<Message> {
 			progressLastTime = initialProgressLastTime;
 			progressTimeConstant = initialProgressTimeConstant;
 			currentProgress.clear();
-			currentDepth = 0;
+			currentDepth = -1;
 			lastMessageCount = 0;
 		}
 		if (currentProgress.isEmpty()) {
@@ -163,22 +196,16 @@ public class JobMessages extends AbstractList<Message> {
 						sub = split[1].trim();
 					}
 
-					// check first if myName is part of the current progress path
-					boolean containsString = false;
+					// determine progress depth
 					int depth = 0;
 					for (Progress p : currentProgress) {
-						if (p.name != null && p.name.equals(myName)) {
-							containsString = true;
+						if (p.matchesName(myName)) {
 							break;
 						} else {
-							depth++;
+							if (p.active) {
+								depth++;
+							}
 						}
-					}
-					if (!containsString) {
-						// myName is not part of the current progress path => create a new sub-progress with that name
-						Progress subProgress = new Progress(myName);
-						subProgress.timeStamp = new Long(m.timeStamp);
-						currentProgress.push(subProgress);
 					}
 					m.depth = currentDepth = depth;
 
@@ -195,7 +222,8 @@ public class JobMessages extends AbstractList<Message> {
 						currentProgress.push(subProgress);
 					}
 					
-					if (myName.equals(progress.name)) {
+					if (progress.matchesName(myName)) {
+						progress.active = true;
 						int parsedFrom = -1;
 						int parsedTo = -1;
 						int parsedTotal = -1;
