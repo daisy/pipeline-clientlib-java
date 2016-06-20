@@ -12,7 +12,7 @@
 
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>clientlib-java-aggregator</artifactId>
-  <version>2.2.7</version>
+  <version>2.2.8-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>DAISY Pipeline 2 :: Aggregator POM for the Java Client Library</name>
 
@@ -40,8 +40,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <scm>
-    <tag>v4.7.0</tag>
-  </scm>
 </project>
