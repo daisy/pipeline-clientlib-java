@@ -9,12 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.filestorage.JobValidator;
+import org.daisy.pipeline.client.models.JobMessages.Progress;
 import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
 import org.w3c.dom.Document;
@@ -1042,5 +1044,13 @@ public class Job implements Comparable<Job> {
 		} else {
 			return messages.getProgressEstimate(now);
 		}
+	}
+	
+	/**
+	 * The progress stack contains information about the progress at each progress "depth".
+	 * @return 
+	 */
+	public Stack<JobMessages.Progress> getProgressStack() {
+		return messages.getProgressStack();
 	}
 }

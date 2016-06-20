@@ -103,7 +103,7 @@ public class JobMessages extends AbstractList<Message> {
 	// $2: "from"
 	// $2: "-to sub-name"
 	
-	private class Progress {
+	public class Progress {
 		private Pattern namePattern;
 		private String nameString;
 		private boolean nameIsGlob = false;
@@ -127,6 +127,7 @@ public class JobMessages extends AbstractList<Message> {
 				this.nameString = name;
 			}
 		}
+		
 		public String getName() {
 			if (nameIsGlob) {
 				return namePattern == null ? null : namePattern.pattern();
@@ -135,6 +136,7 @@ public class JobMessages extends AbstractList<Message> {
 				return nameString;
 			}
 		}
+		
 		public boolean matchesName(String name) {
 			if (nameIsGlob) {
 				if (active) { return false; } // only the first match should be used; otherwise a '*' would match all following messages
@@ -144,10 +146,14 @@ public class JobMessages extends AbstractList<Message> {
 				return nameString == null ? false : nameString.equals(name);
 			}
 		}
+		
+		public void resolveGlob(String name) {
+			this.nameString = name;
+			this.nameIsGlob = false;
+		}
 	}
 	
 	private Stack<Progress> currentProgress = new Stack<Progress>();
-	private int currentDepth = -1;
 	private int lastMessageCount = 0;
 	private boolean dirty = true;
 	private void updateProgress() {
@@ -161,7 +167,6 @@ public class JobMessages extends AbstractList<Message> {
 			progressLastTime = initialProgressLastTime;
 			progressTimeConstant = initialProgressTimeConstant;
 			currentProgress.clear();
-			currentDepth = -1;
 			lastMessageCount = 0;
 		}
 		if (currentProgress.isEmpty()) {
@@ -173,7 +178,7 @@ public class JobMessages extends AbstractList<Message> {
 		boolean progressUpdated = false;
 		for (int i = lastMessageCount; i < size(); i++) {
 			Message m = backingList.get(i);
-			m.depth = currentDepth + 1;
+			m.depth = currentProgress.peek().active ? currentProgress.size() : currentProgress.size() - 1;
 			
 			// set progressFirstTime to time of first message (i.e. job start time)
 			if (progressFirstTime == null) {
@@ -197,9 +202,11 @@ public class JobMessages extends AbstractList<Message> {
 					}
 
 					// determine progress depth
+					boolean validProgress = false;
 					int depth = 0;
 					for (Progress p : currentProgress) {
 						if (p.matchesName(myName)) {
+							validProgress = true;
 							break;
 						} else {
 							if (p.active) {
@@ -207,7 +214,11 @@ public class JobMessages extends AbstractList<Message> {
 							}
 						}
 					}
-					m.depth = currentDepth = depth;
+					m.depth = depth;
+					
+					if (!validProgress) {
+						continue;
+					}
 
 					// remove progress elements nested under myName
 					for (int j = currentProgress.size() - 1; j > depth; j--) {
@@ -223,6 +234,7 @@ public class JobMessages extends AbstractList<Message> {
 					}
 					
 					if (progress.matchesName(myName)) {
+						progress.resolveGlob(myName);
 						progress.active = true;
 						int parsedFrom = -1;
 						int parsedTo = -1;
@@ -283,5 +295,13 @@ public class JobMessages extends AbstractList<Message> {
 
 		lastMessageCount = size();
 		dirty = false;
+	}
+	
+	/**
+	 * The progress stack contains information about the progress at each progress "depth".
+	 * @return 
+	 */
+	public Stack<Progress> getProgressStack() {
+		return currentProgress;
 	}
 }
