@@ -1,6 +1,8 @@
 package org.daisy.pipeline.client.models;
 
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** A job message. */
 public class Message implements Comparable<Message> {
@@ -15,6 +17,8 @@ public class Message implements Comparable<Message> {
     public Integer column;
     public Long timeStamp = new Date().getTime(); // NOTE: the timeStamp is currently not exposed through the web api so we just set it here to the time the object is instantiated instead.
     public String file;
+    
+    public Level inferredLevel; // most severe level among itself and it's sub-messages in the message tree created based on the progress messages
     
     @Override
 	public int compareTo(Message other) {
@@ -32,12 +36,24 @@ public class Message implements Comparable<Message> {
 	}
 	
 	public String getText() {
-		String text = this.text;
-		if (text != null) {
-			// remove progress info from message
-			text = text.replaceAll("^\\[[Pp][Rr][Oo][Gg][Rr][Ee][Ss][Ss][^\\]]*\\] *", "");
+		if (this.text == null) {
+			return null;
+		} else { // remove progress info from message
+			Matcher m = MESSAGE_PATTERN.matcher(this.text);
+			m.matches();
+			String text = m.group("msg");
+			return text == null ? "" : text;
 		}
-		return text;
 	}
-
+	
+	public String getProgressInfo() {
+		Matcher m = MESSAGE_PATTERN.matcher(this.text);
+		m.matches();
+		String progressInfo = m.group("progress");
+		return progressInfo == null ? "" : progressInfo;
+	}
+	
+	private static final Pattern MESSAGE_PATTERN
+		= Pattern.compile("^(?<progress>\\[[Pp][Rr][Oo][Gg][Rr][Ee][Ss][Ss][^\\]]*\\])? *(?<msg>.+)?$", Pattern.DOTALL);
+	
 }

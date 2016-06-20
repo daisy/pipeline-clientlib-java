@@ -9,9 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.Stack;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
@@ -45,7 +44,7 @@ public class Job implements Comparable<Job> {
 	private List<Argument> argumentInputs; // used when there's no script given
 	private List<Argument> argumentOutputs; // used when there's no script given
 	private List<Callback> callback;
-	private List<Message> messages;
+	private JobMessages messages;
 	private Node messagesNode;
 	private String logHref;
 	private Result result; // "all results"-zip
@@ -224,7 +223,7 @@ public class Job implements Comparable<Job> {
 		if (messages == null && messagesNode != null) {
 			try {
 
-				messages = new ArrayList<Message>();
+				messages = new JobMessages();
 				List<Node> messageNodes = XPath.selectNodes("d:message", this.messagesNode, XPath.dp2ns);
 
 				for (Node messageNode : messageNodes) {
@@ -232,6 +231,7 @@ public class Job implements Comparable<Job> {
 					m.text = XPath.selectText(".", messageNode, XPath.dp2ns);
 					if (XPath.selectText("@level", messageNode, XPath.dp2ns) != null) {
 						m.level = Message.Level.valueOf(XPath.selectText("@level", messageNode, XPath.dp2ns));
+						m.inferredLevel = m.level;
 					}
 					if (XPath.selectText("@sequence", messageNode, XPath.dp2ns) != null) {
 						m.sequence = Integer.valueOf(XPath.selectText("@sequence", messageNode, XPath.dp2ns));
@@ -256,8 +256,6 @@ public class Job implements Comparable<Job> {
 				Pipeline2Logger.logger().error("Unable to parse messages XML", e);
 			}
 		}
-		
-		updateProgress();
 		
 		if (maxDepth >= 0) {
 			ArrayList<Message> filteredMessages = new ArrayList<Message>();
@@ -489,7 +487,7 @@ public class Job implements Comparable<Job> {
 		}
 		
 		if (this.messages == null) {
-			this.messages = new ArrayList<Message>();
+			this.messages = new JobMessages();
 		}
 		
 		Collections.sort(messages);
@@ -944,15 +942,6 @@ public class Job implements Comparable<Job> {
 		return arguments;
 	}
 	
-	
-	
-	
-	private double progressLastPercentage = 0.0;
-	private double progressNextPercentage = 100.0;
-	private Long progressFirstTime = null;
-	private Long progressLastTime = null;
-	private double progressTimeConstant = 20000.0;
-	
 	/**
 	 * Get the start of the current progress interval as a percentage.
 	 * 
@@ -966,8 +955,11 @@ public class Job implements Comparable<Job> {
 	 * @return the start of the current progress interval.
 	 */
 	public double getProgressFrom() {
-		updateProgress();
-		return progressLastPercentage;
+		if (messages == null) {
+			return 0.0;
+		} else {
+			return messages.getProgressFrom();
+		}
 	}
 	
 	/**
@@ -976,8 +968,11 @@ public class Job implements Comparable<Job> {
 	 * @return the time as UNIX time.
 	 */
 	public Long getProgressFromTime() {
-		updateProgress();
-		return progressLastTime;
+		if (messages == null) {
+			return null;
+		} else {
+			return messages.getProgressFromTime();
+		}
 	}
 
 	/**
@@ -988,8 +983,11 @@ public class Job implements Comparable<Job> {
 	 * @return the end of the current progress interval.
 	 */
 	public double getProgressTo() {
-		updateProgress();
-		return progressNextPercentage;
+		if (messages == null) {
+			return 100.0;
+		} else {
+			return messages.getProgressTo();
+		}
 	}
 	
 
@@ -1039,179 +1037,20 @@ public class Job implements Comparable<Job> {
 	public double getProgressEstimate(Long now) {
 		if (status == null || status == Status.IDLE) {
 			return 0.0;
-		}
-		if (status != Status.RUNNING) {
+		} else if (status != Status.RUNNING) {
 			return 100.0;
-		}
-		
-		updateProgress();
-		Long previousTime = getProgressFromTime() == null ? now : getProgressFromTime();
-		Double previousPercentage = getProgressFrom();
-		Double nextPercentage = getProgressTo();
-		return nextPercentage - (nextPercentage - previousPercentage) * Math.exp(-(double)(now - previousTime) / progressTimeConstant);
-	}
-	
-	// Progress format: [progress name FROM-TO sub-name]
-	// in the main script, name must be omitted, otherwise,
-	// name must be the same as either the preceding steps name or sub-name.
-	// FROM is required and must be an integer in the range [0,100].
-	// TO is optional if sub-name is omitted and will default to 100.
-	// If not omitted, TO must also be an integer in the range [0,100],
-	// and must be larger than or equal to FROM.
-	// sub-name is the name of a sub-step and can be used to get a more
-	// fine-grained progress info.
-	private static final Pattern PROGRESS_PATTERN;
-	static {
-		PROGRESS_PATTERN = Pattern.compile("^\\[progress(| [^\\s\\]]+) (\\d+)([^\\s\\]]* ?[^\\s\\]]*)\\] *(.*?)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-	}
-	// $1: " my-name"
-	// $2: "from"
-	// $2: "-to sub-name"
-	
-	public class Progress {
-		public String name;
-		public double from = 0.0;
-		public double to = 100.0;
-		public long timeStamp = new Date().getTime();
-		public Progress(String name) {
-			this.name = name;
+		} else if (messages == null) {
+			return 0.0;
+		} else {
+			return messages.getProgressEstimate(now);
 		}
 	}
 	
-	private List<Progress> currentProgress = new ArrayList<Progress>();
-	private int lastMessageCount = 0;
-	private void updateProgress() {
-		if (messages == null || lastMessageCount == messages.size()) {
-			return; // no new messages => no need to update
-		}
-
-		if (currentProgress.isEmpty()) {
-			Progress mainProgress = new Progress("");
-			mainProgress.timeStamp = new Long(messages.get(0).timeStamp);
-			currentProgress.add(mainProgress);
-		}
-		
-		boolean progressUpdated = false;
-		for (int i = lastMessageCount; i < messages.size(); i++) {
-			Message m = messages.get(i);
-			if (i > 0) {
-				m.depth = messages.get(i-1).depth;
-			}
-			
-			// set progressFirstTime to time of first message (i.e. job start time)
-			if (progressFirstTime == null) {
-				progressFirstTime = m.timeStamp;
-				progressLastTime = progressFirstTime;
-			}
-			
-			if (m.text != null && m.text.contains("[")) {
-
-				// if there's progress info in the message
-				Matcher matcher = PROGRESS_PATTERN.matcher(m.text);
-				if (matcher.find()) {
-					String myName = matcher.group(1).trim();
-					String from = matcher.group(2).trim();
-					String to = matcher.group(3);
-					String sub = "";
-					if (to.contains(" ")) {
-						String[] split = to.split(" ");
-						to = split[0].trim();
-						sub = split[1].trim();
-					}
-
-					// check first if myName is part of the current progress path
-					boolean containsString = false;
-					int depth = 0;
-					for (Progress p : currentProgress) {
-						if (p.name != null && p.name.equals(myName)) {
-							containsString = true;
-							break;
-						} else {
-							depth++;
-						}
-					}
-					if (!containsString) {
-						continue; // myName is not part of the current progress path => ignore it
-					}
-					m.depth = depth;
-
-					// remove progress elements nested under myName
-					for (int j = currentProgress.size()-1; j >= 0; j--) {
-						if (currentProgress.get(j).name.equals(myName)) {
-							break;
-						} else {
-							currentProgress.remove(j);
-						}
-					}
-
-					// update progress element with new info
-					Progress progress = currentProgress.get(currentProgress.size()-1);
-					if (!"".equals(sub)) {
-						Progress subProgress = new Progress(sub);
-						subProgress.timeStamp = new Long(m.timeStamp);
-						currentProgress.add(subProgress);
-					}
-					
-					if (myName.equals(progress.name)) {
-						int parsedFrom = -1;
-						int parsedTo = -1;
-						int parsedTotal = -1;
-						if (!"".equals(from)) {
-							try { parsedFrom = Integer.parseInt(from); }
-							catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse progress integer: '"+from+"'."); }
-						}
-						if (!"".equals(to)) {
-							if (to.startsWith("/")) {
-								try { parsedTotal = Integer.parseInt(to.substring(1)); }
-								catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse fractioned progress 'total' integer: '"+to+"'."); }
-							} else {
-								try { parsedTo = Math.abs(Integer.parseInt(to)); }
-								catch (NumberFormatException e) { Pipeline2Logger.logger().warn("Unable to parse ranged progress 'to' integer: '"+to+"'."); }
-							}
-						}
-						if (parsedFrom >= 0) {
-							if (parsedTo < 0) {
-								// cumulative progress (optionally fractioned)
-								if (!(progress.from == 0.0 && progress.to == 100.0)) {
-									progress.from = progress.to;
-								}
-								double total = parsedTotal < 0 ? 100.0 : parsedTotal;
-								progress.to = Math.min(100, progress.from + parsedFrom * 100.0 / total);
-								
-							} else {
-								// ranged progress
-								progress.from = parsedFrom;
-								progress.to = parsedTo;
-							}
-							progress.timeStamp = m.timeStamp;
-							progressUpdated = true;
-						}
-						
-					} else {
-						// progress info with wrong name => ignore it
-					}
-				}
-			}
-		}
-		
-		if (progressUpdated) {
-			// calculate current progress
-			progressLastTime = currentProgress.get(currentProgress.size()-1).timeStamp;
-			progressLastPercentage = 0.0;
-			progressNextPercentage = 100.0;
-			for (Progress p : currentProgress) {
-				double lastPercentage = progressLastPercentage + (progressNextPercentage - progressLastPercentage) / 100.0 * p.from;
-				double nextPercentage = progressLastPercentage + (progressNextPercentage - progressLastPercentage) / 100.0 * p.to;
-				progressLastPercentage = lastPercentage;
-				progressNextPercentage = nextPercentage;
-			}
-			if (progressLastPercentage > 0 && progressFirstTime != null && progressLastTime != null && progressLastTime - progressFirstTime > 0 && progressNextPercentage - progressLastPercentage > 0.0) {
-				progressTimeConstant = - (progressLastTime-progressFirstTime) * (progressNextPercentage/progressLastPercentage - 1.0) / Math.log(0.05);
-			}
-		}
-
-		lastMessageCount = messages.size();
-
+	/**
+	 * The progress stack contains information about the progress at each progress "depth".
+	 * @return 
+	 */
+	public Stack<JobMessages.Progress> getProgressStack() {
+		return messages.getProgressStack();
 	}
-
 }

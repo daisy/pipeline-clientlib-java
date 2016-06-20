@@ -12,8 +12,8 @@
 
     <groupId>org.daisy.pipeline</groupId>
     <artifactId>clientlib-java</artifactId>
-    <version>4.6.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <version>4.7.1-SNAPSHOT</version>
+    <packaging>bundle</packaging>
 
     <name>DAISY Pipeline 2 :: Java Client Library</name>
     <description>A Java library for communicating with the DAISY Pipeline 2.</description>
@@ -68,6 +68,19 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Main-Class>org.daisy.pipeline.client.Main</Main-Class>
+                    </instructions>
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
                 </configuration>
             </plugin>
             <plugin>
