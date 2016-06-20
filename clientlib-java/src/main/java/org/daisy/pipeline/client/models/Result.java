@@ -138,7 +138,6 @@ public class Result implements Comparable<Result> {
 					return f;
 
 				} else {
-					System.out.println("file: "+f);
 					return null;
 				}
 			} catch (URISyntaxException e) {

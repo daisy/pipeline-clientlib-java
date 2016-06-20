@@ -18,6 +18,8 @@ public class Message implements Comparable<Message> {
     public Long timeStamp = new Date().getTime(); // NOTE: the timeStamp is currently not exposed through the web api so we just set it here to the time the object is instantiated instead.
     public String file;
     
+    public Level inferredLevel; // most severe level among itself and it's sub-messages in the message tree created based on the progress messages
+    
     @Override
 	public int compareTo(Message other) {
 		return this.sequence - other.sequence;

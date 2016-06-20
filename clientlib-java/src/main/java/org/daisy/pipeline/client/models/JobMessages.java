@@ -114,6 +114,9 @@ public class JobMessages extends AbstractList<Message> {
 		
 		public boolean active = false; // will be set to true when a message on this level arrives
 		
+		public Message currentMessage = null;
+		public Message.Level currentLevel = Message.Level.TRACE;
+		
 		public Progress(String name) {
 			if (name.contains("*") || name.contains("?")) {
 				String regexName = "";
@@ -151,6 +154,23 @@ public class JobMessages extends AbstractList<Message> {
 			this.nameString = name;
 			this.nameIsGlob = false;
 		}
+		
+		public void updateSeverity(Message.Level level) {
+			if (level != null && currentMessage != null) {
+				if (currentMessage.inferredLevel == null || level.compareTo(currentMessage.inferredLevel) < 0) {
+					currentMessage.inferredLevel = level;
+				}
+			}
+			
+			if (currentLevel == null) {
+				currentLevel = level;
+				
+			} else if (level != null) {
+				if (level.compareTo(currentLevel) < 0) {
+					currentLevel = level;
+				}
+			}
+		}
 	}
 	
 	private Stack<Progress> currentProgress = new Stack<Progress>();
@@ -178,7 +198,17 @@ public class JobMessages extends AbstractList<Message> {
 		boolean progressUpdated = false;
 		for (int i = lastMessageCount; i < size(); i++) {
 			Message m = backingList.get(i);
-			m.depth = currentProgress.peek().active ? currentProgress.size() : currentProgress.size() - 1;
+			m.inferredLevel = m.level;
+			if (currentProgress.peek().active) {
+				m.depth = currentProgress.size();
+				currentProgress.peek().updateSeverity(m.level);
+				
+			} else {
+				m.depth = currentProgress.size() - 1;
+				if (currentProgress.size() > 1) {
+					currentProgress.get(currentProgress.size()-2).updateSeverity(m.level);
+				}
+			}
 			
 			// set progressFirstTime to time of first message (i.e. job start time)
 			if (progressFirstTime == null) {
@@ -222,7 +252,8 @@ public class JobMessages extends AbstractList<Message> {
 
 					// remove progress elements nested under myName
 					for (int j = currentProgress.size() - 1; j > depth; j--) {
-						currentProgress.pop();
+						Progress poppedProgress = currentProgress.pop();
+						currentProgress.peek().updateSeverity(poppedProgress.currentLevel);
 					}
 
 					// update progress element with new info
@@ -236,6 +267,7 @@ public class JobMessages extends AbstractList<Message> {
 					if (progress.matchesName(myName)) {
 						progress.resolveGlob(myName);
 						progress.active = true;
+						progress.currentMessage = m;
 						int parsedFrom = -1;
 						int parsedTo = -1;
 						int parsedTotal = -1;
@@ -277,6 +309,13 @@ public class JobMessages extends AbstractList<Message> {
 			}
 		}
 		
+		// infer levels for active progress objects
+		for (int j = currentProgress.size() - 1; j > 0; j--) {
+			if (currentProgress.get(j).currentMessage != null) {
+				currentProgress.get(j-1).updateSeverity(currentProgress.get(j).currentLevel);
+			}
+		}
+		
 		if (progressUpdated) {
 			// calculate current progress
 			progressLastTime = currentProgress.peek().timeStamp;
@@ -304,4 +343,5 @@ public class JobMessages extends AbstractList<Message> {
 	public Stack<Progress> getProgressStack() {
 		return currentProgress;
 	}
+	
 }

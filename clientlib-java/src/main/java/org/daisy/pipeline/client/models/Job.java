@@ -16,7 +16,6 @@ import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.filestorage.JobValidator;
-import org.daisy.pipeline.client.models.JobMessages.Progress;
 import org.daisy.pipeline.client.utils.XML;
 import org.daisy.pipeline.client.utils.XPath;
 import org.w3c.dom.Document;
@@ -232,6 +231,7 @@ public class Job implements Comparable<Job> {
 					m.text = XPath.selectText(".", messageNode, XPath.dp2ns);
 					if (XPath.selectText("@level", messageNode, XPath.dp2ns) != null) {
 						m.level = Message.Level.valueOf(XPath.selectText("@level", messageNode, XPath.dp2ns));
+						m.inferredLevel = m.level;
 					}
 					if (XPath.selectText("@sequence", messageNode, XPath.dp2ns) != null) {
 						m.sequence = Integer.valueOf(XPath.selectText("@sequence", messageNode, XPath.dp2ns));
