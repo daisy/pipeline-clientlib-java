@@ -4,7 +4,8 @@
                 xmlns:p="http://www.w3.org/ns/xproc"
                 xmlns:px="http://www.daisy.org/ns/pipeline/xproc"
                 px:input-filesets="daisy202 daisy3"
-                px:output-filesets="epub2 epub3">
+                px:output-filesets="epub2 epub3"
+                exclude-inline-prefixes="#all">
     
     <p:documentation xmlns="http://www.w3.org/1999/xhtml">
         <h1 px:role="name">Example script</h1>
@@ -69,6 +70,24 @@
         </p:documentation>
     </p:option>
     
-    <p:sink/>
+    <p:wrap match="/*" wrapper="source" name="source"/>
+    
+    <p:add-attribute match="/*" attribute-name="value" name="option">
+        <p:input port="source">
+            <p:inline><option name="href"/></p:inline>
+        </p:input>
+        <p:with-option name="attribute-value" select="$href"/>
+    </p:add-attribute>
+    
+    <p:wrap-sequence wrapper="result">
+        <p:input port="source">
+            <p:pipe step="source" port="result"/>
+            <p:pipe step="option" port="result"/>
+        </p:input>
+    </p:wrap-sequence>
+    
+    <p:store>
+        <p:with-option name="href" select="resolve-uri('result.xml', $output-dir)"/>
+    </p:store>
     
 </p:declare-step>

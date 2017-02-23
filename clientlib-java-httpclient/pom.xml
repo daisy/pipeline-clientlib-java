@@ -145,6 +145,11 @@
             <artifactId>clientlib-java</artifactId>
             <version>4.7.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!--
             test dependencies
         -->
@@ -207,14 +212,6 @@
             <groupId>org.daisy.libs</groupId>
             <artifactId>jing</artifactId>
             <version>20120724.0.0</version>
-            <scope>test</scope>
-        </dependency>
-        <!--
-            FIXME: belongs in the framework as runtime dependency (for fileupload)
-        -->
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
