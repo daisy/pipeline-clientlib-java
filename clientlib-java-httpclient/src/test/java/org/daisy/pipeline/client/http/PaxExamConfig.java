@@ -20,6 +20,7 @@ import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
+import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.Option;
@@ -56,6 +57,8 @@ public abstract class PaxExamConfig {
 			logbackConfigFile(),
 			felixDeclarativeServices(),
 			junitBundles(),
+			systemPackage("com.sun.org.apache.xml.internal.resolver"),
+			systemPackage("com.sun.org.apache.xml.internal.resolver.tools"),
 			mavenBundlesWithDependencies(
 				logbackClassic(),
 				mavenBundle("commons-io:commons-io:?"),
