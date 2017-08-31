@@ -84,7 +84,7 @@ public abstract class PaxExamConfig {
 			wrappedBundle(
 				mavenBundle("org.daisy.pipeline:clientlib-java:?"))
 				.bundleSymbolicName("org.daisy.pipeline.clientlib-java")
-				.bundleVersion("4.7.1.SNAPSHOT"),
+				.bundleVersion("4.8.1.SNAPSHOT"),
 			mavenBundle("org.apache.httpcomponents:httpcore-osgi:?"),
 			mavenBundle("org.apache.httpcomponents:httpclient-osgi:?")
 		);
