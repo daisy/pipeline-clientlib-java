@@ -23,6 +23,7 @@ import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
@@ -84,7 +85,7 @@ public abstract class PaxExamConfig {
 			wrappedBundle(
 				mavenBundle("org.daisy.pipeline:clientlib-java:?"))
 				.bundleSymbolicName("org.daisy.pipeline.clientlib-java")
-				.bundleVersion("4.8.1.SNAPSHOT"),
+				.bundleVersion(MavenUtils.asInProject().getVersion("org.daisy.pipeline", "clientlib-java")),
 			mavenBundle("org.apache.httpcomponents:httpcore-osgi:?"),
 			mavenBundle("org.apache.httpcomponents:httpclient-osgi:?")
 		);
