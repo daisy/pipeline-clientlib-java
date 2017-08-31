@@ -52,7 +52,7 @@ public class WSResponse {
 	
 	/**
 	 * Returns the response body as a String.
-	 * @return
+	 * @return the response body as a String.
 	 * @throws Pipeline2Exception 
 	 */
 	public String asText() throws Pipeline2Exception {
@@ -105,7 +105,7 @@ public class WSResponse {
 	
 	/**
 	 * Returns the response body as a InputStream.
-	 * @return
+	 * @return the response body as a InputStream.
 	 * @throws Pipeline2Exception 
 	 */
 	public InputStream asStream() throws Pipeline2Exception {
@@ -128,7 +128,7 @@ public class WSResponse {
 	
 	/**
 	 * Returns the response body as an XML Document.
-	 * @return
+	 * @return the response body as an XML Document.
 	 * @throws Pipeline2Exception 
 	 */
 	public Document asXml() throws Pipeline2Exception {

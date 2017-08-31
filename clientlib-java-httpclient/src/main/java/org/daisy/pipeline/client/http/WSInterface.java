@@ -10,7 +10,7 @@ import org.daisy.pipeline.client.models.*;
 /**
  * Methods for communicating with the Pipeline 2 API.
  * 
- * @see http://code.google.com/p/daisy-pipeline/wiki/WebServiceAPI
+ * @see <a href="http://code.google.com/p/daisy-pipeline/wiki/WebServiceAPI">http://code.google.com/p/daisy-pipeline/wiki/WebServiceAPI</a>
  */
 public interface WSInterface {
 

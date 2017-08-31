@@ -225,7 +225,7 @@ public class Pipeline2HttpClient {
 	 * @param username
 	 * @param secret
 	 * @param parameters
-	 * @return
+	 * @return the signed URL as a String
 	 * @throws Pipeline2Exception
 	 */
 	public static String url(String endpoint, String path, String username, String secret, Map<String,String> parameters) throws Pipeline2Exception {
