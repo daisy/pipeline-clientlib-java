@@ -63,7 +63,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>jar-before-test</id>
+                        <id>default-jar</id>
                         <phase>generate-test-resources</phase>
                         <goals>
                             <goal>jar</goal>
