@@ -79,9 +79,9 @@ public abstract class PaxExamConfig {
 			// is no other way to keep the webservice running while the test
 			// is executed
 			wrappedBundle(
-				bundle(new File(BASEDIR, "target/clientlib-java-httpclient-2.0.1-SNAPSHOT.jar").toURL().toString()))
+				bundle(new File(BASEDIR, "target/clientlib-java-httpclient-"+MavenUtils.asInProject().getVersion("org.daisy.pipeline", "clientlib-java-httpclient")+".jar").toURL().toString()))
 				.bundleSymbolicName("org.daisy.pipeline.clientlib-java-httpclient")
-				.bundleVersion("2.0.1.SNAPSHOT"),
+				.bundleVersion(MavenUtils.asInProject().getVersion("org.daisy.pipeline", "clientlib-java-httpclient").replaceAll("-",".")),
 			wrappedBundle(
 				mavenBundle("org.daisy.pipeline:clientlib-java:?"))
 				.bundleSymbolicName("org.daisy.pipeline.clientlib-java")
