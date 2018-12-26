@@ -29,7 +29,7 @@ import org.w3c.dom.Node;
  */
 public class Job implements Comparable<Job> {
 
-	public enum Status { IDLE, RUNNING, DONE, ERROR, VALIDATION_FAIL };
+	public enum Status { IDLE, RUNNING, SUCCESS, ERROR, FAIL };
 	public enum Priority { high, medium, low };
 
 	private String id;
