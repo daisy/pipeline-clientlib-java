@@ -13,8 +13,6 @@ import java.nio.file.Paths;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.models.Job;
-import org.daisy.pipeline.client.models.Message;
-import org.daisy.pipeline.client.models.Message.Level;
 import org.daisy.pipeline.client.utils.XML;
 import org.junit.Test;
 import org.w3c.dom.Document;

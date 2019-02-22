@@ -1173,6 +1173,8 @@ public class Job implements Comparable<Job> {
 	}
 	
 	double getProgressEstimate(Long now, Integer timeUntilUpdateRequest) {
+		getMessages(); // lazy load messages
+		
 		if (status == null || status == Status.IDLE) {
 			return 0.0;
 		} else if (status != Status.RUNNING) {
@@ -1184,10 +1186,17 @@ public class Job implements Comparable<Job> {
 			if (previousTime == null) previousTime = now;
 			Double previousPercentage = getProgressFrom();
 			Double nextPercentage = getProgressTo();
-			return nextPercentage
-			       - (nextPercentage - previousPercentage)
-			         * Math.exp(-(double)Math.max(0L, now - previousTime)
-			                    / getProgressTimeConstant(timeUntilUpdateRequest));
+			Double inverseExponential = nextPercentage
+                                        - (nextPercentage - previousPercentage)
+                                          * Math.exp(-(double)Math.max(0L, now - previousTime)
+                                                     / getProgressTimeConstant(timeUntilUpdateRequest));
+			Double linear = previousPercentage + (now - previousTime) * getAverageProgress();
+			
+			// Linear progress will be lower than inverse exponential progress
+			// for the first 95% of the progress interval. After that, the progress
+			// follows an inverse exponential curve so that the progress is always
+			// moving forward, while never exceeding the progress interval.
+			return Math.min(linear, inverseExponential);
 			
 		}
 	}
@@ -1205,7 +1214,7 @@ public class Job implements Comparable<Job> {
 		} else {
 			double interval = toPercentage(messages.getProgressInterval());
 			if (timeUntilUpdateRequest != null) {
-				double minInterval = getAverageProgress() / timeUntilUpdateRequest;
+				double minInterval = getAverageProgress() * timeUntilUpdateRequest;
 				interval = Math.max(interval, minInterval);
 			}
 			return interval;
@@ -1213,12 +1222,15 @@ public class Job implements Comparable<Job> {
 	}
 	
 	/**
-	 * Get the average progress since the start of the job, in percentage per second
+	 * Get the average progress since the start of the job, in percentage per millisecond
 	 */
 	private double getAverageProgress() {
 		Long now = new Date().getTime();
 		Long startTime = messages.getJobStartTime();
 		if (startTime == null) {
+			return 0.0;
+		}
+		if (now.equals(startTime)) {
 			return 0.0;
 		}
 		return getProgressFrom() / (now - startTime);
