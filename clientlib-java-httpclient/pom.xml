@@ -183,7 +183,7 @@
         <dependency>
             <groupId>org.daisy.pipeline</groupId>
             <artifactId>clientlib-java</artifactId>
-            <version>5.0.1-SNAPSHOT</version>
+            <version>5.0.1</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
